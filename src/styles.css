@@ -136,3 +136,7 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+.flex-center {
+  @apply flex items-center justify-center;
+}
