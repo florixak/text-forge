@@ -310,21 +310,13 @@ export function parseText(input: string): ParseResult {
   if (!input) {
     return {
       success: true,
-      data: {
-        lines: [],
-        length: 0,
-        wordCount: 0,
-      },
+      data: '',
       type: 'Auto-detect',
     }
   }
   return {
     success: true,
-    data: {
-      lines: input.split(/\r?\n/),
-      length: input.length,
-      wordCount: input.split(/\s+/).filter(Boolean).length,
-    },
+    data: input,
     type: 'Auto-detect',
   }
 }

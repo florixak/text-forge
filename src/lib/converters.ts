@@ -22,30 +22,34 @@ export function toJSON(data: any): ConversionResult {
 
 export function toCSV(data: any): ConversionResult {
   try {
-    // Handle array of objects
-    if (Array.isArray(data) && data.length > 0) {
+    if (typeof data === 'string') {
+      const lines = data.split(/\r?\n/).filter((line) => line.trim())
+      const output = lines
+        .map((line) => line.trim().split(/\s+/).join(','))
+        .join('\n')
+      return { success: true, output }
+    }
+
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
       const headers = Object.keys(data[0])
-      const csvRows = [
-        headers.join(','), // Header row
-        ...data.map((row) =>
-          headers
-            .map((header) => {
-              const value = row[header]
-              if (
-                typeof value === 'string' &&
-                (value.includes(',') || value.includes('"'))
-              ) {
-                return `"${value.replace(/"/g, '""')}"`
-              }
-              return value
-            })
-            .join(','),
-        ),
-      ]
+      const csvRows = []
+      csvRows.push(headers.join(','))
+
+      data.forEach((row: Record<string, any>) => {
+        const values = headers.map((h) => {
+          const val = row[h] !== undefined ? row[h] : ''
+          const escaped =
+            typeof val === 'string' ? val.replace(/"/g, '""') : String(val)
+          if (escaped.includes(',') || escaped.includes('\n')) {
+            return `"${escaped}"`
+          }
+          return escaped
+        })
+        csvRows.push(values.join(','))
+      })
       return { success: true, output: csvRows.join('\n') }
     }
 
-    // Handle single object - convert to single row
     if (typeof data === 'object' && !Array.isArray(data)) {
       const headers = Object.keys(data)
       const values = Object.values(data)
@@ -92,15 +96,12 @@ export function toMarkdown(data: any): ConversionResult {
   try {
     let output = ''
 
-    // Handle array of objects (convert to table)
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
       const headers = Object.keys(data[0])
 
-      // Table header
       output += `| ${headers.join(' | ')} |\n`
       output += `| ${headers.map(() => '---').join(' | ')} |\n`
 
-      // Table rows
       data.forEach((row) => {
         output += `| ${headers.map((h) => row[h] || '').join(' | ')} |\n`
       })
@@ -108,7 +109,6 @@ export function toMarkdown(data: any): ConversionResult {
       return { success: true, output }
     }
 
-    // Handle object (convert to list)
     if (typeof data === 'object' && !Array.isArray(data)) {
       Object.entries(data).forEach(([key, value]) => {
         output += `- **${key}**: ${value}\n`
@@ -116,7 +116,6 @@ export function toMarkdown(data: any): ConversionResult {
       return { success: true, output }
     }
 
-    // Handle primitive or string
     return { success: true, output: String(data) }
   } catch (error) {
     return {
@@ -246,6 +245,14 @@ export function convertData(
       return toHTML(parseResult.data)
     case 'XML':
       return toXML(parseResult.data)
+    case 'Text':
+      if (typeof parseResult.data === 'string') {
+        return { success: true, output: parseResult.data }
+      }
+      return {
+        success: true,
+        output: JSON.stringify(parseResult.data, null, 2),
+      }
     default:
       return {
         success: false,
