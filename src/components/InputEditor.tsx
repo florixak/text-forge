@@ -1,11 +1,11 @@
 import { InputType, inputTypes, outputTypes } from '@/constants'
+import { createServerFn } from '@tanstack/react-start'
 import { ArrowRight, Sparkles } from 'lucide-react'
-import { useState } from 'react'
 import TypeSelect from './TypeSelect'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { createServerFn } from '@tanstack/react-start'
+import useDebounce from '@/hooks/useDebounce'
 
 const checkInputType = createServerFn({
   method: 'POST',
@@ -57,6 +57,17 @@ const checkInputType = createServerFn({
         }
       }
 
+      if (
+        /<\?xml[\s\S]*?\?>/.test(input) ||
+        /<([a-z][\w-]*)(?:\s[^>]*)?\/?>/i.test(input)
+      ) {
+        return { type: 'XML', valid: true }
+      }
+
+      if (/^[\s\S]*$/.test(input) && input.trim().length > 0) {
+        return { type: 'Text', valid: true }
+      }
+
       // Fallback
       return { type: 'Auto-detect', valid: false }
     },
@@ -65,33 +76,44 @@ const checkInputType = createServerFn({
 interface InputEditorProps {
   input: string
   setInput: (input: string) => void
-  selectedType: InputType
-  setSelectedType: (type: InputType) => void
+  fromType: InputType
+  setFromType: (type: InputType) => void
+  toType?: InputType
+  setToType?: (type: InputType) => void
 }
 
 const InputEditor = ({
   input,
   setInput,
-  selectedType,
-  setSelectedType,
+  fromType,
+  setFromType,
+  toType,
+  setToType,
 }: InputEditorProps) => {
-  const handleValueChange = async (newValue: string) => {
-    setInput(newValue)
+  const { debouncedValue } = useDebounce({
+    value: input,
+    delay: 500,
+    onDebounce: () => {
+      handleTypeCheck()
+    },
+  })
+  const handleTypeCheck = async () => {
+    if (fromType !== 'Auto-detect') return
     const { valid, type: detectedType } = await checkInputType({
-      data: { input: newValue },
+      data: { input: debouncedValue },
     })
     if (valid) {
-      console.log('Detected input type:', detectedType)
-      setSelectedType(detectedType as InputType)
-    } else {
-      console.log('Could not detect input type, defaulting to Auto-detect')
-      setSelectedType('Auto-detect')
+      setFromType(detectedType as InputType)
     }
+  }
+
+  const handleValueChange = async (newValue: string) => {
+    setInput(newValue)
   }
 
   const handleClear = () => {
     setInput('')
-    setSelectedType('Auto-detect')
+    setFromType('Auto-detect')
   }
 
   return (
@@ -113,8 +135,8 @@ const InputEditor = ({
             defaultValue={inputTypes[0]}
             inputTypes={inputTypes}
             id="input-type-select"
-            selectedType={selectedType}
-            setSelectedType={setSelectedType}
+            selectedType={fromType}
+            setSelectedType={setFromType}
           />
         </div>
         <ArrowRight className="text-muted-foreground" />
@@ -130,13 +152,15 @@ const InputEditor = ({
             defaultValue={outputTypes[0]}
             inputTypes={outputTypes}
             id="output-type-select"
+            selectedType={toType}
+            setSelectedType={setToType}
           />
         </div>
       </div>
       <Textarea
         id="input-textarea"
         placeholder="Enter your text or code here..."
-        className="mt-4 min-h-120 w-full resize-none"
+        className="mt-4 h-120 w-full resize-none"
         value={input}
         onChange={(e) => handleValueChange(e.target.value)}
         onKeyDown={(e) => {
