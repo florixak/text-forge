@@ -28,7 +28,10 @@ export default function Header() {
             ))}
           </ul>
         </nav>
-        <Button>Sign In</Button>
+
+        <Button asChild>
+          <Link to="/signin">Sign In</Link>
+        </Button>
       </div>
     </header>
   )
