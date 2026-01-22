@@ -17,8 +17,18 @@ const inputTypes = [
   'YAML',
   'Markdown',
   'HTML',
+  'Text',
+  'XML',
 ] as const
 
-const outputTypes = ['JSON', 'CSV', 'YAML', 'Markdown', 'HTML'] as const
+const outputTypes = [
+  'JSON',
+  'CSV',
+  'YAML',
+  'Markdown',
+  'HTML',
+  'Text',
+  'XML',
+] as const
 
 export { navLinks, inputTypes, outputTypes }
