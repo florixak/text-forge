@@ -3,6 +3,8 @@ interface NavLink {
   href: string
 }
 
+export type InputType = (typeof inputTypes)[number]
+
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
   { name: 'AI Tools', href: '/ai-tools' },
@@ -11,12 +13,12 @@ const navLinks: NavLink[] = [
 const inputTypes = [
   'Auto-detect',
   'JSON',
-  'CSV / Excel',
+  'CSV',
   'YAML',
   'Markdown',
   'HTML',
 ] as const
 
-const outputTypes = ['JSON', 'CSV / Excel', 'YAML', 'Markdown', 'HTML'] as const
+const outputTypes = ['JSON', 'CSV', 'YAML', 'Markdown', 'HTML'] as const
 
 export { navLinks, inputTypes, outputTypes }
