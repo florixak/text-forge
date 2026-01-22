@@ -8,4 +8,15 @@ const navLinks: NavLink[] = [
   { name: 'AI Tools', href: '/ai-tools' },
 ]
 
-export { navLinks }
+const inputTypes = [
+  'Auto-detect',
+  'JSON',
+  'CSV / Excel',
+  'YAML',
+  'Markdown',
+  'HTML',
+] as const
+
+const outputTypes = ['JSON', 'CSV / Excel', 'YAML', 'Markdown', 'HTML'] as const
+
+export { navLinks, inputTypes, outputTypes }
