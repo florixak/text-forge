@@ -140,3 +140,16 @@ code {
 .flex-center {
   @apply flex items-center justify-center;
 }
+
+.marble-gradient {
+  background:
+    linear-gradient(135deg, #f5f7fa 0%, #cbd8ed 50%, #ccdaf1 100%),
+    repeating-linear-gradient(
+      120deg,
+      rgba(224, 224, 224, 0.15) 0px,
+      rgba(224, 224, 224, 0.15) 2px,
+      transparent 18px,
+      transparent 18px
+    );
+  background-blend-mode: lighten;
+}
