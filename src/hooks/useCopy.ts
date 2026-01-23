@@ -1,17 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const useCopy = () => {
   const [copied, setCopied] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const handleCopy = (content: string) => {
-    if (!content) return
-
-    navigator.clipboard.writeText(content).then(() => {
+  const handleCopy = async (content: string) => {
+    if (!content?.trim()) return
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText)
+      return
+    try {
+      await navigator.clipboard.writeText(content)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
   }
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
   return { copied, handleCopy }
 }
 
