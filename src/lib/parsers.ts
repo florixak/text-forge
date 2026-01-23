@@ -202,65 +202,17 @@ export function parseMarkdown(input: string): ParseResult {
       level?: number
     }> = []
 
+    let inCodeBlock = false
+
     lines.forEach((line) => {
-      // ...existing code...
-      const lines = input.split(/\r?\n/)
-      const structure: Array<{
-        type: string
-        content: string
-        level?: number
-      }> = []
-
-      let inCodeBlock = false
-
-      lines.forEach((line) => {
-        // Handle code block fences
-        if (line.startsWith('```')) {
-          inCodeBlock = !inCodeBlock
-          structure.push({
-            type: inCodeBlock ? 'code-block-start' : 'code-block-end',
-            content: line,
-          })
-          return
-        }
-
-        // If inside a code block, treat all lines as code
-        if (inCodeBlock) {
-          structure.push({
-            type: 'code',
-            content: line,
-          })
-          return
-        }
-
-        // Headings
-        const headingMatch = line.match(/^(#{1,6})\s+(.+)/)
-        if (headingMatch) {
-          structure.push({
-            type: 'heading',
-            level: headingMatch[1].length,
-            content: headingMatch[2],
-          })
-          return
-        }
-
-        // Lists
-        if (/^\s*[-*+]\s/.test(line)) {
-          structure.push({
-            type: 'list-item',
-            content: line.replace(/^\s*[-*+]\s/, ''),
-          })
-          return
-        }
-
-        // Paragraphs
-        if (line.trim()) {
-          structure.push({
-            type: 'paragraph',
-            content: line,
-          })
-        }
-      })
+      if (line.startsWith('```')) {
+        inCodeBlock = !inCodeBlock
+        structure.push({
+          type: inCodeBlock ? 'code-block-start' : 'code-block-end',
+          content: line,
+        })
+        return
+      }
     })
 
     return {
