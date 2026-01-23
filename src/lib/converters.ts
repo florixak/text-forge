@@ -194,7 +194,7 @@ export function toHTML(data: any): ConversionResult {
       data.forEach((row) => {
         parts.push('      <tr>')
         headers.forEach((h) => {
-          parts.push(`        <td>${escapeInput(String(row[h] || ''))}</td>`)
+          parts.push(`        <td>${escapeInput(String(row[h] ?? ''))}</td>`)
         })
         parts.push('      </tr>')
       })
@@ -273,7 +273,7 @@ export function convertData(
 ): ConversionResult {
   const parseResult = parseInput(input, fromType)
 
-  if (!parseResult.success || !parseResult.data) {
+  if (!parseResult.success || typeof parseResult.data === 'undefined') {
     return {
       success: false,
       error: parseResult.error || 'Failed to parse input',
