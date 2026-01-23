@@ -5,8 +5,8 @@ import { Button } from './ui/button'
 
 export default function Header() {
   return (
-    <header className="p-4 bg-background text-foreground w-full shadow-md">
-      <div className="flex flex-row justify-between items-center max-w-7xl w-full mx-auto">
+    <header className="bg-background text-foreground w-full shadow-md">
+      <div className="flex flex-row justify-between items-center max-w-7xl w-full mx-auto py-4">
         <h1 className="ml-4 text-xl font-semibold text-foreground">
           <Link to="/">
             <div className="flex items-center gap-2">
@@ -28,7 +28,10 @@ export default function Header() {
             ))}
           </ul>
         </nav>
-        <Button>Sign In</Button>
+
+        <Button asChild>
+          <Link to="/signin">Sign In</Link>
+        </Button>
       </div>
     </header>
   )
