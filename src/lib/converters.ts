@@ -230,13 +230,19 @@ export function toHTML(data: any): ConversionResult {
 
 export function toXML(data: any, rootName = 'root'): ConversionResult {
   try {
+    const sanitizeXmlName = (name: string): string => {
+      const sanitized = name.replace(/[^A-Za-z0-9_.-]/g, '_')
+      return /^[A-Za-z_]/.test(sanitized) ? sanitized : `_${sanitized}`
+    }
+
     const objectToXML = (obj: any, nodeName: string, indent = ''): string => {
+      const safeName = sanitizeXmlName(nodeName)
       if (obj === null || obj === undefined) {
-        return `${indent}<${nodeName}/>\n`
+        return `${indent}<${safeName}/>\n`
       }
 
       if (typeof obj !== 'object') {
-        return `${indent}<${nodeName}>${escapeInput(String(obj))}</${nodeName}>\n`
+        return `${indent}<${safeName}>${escapeInput(String(obj))}</${safeName}>\n`
       }
 
       if (Array.isArray(obj)) {
@@ -247,11 +253,11 @@ export function toXML(data: any, rootName = 'root'): ConversionResult {
         return xml
       }
 
-      let xml = `${indent}<${nodeName}>\n`
+      let xml = `${indent}<${safeName}>\n`
       Object.entries(obj).forEach(([key, value]) => {
         xml += objectToXML(value, key, indent + '  ')
       })
-      xml += `${indent}</${nodeName}>\n`
+      xml += `${indent}</${safeName}>\n`
       return xml
     }
 
