@@ -8,6 +8,8 @@ const getFileExtension = (type: InputType): string => {
       return 'csv'
     case 'YAML':
       return 'yaml'
+    case 'XML':
+      return 'xml'
     case 'Markdown':
       return 'md'
     case 'HTML':
@@ -27,6 +29,8 @@ const getMimeType = (type: InputType): string => {
       return 'text/csv'
     case 'YAML':
       return 'text/yaml'
+    case 'XML':
+      return 'application/xml'
     case 'Markdown':
       return 'text/markdown'
     case 'HTML':
