@@ -90,17 +90,18 @@ const InputEditor = ({
   toType,
   setToType,
 }: InputEditorProps) => {
-  const { debouncedValue } = useDebounce({
+  useDebounce({
     value: input,
     delay: 500,
-    onDebounce: () => {
-      handleTypeCheck()
+    onDebounce: (value: string) => {
+      handleTypeCheck(value)
     },
   })
-  const handleTypeCheck = async () => {
+
+  const handleTypeCheck = async (value: string) => {
     if (fromType !== 'Auto-detect') return
     const { valid, type: detectedType } = await checkInputType({
-      data: { input: debouncedValue },
+      data: { input: value },
     })
     if (valid) {
       setFromType(detectedType as InputType)
