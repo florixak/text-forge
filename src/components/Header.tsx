@@ -1,9 +1,11 @@
 import { navLinks } from '@/constants'
 import { Link } from '@tanstack/react-router'
-import { Terminal } from 'lucide-react'
+import { Terminal, User } from 'lucide-react'
 import { Button } from './ui/button'
+import { authClient } from '@/lib/auth-client'
 
 export default function Header() {
+  const { data: session } = authClient.useSession()
   return (
     <header className="bg-background text-foreground w-full shadow-md">
       <div className="flex flex-row justify-between items-center max-w-7xl w-full mx-auto py-4">
@@ -29,9 +31,21 @@ export default function Header() {
           </ul>
         </nav>
 
-        <Button asChild>
-          <Link to="/signin">Sign In</Link>
-        </Button>
+        {!session ? (
+          <Button variant="ghost" asChild>
+            <Link to="/signin">
+              <User className="text-foreground" />
+              <span>Sign In</span>
+            </Link>
+          </Button>
+        ) : (
+          <Button variant="ghost" asChild>
+            <Link to="/dashboard">
+              <User className="text-foreground" />
+              <span>{session.user?.name ?? session.user?.email}</span>
+            </Link>
+          </Button>
+        )}
       </div>
     </header>
   )
