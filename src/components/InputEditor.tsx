@@ -181,7 +181,7 @@ const InputEditor = ({
       />
       <div className="flex items-center justify-between mt-4 w-full">
         <div className="flex gap-2">
-          <Button>Convert</Button>
+          {/*<Button>Convert</Button>*/}
           <Button variant="link" onClick={handleClear}>
             Clear
           </Button>
