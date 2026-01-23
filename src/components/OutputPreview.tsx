@@ -36,7 +36,11 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
         </pre>
         <div className="bg-muted/30 w-full h-10 rounded-b-md border p-2 flex items-center gap-2">
           <div className="text-sm text-foreground font-medium flex items-center">
-            <Dot className="text-green-400 -mr-2" size={48} /> LIVE
+            <Dot
+              className={`${success ? 'text-green-400' : 'text-red-400'} -mr-2`}
+              size={48}
+            />{' '}
+            LIVE
           </div>
 
           <div className="text-sm text-muted-foreground font-medium ml-auto">
@@ -49,11 +53,11 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
         <Button
           variant="outline"
           onClick={() => handleCopy(output || '')}
-          disabled={!output}
+          disabled={!success}
         >
           {copied ? 'Copied!' : 'Copy Output'}
         </Button>
-        <Button variant="outline" onClick={handleDownload} disabled={!output}>
+        <Button variant="outline" onClick={handleDownload} disabled={!success}>
           Download Output
         </Button>
       </div>

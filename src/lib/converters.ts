@@ -24,10 +24,42 @@ export function toCSV(data: any): ConversionResult {
   try {
     if (typeof data === 'string') {
       const lines = data.split(/\r?\n/).filter((line) => line.trim())
-      const output = lines
-        .map((line) => line.trim().split(/\s+/).join(','))
-        .join('\n')
-      return { success: true, output }
+
+      if (lines.length === 0) {
+        return { success: false, error: 'No data to convert' }
+      }
+
+      const firstLine = lines[0]
+      const hasMultipleSpaces = /\s{2,}/.test(firstLine)
+      const hasTabs = firstLine.includes('\t')
+
+      let delimiter: RegExp
+      if (hasTabs) {
+        delimiter = /\t+/
+      } else if (hasMultipleSpaces) {
+        delimiter = /\s{2,}/
+      } else {
+        delimiter = /\s+/
+      }
+
+      const csvRows = lines.map((line) => {
+        const values = line
+          .trim()
+          .split(delimiter)
+          .map((v) => {
+            const trimmed = v.trim()
+            const needsQuotes =
+              trimmed.includes(',') ||
+              trimmed.includes(' ') ||
+              trimmed.includes('\n') ||
+              trimmed.includes('"')
+            const escaped = trimmed.replace(/"/g, '""')
+            return needsQuotes ? `"${escaped}"` : escaped
+          })
+        return values.join(',')
+      })
+
+      return { success: true, output: csvRows.join('\n') }
     }
 
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
@@ -40,7 +72,11 @@ export function toCSV(data: any): ConversionResult {
           const val = row[h] !== undefined ? row[h] : ''
           const escaped =
             typeof val === 'string' ? val.replace(/"/g, '""') : String(val)
-          if (escaped.includes(',') || escaped.includes('\n')) {
+          if (
+            escaped.includes(',') ||
+            escaped.includes('\n') ||
+            escaped.includes('"')
+          ) {
             return `"${escaped}"`
           }
           return escaped
@@ -50,9 +86,21 @@ export function toCSV(data: any): ConversionResult {
       return { success: true, output: csvRows.join('\n') }
     }
 
-    if (typeof data === 'object' && !Array.isArray(data)) {
+    if (typeof data === 'object' && !Array.isArray(data) && data !== null) {
       const headers = Object.keys(data)
-      const values = Object.values(data)
+      const values = headers.map((h) => {
+        const val = data[h]
+        const escaped =
+          typeof val === 'string' ? val.replace(/"/g, '""') : String(val)
+        if (
+          escaped.includes(',') ||
+          escaped.includes('\n') ||
+          escaped.includes('"')
+        ) {
+          return `"${escaped}"`
+        }
+        return escaped
+      })
       return {
         success: true,
         output: `${headers.join(',')}\n${values.join(',')}`,
@@ -69,25 +117,6 @@ export function toCSV(data: any): ConversionResult {
       success: false,
       error:
         error instanceof Error ? error.message : 'Failed to convert to CSV',
-    }
-  }
-}
-
-export function toYAML(data: any): ConversionResult {
-  try {
-    // Placeholder - you'll need to install js-yaml
-    // const output = yaml.dump(data)
-    // return { success: true, output }
-
-    return {
-      success: false,
-      error: 'YAML conversion not yet implemented. Install js-yaml library.',
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error ? error.message : 'Failed to convert to YAML',
     }
   }
 }
@@ -128,49 +157,68 @@ export function toMarkdown(data: any): ConversionResult {
   }
 }
 
+function escapeInput(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function toHTML(data: any): ConversionResult {
   try {
-    let output =
-      '<!DOCTYPE html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <title>Converted Data</title>\n</head>\n<body>\n'
+    const parts: string[] = [
+      '<!DOCTYPE html>',
+      '<html>',
+      '<head>',
+      '  <meta charset="UTF-8">',
+      '  <title>Converted Data</title>',
+      '</head>',
+      '<body>',
+    ]
 
-    // Handle array of objects (convert to table)
     if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
       const headers = Object.keys(data[0])
 
-      output += '  <table border="1">\n'
-      output += '    <thead>\n      <tr>\n'
+      parts.push('  <table border="1">')
+      parts.push('    <thead>')
+      parts.push('      <tr>')
       headers.forEach((h) => {
-        output += `        <th>${h}</th>\n`
+        parts.push(`        <th>${escapeInput(String(h))}</th>`)
       })
-      output += '      </tr>\n    </thead>\n'
+      parts.push('      </tr>')
+      parts.push('    </thead>')
 
-      output += '    <tbody>\n'
+      parts.push('    <tbody>')
       data.forEach((row) => {
-        output += '      <tr>\n'
+        parts.push('      <tr>')
         headers.forEach((h) => {
-          output += `        <td>${row[h] || ''}</td>\n`
+          parts.push(`        <td>${escapeInput(String(row[h] || ''))}</td>`)
         })
-        output += '      </tr>\n'
+        parts.push('      </tr>')
       })
-      output += '    </tbody>\n'
-      output += '  </table>\n'
-    }
-    // Handle object (convert to list)
-    else if (typeof data === 'object' && !Array.isArray(data)) {
-      output += '  <dl>\n'
+      parts.push('    </tbody>')
+      parts.push('  </table>')
+    } else if (
+      typeof data === 'object' &&
+      !Array.isArray(data) &&
+      data !== null
+    ) {
+      parts.push('  <dl>')
       Object.entries(data).forEach(([key, value]) => {
-        output += `    <dt><strong>${key}</strong></dt>\n`
-        output += `    <dd>${value}</dd>\n`
+        parts.push(`    <dt><strong>${escapeInput(String(key))}</strong></dt>`)
+        parts.push(`    <dd>${escapeInput(String(value))}</dd>`)
       })
-      output += '  </dl>\n'
-    }
-    // Handle primitive
-    else {
-      output += `  <p>${data}</p>\n`
+      parts.push('  </dl>')
+    } else {
+      parts.push(`  <p>${escapeInput(String(data))}</p>`)
     }
 
-    output += '</body>\n</html>'
-    return { success: true, output }
+    parts.push('</body>')
+    parts.push('</html>')
+
+    return { success: true, output: parts.join('\n') }
   } catch (error) {
     return {
       success: false,
@@ -188,7 +236,7 @@ export function toXML(data: any, rootName = 'root'): ConversionResult {
       }
 
       if (typeof obj !== 'object') {
-        return `${indent}<${nodeName}>${obj}</${nodeName}>\n`
+        return `${indent}<${nodeName}>${escapeInput(String(obj))}</${nodeName}>\n`
       }
 
       if (Array.isArray(obj)) {
@@ -237,8 +285,6 @@ export function convertData(
       return toJSON(parseResult.data)
     case 'CSV':
       return toCSV(parseResult.data)
-    case 'YAML':
-      return toYAML(parseResult.data)
     case 'Markdown':
       return toMarkdown(parseResult.data)
     case 'HTML':

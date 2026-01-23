@@ -46,6 +46,7 @@ export function parseCSV(input: string): ParseResult<Record<string, string>[]> {
         type: 'CSV',
       }
     }
+
     const lines = input.trim().split(/\r?\n/)
     if (lines.length < 2) {
       return {
@@ -55,18 +56,44 @@ export function parseCSV(input: string): ParseResult<Record<string, string>[]> {
       }
     }
 
-    // Parse header
-    const headers = lines[0].split(',').map((h) => h.trim())
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = []
+      let current = ''
+      let inQuotes = false
 
-    // Parse data rows
-    const data = lines.slice(1).map((line) => {
-      const values = line.split(',').map((v) => v.trim())
-      const row: Record<string, string> = {}
-      headers.forEach((header, index) => {
-        row[header] = values[index] || ''
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i]
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"'
+            i++
+          } else {
+            inQuotes = !inQuotes
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current)
+          current = ''
+        } else {
+          current += char
+        }
+      }
+      result.push(current)
+      return result
+    }
+
+    const headers = parseCSVLine(lines[0])
+
+    const data = lines
+      .slice(1)
+      .filter((line) => line.trim())
+      .map((line) => {
+        const values = parseCSVLine(line)
+        const row: Record<string, string> = {}
+        headers.forEach((header, index) => {
+          row[header] = values[index] || ''
+        })
+        return row
       })
-      return row
-    })
 
     return {
       success: true,
@@ -91,7 +118,7 @@ export function parseXML(input: string): ParseResult {
       return {
         success: false,
         error: 'Input is empty',
-        type: 'HTML',
+        type: 'XML',
       }
     }
     const parser = new DOMParser()
@@ -102,7 +129,7 @@ export function parseXML(input: string): ParseResult {
       return {
         success: false,
         error: parserError.textContent || 'Invalid XML',
-        type: 'HTML', // XML not in constants, using HTML
+        type: 'XML',
       }
     }
 
@@ -145,42 +172,13 @@ export function parseXML(input: string): ParseResult {
       data: {
         [doc.documentElement.tagName]: data,
       },
-      type: 'HTML', // XML not in constants, using HTML
+      type: 'XML',
     }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Invalid XML',
-      type: 'HTML',
-    }
-  }
-}
-
-/**
- * Parse YAML input (requires js-yaml library)
- * Note: need to install js-yaml: pnpm add js-yaml @types/js-yaml
- */
-export function parseYAML(input: string): ParseResult {
-  try {
-    if (!input) {
-      return {
-        success: false,
-        error: 'Input is empty',
-        type: 'YAML',
-      }
-    }
-    // const data = yaml.load(input)
-
-    return {
-      success: false,
-      error: 'YAML parsing not yet implemented. Install js-yaml library.',
-      type: 'YAML',
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Invalid YAML',
-      type: 'YAML',
+      type: 'XML',
     }
   }
 }
@@ -205,42 +203,64 @@ export function parseMarkdown(input: string): ParseResult {
     }> = []
 
     lines.forEach((line) => {
-      // Headings
-      const headingMatch = line.match(/^(#{1,6})\s+(.+)/)
-      if (headingMatch) {
-        structure.push({
-          type: 'heading',
-          level: headingMatch[1].length,
-          content: headingMatch[2],
-        })
-        return
-      }
+      // ...existing code...
+      const lines = input.split(/\r?\n/)
+      const structure: Array<{
+        type: string
+        content: string
+        level?: number
+      }> = []
 
-      // Lists
-      if (/^\s*[-*+]\s/.test(line)) {
-        structure.push({
-          type: 'list-item',
-          content: line.replace(/^\s*[-*+]\s/, ''),
-        })
-        return
-      }
+      let inCodeBlock = false
 
-      // Code blocks
-      if (line.startsWith('```')) {
-        structure.push({
-          type: 'code-block',
-          content: line,
-        })
-        return
-      }
+      lines.forEach((line) => {
+        // Handle code block fences
+        if (line.startsWith('```')) {
+          inCodeBlock = !inCodeBlock
+          structure.push({
+            type: inCodeBlock ? 'code-block-start' : 'code-block-end',
+            content: line,
+          })
+          return
+        }
 
-      // Paragraphs
-      if (line.trim()) {
-        structure.push({
-          type: 'paragraph',
-          content: line,
-        })
-      }
+        // If inside a code block, treat all lines as code
+        if (inCodeBlock) {
+          structure.push({
+            type: 'code',
+            content: line,
+          })
+          return
+        }
+
+        // Headings
+        const headingMatch = line.match(/^(#{1,6})\s+(.+)/)
+        if (headingMatch) {
+          structure.push({
+            type: 'heading',
+            level: headingMatch[1].length,
+            content: headingMatch[2],
+          })
+          return
+        }
+
+        // Lists
+        if (/^\s*[-*+]\s/.test(line)) {
+          structure.push({
+            type: 'list-item',
+            content: line.replace(/^\s*[-*+]\s/, ''),
+          })
+          return
+        }
+
+        // Paragraphs
+        if (line.trim()) {
+          structure.push({
+            type: 'paragraph',
+            content: line,
+          })
+        }
+      })
     })
 
     return {
@@ -272,16 +292,6 @@ export function parseHTML(input: string): ParseResult {
     const parser = new DOMParser()
     const doc = parser.parseFromString(input, 'text/html')
 
-    // Check for parsing errors
-    const parserError = doc.querySelector('parsererror')
-    if (parserError) {
-      return {
-        success: false,
-        error: 'Invalid HTML',
-        type: 'HTML',
-      }
-    }
-
     // Return a simplified structure
     const data = {
       title: doc.title || '',
@@ -311,14 +321,69 @@ export function parseText(input: string): ParseResult {
     return {
       success: true,
       data: '',
-      type: 'Auto-detect',
+      type: 'Text',
     }
   }
   return {
     success: true,
     data: input,
-    type: 'Auto-detect',
+    type: 'Text',
   }
+}
+
+/**
+ * Auto-detect input type based on content
+ */
+export function detectInputType(input: string): InputType {
+  const trimmed = input.trim()
+
+  // Try JSON
+  try {
+    JSON.parse(trimmed)
+    return 'JSON'
+  } catch {}
+
+  // Check for XML (starts with <?xml or has root element)
+  if (trimmed.startsWith('<?xml') || /^<\w+[^>]*>/.test(trimmed)) {
+    return 'XML'
+  }
+
+  // Check for HTML (doctype or common html tags)
+  if (
+    /^<!DOCTYPE\s+html/i.test(trimmed) ||
+    /<html[^>]*>/i.test(trimmed) ||
+    /<head[^>]*>/i.test(trimmed) ||
+    /<body[^>]*>/i.test(trimmed)
+  ) {
+    return 'HTML'
+  }
+
+  // Check for CSV (has header row with commas)
+  const lines = trimmed.split(/\r?\n/).filter((line) => line.trim())
+  if (lines.length >= 2) {
+    const firstLine = lines[0]
+    const hasCommas = firstLine.includes(',')
+    const secondLine = lines[1]
+    const sameColumns =
+      firstLine.split(',').length === secondLine.split(',').length
+
+    if (hasCommas && sameColumns) {
+      return 'CSV'
+    }
+  }
+
+  // Check for Markdown (headings, lists, code blocks)
+  if (
+    /^#{1,6}\s/m.test(trimmed) ||
+    /^\s*[-*+]\s/m.test(trimmed) ||
+    /^\d+\.\s/m.test(trimmed) ||
+    /^```/m.test(trimmed)
+  ) {
+    return 'Markdown'
+  }
+
+  // Default to Text
+  return 'Text'
 }
 
 /**
@@ -333,18 +398,24 @@ export function parseInput(input: string, type: InputType): ParseResult {
     }
   }
 
-  switch (type) {
+  // Auto-detect if needed
+  let actualType = type
+  if (type === 'Auto-detect') {
+    actualType = detectInputType(input)
+  }
+
+  switch (actualType) {
     case 'JSON':
       return parseJSON(input)
     case 'CSV':
       return parseCSV(input)
-    case 'YAML':
-      return parseYAML(input)
     case 'Markdown':
       return parseMarkdown(input)
     case 'HTML':
       return parseHTML(input)
-    case 'Auto-detect':
+    case 'XML':
+      return parseXML(input)
+    case 'Text':
       return parseText(input)
     default:
       return parseText(input)

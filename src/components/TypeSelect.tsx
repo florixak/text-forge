@@ -9,15 +9,15 @@ import {
 
 interface TypeSelectProps {
   placeholder?: string
-  selectedType?: string
+  selectedType?: InputType
   setSelectedType?: (type: InputType) => void
-  defaultValue?: string
+  defaultValue?: InputType
   inputTypes: readonly InputType[]
   id?: string
 }
 
 const TypeSelect = ({
-  placeholder = 'Select ',
+  placeholder = 'Select',
   selectedType,
   setSelectedType,
   defaultValue,

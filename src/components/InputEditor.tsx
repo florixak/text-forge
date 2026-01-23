@@ -22,6 +22,13 @@ const checkInputType = createServerFn({
         return { type: 'JSON', valid: true }
       } catch {}
 
+      if (
+        /<\?xml[\s\S]*?\?>/.test(input) ||
+        /<([a-z][\w-]*)(?:\s[^>]*)?\/?>/i.test(input)
+      ) {
+        return { type: 'XML', valid: true }
+      }
+
       // Try YAML
       /*try {
       yaml.load(input)
@@ -57,13 +64,6 @@ const checkInputType = createServerFn({
         }
       }
 
-      if (
-        /<\?xml[\s\S]*?\?>/.test(input) ||
-        /<([a-z][\w-]*)(?:\s[^>]*)?\/?>/i.test(input)
-      ) {
-        return { type: 'XML', valid: true }
-      }
-
       if (/^[\s\S]*$/.test(input) && input.trim().length > 0) {
         return { type: 'Text', valid: true }
       }
@@ -78,8 +78,8 @@ interface InputEditorProps {
   setInput: (input: string) => void
   fromType: InputType
   setFromType: (type: InputType) => void
-  toType?: InputType
-  setToType?: (type: InputType) => void
+  toType: InputType
+  setToType: (type: InputType) => void
 }
 
 const InputEditor = ({
