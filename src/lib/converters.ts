@@ -246,10 +246,11 @@ export function toXML(data: any, rootName = 'root'): ConversionResult {
       }
 
       if (Array.isArray(obj)) {
-        let xml = ''
+        let xml = `${indent}<${safeName}>\n`
         obj.forEach((item, index) => {
-          xml += objectToXML(item, `${nodeName}_${index}`, indent)
+          xml += objectToXML(item, `item_${index}`, indent + '  ')
         })
+        xml += `${indent}</${safeName}>\n`
         return xml
       }
 
