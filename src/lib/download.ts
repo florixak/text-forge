@@ -47,7 +47,7 @@ export const downloadFile = (
   type: InputType,
   filename?: string,
 ) => {
-  if (!content || content.trim() === '') return
+  if (content.length === 0) return
 
   const extension = getFileExtension(type)
   const mimeType = getMimeType(type)
