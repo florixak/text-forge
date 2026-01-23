@@ -132,13 +132,13 @@ export function toMarkdown(data: any): ConversionResult {
       output += `| ${headers.map(() => '---').join(' | ')} |\n`
 
       data.forEach((row) => {
-        output += `| ${headers.map((h) => row[h] || '').join(' | ')} |\n`
+        output += `| ${headers.map((h) => row[h] ?? '').join(' | ')} |\n`
       })
 
       return { success: true, output }
     }
 
-    if (typeof data === 'object' && !Array.isArray(data)) {
+    if (typeof data === 'object' && !Array.isArray(data) && data !== null) {
       Object.entries(data).forEach(([key, value]) => {
         output += `- **${key}**: ${value}\n`
       })
