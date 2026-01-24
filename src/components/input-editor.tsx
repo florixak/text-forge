@@ -6,6 +6,8 @@ import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import useDebounce from '@/hooks/useDebounce'
+import { authClient } from '@/lib/auth-client'
+import { useQuery } from '@tanstack/react-query'
 
 const checkInputType = createServerFn({
   method: 'POST',
@@ -90,6 +92,8 @@ const InputEditor = ({
   toType,
   setToType,
 }: InputEditorProps) => {
+  const { data } = authClient.useSession()
+
   useDebounce({
     value: input,
     delay: 500,
@@ -116,6 +120,8 @@ const InputEditor = ({
     setInput('')
     setFromType('Auto-detect')
   }
+
+  const loggedIn = data?.user !== null && data?.user !== undefined
 
   return (
     <section className="p-4 w-full">
@@ -187,11 +193,17 @@ const InputEditor = ({
             Clear
           </Button>
         </div>
-
-        <Button variant="outline">
-          <Sparkles />
-          AI Assist
-        </Button>
+        <div className="flex flex-row items-center gap-2">
+          {!loggedIn && (
+            <span className="text-sm text-muted-foreground">
+              Sign in to use AI Assist
+            </span>
+          )}
+          <Button variant="outline" disabled={!loggedIn}>
+            <Sparkles />
+            AI Assist
+          </Button>
+        </div>
       </div>
     </section>
   )
