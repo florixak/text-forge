@@ -1,7 +1,7 @@
 import { InputType, inputTypes, outputTypes } from '@/constants'
 import { createServerFn } from '@tanstack/react-start'
 import { ArrowRight, Sparkles } from 'lucide-react'
-import TypeSelect from './TypeSelect'
+import TypeSelect from './type-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
