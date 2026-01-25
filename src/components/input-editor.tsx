@@ -1,13 +1,12 @@
 import { InputType, inputTypes, outputTypes } from '@/constants'
+import useDebounce from '@/hooks/useDebounce'
+import { authClient } from '@/lib/auth-client'
 import { createServerFn } from '@tanstack/react-start'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import TypeSelect from './type-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import useDebounce from '@/hooks/useDebounce'
-import { authClient } from '@/lib/auth-client'
-import { useQuery } from '@tanstack/react-query'
 
 const checkInputType = createServerFn({
   method: 'POST',
