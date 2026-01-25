@@ -11,4 +11,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  user: {
+    additionalFields: {
+      plan: {
+        type: 'string',
+        options: ['free', 'pro'],
+        default: 'free',
+      },
+    },
+  },
 })
