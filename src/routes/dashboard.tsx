@@ -2,9 +2,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { planLimits } from '@/constants'
+import { db } from '@/db'
+import { aiUsage } from '@/db/schema'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { and, eq } from 'drizzle-orm'
 import {
   CirclePile,
   ShieldCheck,
@@ -20,19 +23,38 @@ export const Route = createFileRoute('/dashboard')({
   },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
-  loader: async () => {
-    const { data } = await authClient.getSession()
+  loader: async ({ serverContext }) => {
+    const { user } = serverContext?.session || {}
 
-    if (!data?.user) {
+    if (!user) {
       throw new Response('Unauthorized', { status: 401 })
     }
 
-    return { user: data.user }
+    const today = new Date().toISOString().split('T')[0]
+    const todayUsage = await db
+      .select()
+      .from(aiUsage)
+      .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
+      .limit(1)
+
+    const limit =
+      planLimits[user.plan as keyof typeof planLimits].ai_generations_day
+    const used = todayUsage[0]?.used ?? 0
+
+    return {
+      user,
+      usage: {
+        used,
+        limit,
+        remaining: limit - used,
+        percentage: (used / limit) * 100,
+      },
+    }
   },
 })
 
 function RouteComponent() {
-  const { user } = Route.useLoaderData()
+  const { user, usage } = Route.useLoaderData()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -45,12 +67,7 @@ function RouteComponent() {
     })
   }
 
-  const planLimit =
-    planLimits[user.plan as keyof typeof planLimits].ai_generations_day
-
-  const usage = (3 / 5) * 100
-
-  if (usage === 100) {
+  if (usage.percentage >= 100) {
     return <div>Please upgrade your plan to continue using the service.</div>
   }
 
@@ -84,14 +101,16 @@ function RouteComponent() {
           </div>
           <div className="flex flex-col">
             <div className="flex items-center justify-between">
-              <h4 className="text-lg font-bold">3 / 5 used</h4>
-              <span className="text-xs">{usage}%</span>
+              <h4 className="text-lg font-bold">
+                {usage.used} / {usage.limit} used
+              </h4>
+              <span className="text-xs">{Math.round(usage.percentage)}%</span>
             </div>
 
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-2 bg-primary"
-                style={{ width: `${usage}%` }}
+                style={{ width: `${usage.percentage}%` }}
               ></div>
             </div>
 
@@ -160,10 +179,10 @@ function RouteComponent() {
             <div>
               <h5>Daily Limit</h5>
               <p className="text-sm text-muted-foreground">
-                Standard for Free tier users
+                Standard for {user.plan} tier users
               </p>
             </div>
-            <p className="font-semibold text-base">{planLimit} Generations</p>
+            <p className="font-semibold text-base">{usage.limit} Generations</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
