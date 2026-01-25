@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { planLimits } from '@/constants'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
@@ -21,7 +22,12 @@ export const Route = createFileRoute('/dashboard')({
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async () => {
     const { data } = await authClient.getSession()
-    return { user: data?.user }
+
+    if (!data?.user) {
+      throw new Response('Unauthorized', { status: 401 })
+    }
+
+    return { user: data.user }
   },
 })
 
@@ -38,6 +44,9 @@ function RouteComponent() {
       },
     })
   }
+
+  const planLimit =
+    planLimits[user.plan as keyof typeof planLimits].ai_generations_day
 
   const usage = (3 / 5) * 100
 
@@ -154,7 +163,7 @@ function RouteComponent() {
                 Standard for Free tier users
               </p>
             </div>
-            <p className="font-semibold text-base">5 Generations</p>
+            <p className="font-semibold text-base">{planLimit} Generations</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
