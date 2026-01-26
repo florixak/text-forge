@@ -8,6 +8,7 @@ import {
   date,
   uuid,
   integer,
+  unique,
 } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
@@ -84,24 +85,31 @@ export const verification = pgTable(
   (table) => [index('verification_identifier_idx').on(table.identifier)],
 )
 
-export const aiUsage = pgTable('ai_usage', {
-  id: uuid('id').defaultRandom().primaryKey(),
+export const aiUsage = pgTable(
+  'ai_usage',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
 
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
 
-  day: date('day').notNull(),
+    day: date('day').notNull(),
 
-  used: integer('used').default(0).notNull(),
+    used: integer('used').default(0).notNull(),
 
-  last_used: timestamp('last_used')
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
+    last_used: timestamp('last_used')
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
 
-  words: integer('words').default(0).notNull(),
-})
+    words: integer('words').default(0).notNull(),
+  },
+  (table) => [
+    index('ai_usage_userId_idx').on(table.userId),
+    unique('ai_usage_userId_day_unique').on(table.userId, table.day),
+  ],
+)
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
