@@ -17,6 +17,7 @@ export const user = pgTable('user', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
   plan: text('plan').$type<'free' | 'pro'>().default('free').notNull(),
+  enabled: boolean('enabled').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()
@@ -93,6 +94,13 @@ export const aiUsage = pgTable('ai_usage', {
   day: date('day').notNull(),
 
   used: integer('used').default(0).notNull(),
+
+  last_used: timestamp('last_used')
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull(),
+
+  words: integer('words').default(0).notNull(),
 })
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -110,6 +118,13 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}))
+
+export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
+  user: one(user, {
+    fields: [aiUsage.userId],
     references: [user.id],
   }),
 }))
