@@ -16,6 +16,17 @@ export const authMiddleware = createMiddleware().server(
   },
 )
 
+export const authOptionalMiddleware = createMiddleware().server(
+  async ({ next, request }) => {
+    const session = await auth.api.getSession({ headers: request.headers })
+    return await next({
+      context: {
+        session: session || null,
+      },
+    })
+  },
+)
+
 export const guestMiddleware = createMiddleware().server(
   async ({ next, request }) => {
     const session = await auth.api.getSession({ headers: request.headers })
