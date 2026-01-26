@@ -61,6 +61,9 @@ function RouteComponent() {
           <Card
             key={plan}
             onClick={() => handleSelectPlan(plan)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={() => handleSelectPlan(plan)}
             className={`relative w-sm ${selected === plan ? 'border-2 border-primary' : ''}`}
           >
             {plan === userPlan.plan && userPlan.loggedIn && (
@@ -117,7 +120,7 @@ function RouteComponent() {
                 </td>
                 {plans.map(([plan, limits]) => (
                   <td
-                    key={limits.ai_generations_day}
+                    key={plan}
                     className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
                   >
                     {limits.ai_generations_day}
@@ -130,7 +133,7 @@ function RouteComponent() {
                 </td>
                 {plans.map(([plan, limits]) => (
                   <td
-                    key={limits.ai_assist_calls}
+                    key={plan}
                     className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
                   >
                     {limits.ai_assist_calls}
@@ -143,7 +146,7 @@ function RouteComponent() {
                 </td>
                 {plans.map(([plan, limits], idx) => (
                   <td
-                    key={limits.support}
+                    key={plan}
                     className={`px-6 py-4 text-center capitalize ${selected === plan ? 'text-primary' : 'text-muted-foreground'} ${idx === plans.length - 1 ? ' rounded-br-xl' : ''}`}
                   >
                     {limits.support}
