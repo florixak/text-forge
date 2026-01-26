@@ -35,8 +35,12 @@ const getTodayUsage = createServerFn({ method: 'GET' })
       .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
       .limit(1)
 
-    const limit =
-      planLimits[user.plan as keyof typeof planLimits].ai_generations_day
+    const planKey = user.plan as keyof typeof planLimits
+    const planConfig = planLimits[planKey]
+    if (!planConfig) {
+      throw new Error('Invalid plan configuration')
+    }
+    const limit = planConfig.ai_generations_day
     const used = todayUsage[0]?.used ?? 0
 
     const lastUsedDate = todayUsage[0]?.last_used
@@ -55,7 +59,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
         limit,
         words,
         remaining: limit - used,
-        percentage: (used / limit) * 100,
+        percentage: limit > 0 ? (used / limit) * 100 : 0,
         last_used,
       },
     }
@@ -167,7 +171,7 @@ function RouteComponent() {
               </div>
             </Card>
           </Link>
-          <Link to="/" className="flex-1">
+          <Link to="/ai-structuring" className="flex-1">
             <Card className="p-4 mb-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-accent/50">
               <div className="flex items-center">
                 <div className="bg-primary/10 p-2 rounded-md">

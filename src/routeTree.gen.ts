@@ -14,6 +14,7 @@ import { Route as SigninRouteImport } from './routes/signin'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AiStructuringRouteImport } from './routes/ai-structuring'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoDrizzleRouteImport } from './routes/demo/drizzle'
@@ -50,6 +51,11 @@ const HistoryRoute = HistoryRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiStructuringRoute = AiStructuringRouteImport.update({
+  id: '/ai-structuring',
+  path: '/ai-structuring',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -115,6 +121,7 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-structuring': typeof AiStructuringRoute
   '/dashboard': typeof DashboardRoute
   '/history': typeof HistoryRoute
   '/plans': typeof PlansRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-structuring': typeof AiStructuringRoute
   '/dashboard': typeof DashboardRoute
   '/history': typeof HistoryRoute
   '/plans': typeof PlansRoute
@@ -154,6 +162,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-structuring': typeof AiStructuringRoute
   '/dashboard': typeof DashboardRoute
   '/history': typeof HistoryRoute
   '/plans': typeof PlansRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-structuring'
     | '/dashboard'
     | '/history'
     | '/plans'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-structuring'
     | '/dashboard'
     | '/history'
     | '/plans'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/ai-structuring'
     | '/dashboard'
     | '/history'
     | '/plans'
@@ -233,6 +245,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiStructuringRoute: typeof AiStructuringRoute
   DashboardRoute: typeof DashboardRoute
   HistoryRoute: typeof HistoryRoute
   PlansRoute: typeof PlansRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-structuring': {
+      id: '/ai-structuring'
+      path: '/ai-structuring'
+      fullPath: '/ai-structuring'
+      preLoaderRoute: typeof AiStructuringRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -377,6 +397,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiStructuringRoute: AiStructuringRoute,
   DashboardRoute: DashboardRoute,
   HistoryRoute: HistoryRoute,
   PlansRoute: PlansRoute,
