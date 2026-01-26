@@ -17,8 +17,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       plan: {
-        type: 'string',
-        options: ['free', 'pro'],
+        type: ['free', 'pro'],
         default: 'free',
       },
       enabled: {
