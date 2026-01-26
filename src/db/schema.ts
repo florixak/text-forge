@@ -1,5 +1,15 @@
 import { relations } from 'drizzle-orm'
-import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core'
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  index,
+  date,
+  uuid,
+  integer,
+  unique,
+} from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -7,6 +17,8 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
+  plan: text('plan').$type<'free' | 'pro'>().default('free').notNull(),
+  enabled: boolean('enabled').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()
@@ -73,6 +85,32 @@ export const verification = pgTable(
   (table) => [index('verification_identifier_idx').on(table.identifier)],
 )
 
+export const aiUsage = pgTable(
+  'ai_usage',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    day: date('day').notNull(),
+
+    used: integer('used').default(0).notNull(),
+
+    last_used: timestamp('last_used')
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+
+    words: integer('words').default(0).notNull(),
+  },
+  (table) => [
+    index('ai_usage_userId_idx').on(table.userId),
+    unique('ai_usage_userId_day_unique').on(table.userId, table.day),
+  ],
+)
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -88,6 +126,13 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
+    references: [user.id],
+  }),
+}))
+
+export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
+  user: one(user, {
+    fields: [aiUsage.userId],
     references: [user.id],
   }),
 }))

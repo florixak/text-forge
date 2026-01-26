@@ -16,3 +16,8 @@ export const getFileSize = (text: string): string => {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
+
+export const capitalizeFirstLetter = (str: string): string => {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}

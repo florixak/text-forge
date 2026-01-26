@@ -1,5 +1,5 @@
-import InputEditor from '@/components/InputEditor'
-import OutputPreview from '@/components/OutputPreview'
+import InputEditor from '@/components/input-editor'
+import OutputPreview from '@/components/output-preview'
 import { InputType } from '@/constants'
 import useDebounce from '@/hooks/useDebounce'
 import { createFileRoute } from '@tanstack/react-router'

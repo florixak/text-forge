@@ -11,4 +11,21 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  /*emailVerification: {
+    sendVerificationEmail: async ({ user, url, token }, request) => {},
+  },*/
+  user: {
+    additionalFields: {
+      plan: {
+        type: ['free', 'pro'],
+        default: 'free',
+      },
+      enabled: {
+        type: 'boolean',
+        default: true,
+      },
+    },
+  },
 })
+
+export type Auth = typeof auth

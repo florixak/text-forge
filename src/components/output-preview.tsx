@@ -40,7 +40,7 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
               className={`${success ? 'text-green-400' : 'text-red-400'} -mr-2`}
               size={48}
             />{' '}
-            LIVE
+            LIVE PREVIEW
           </div>
 
           <div className="text-sm text-muted-foreground font-medium ml-auto">
