@@ -6,7 +6,9 @@ import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
+import { capitalizeFirstLetter } from '@/lib/utils'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
 import {
   CirclePile,
@@ -16,21 +18,17 @@ import {
   TextAlignStart,
 } from 'lucide-react'
 
-export const Route = createFileRoute('/dashboard')({
-  component: RouteComponent,
-  server: {
-    middleware: [authMiddleware],
-  },
-  errorComponent: () => <div>Failed to load dashboard</div>,
-  pendingComponent: () => <div>Loading dashboard...</div>,
-  loader: async ({ serverContext }) => {
-    const { user } = serverContext?.session || {}
+const getTodayUsage = createServerFn({ method: 'GET' })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { user } = context.session || {}
 
     if (!user) {
-      throw new Response('Unauthorized', { status: 401 })
+      throw new Error('Unauthorized')
     }
 
-    const today = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
     const todayUsage = await db
       .select()
       .from(aiUsage)
@@ -41,15 +39,34 @@ export const Route = createFileRoute('/dashboard')({
       planLimits[user.plan as keyof typeof planLimits].ai_generations_day
     const used = todayUsage[0]?.used ?? 0
 
+    const lastUsedDate = todayUsage[0]?.last_used
+      ? new Date(todayUsage[0].last_used)
+      : null
+    const last_used = lastUsedDate
+      ? Math.floor((now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60))
+      : null
+
+    const words = todayUsage[0]?.words ?? 0
+
     return {
       user,
       usage: {
         used,
         limit,
+        words,
         remaining: limit - used,
         percentage: (used / limit) * 100,
+        last_used,
       },
     }
+  })
+
+export const Route = createFileRoute('/dashboard')({
+  component: RouteComponent,
+  errorComponent: () => <div>Failed to load dashboard</div>,
+  pendingComponent: () => <div>Loading dashboard...</div>,
+  loader: async () => {
+    return await getTodayUsage()
   },
 })
 
@@ -67,10 +84,6 @@ function RouteComponent() {
     })
   }
 
-  if (usage.percentage >= 100) {
-    return <div>Please upgrade your plan to continue using the service.</div>
-  }
-
   return (
     <section className="max-w-3xl mx-auto min-h-screen flex flex-col items-start justify-center gap-8 mt-8">
       <div className="text-left">
@@ -84,12 +97,16 @@ function RouteComponent() {
             <div className="bg-primary/10 p-2 rounded-md">
               <Star className="text-primary" />
             </div>
-            <Button size="sm" asChild>
-              <Link to="/plans">Upgrade</Link>
-            </Button>
+            {user.plan === 'free' && (
+              <Button size="sm" asChild>
+                <Link to="/plans">Upgrade</Link>
+              </Button>
+            )}
           </div>
           <div className="flex flex-col">
-            <h4 className="text-lg font-bold">Free</h4>
+            <h4 className="text-lg font-bold">
+              {capitalizeFirstLetter(user.plan)}
+            </h4>
             <p className="text-sm text-muted-foreground">Current Plan</p>
           </div>
         </Card>
@@ -124,7 +141,9 @@ function RouteComponent() {
             </div>
           </div>
           <div className="flex flex-col">
-            <h4 className="text-lg font-bold">Active</h4>
+            <h4 className="text-lg font-bold">
+              {user.enabled ? 'Active' : 'Disabled'}
+            </h4>
             <p className="text-sm text-muted-foreground">Account Status</p>
           </div>
         </Card>
@@ -191,7 +210,7 @@ function RouteComponent() {
                 Total words processed so far today
               </p>
             </div>
-            <p className="font-semibold text-base">1,240 words</p>
+            <p className="font-semibold text-base">{usage.words} words</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -200,7 +219,9 @@ function RouteComponent() {
                 Your most recent AI generation
               </p>
             </div>
-            <p className="font-semibold text-base">2 hours ago</p>
+            <p className="font-semibold text-base">
+              {usage.last_used ? `${usage.last_used} hours ago` : 'Never'}
+            </p>
           </div>
         </CardContent>
         <CardFooter className="bg-border/50 flex flex-col items-center p-4">
