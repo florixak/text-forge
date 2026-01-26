@@ -40,17 +40,24 @@ const getTodayUsage = createServerFn({ method: 'GET' })
     if (!planConfig) {
       throw new Error('Invalid plan configuration')
     }
-    const limit = planConfig.ai_generations_day
-    const used = todayUsage[0]?.used ?? 0
+    const limit = Math.max(0, planConfig.ai_generations_day)
+    const used = Math.max(0, todayUsage[0]?.used ?? 0)
 
     const lastUsedDate = todayUsage[0]?.last_used
       ? new Date(todayUsage[0].last_used)
       : null
     const last_used = lastUsedDate
-      ? Math.floor((now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60))
+      ? Math.max(
+          0,
+          Math.floor(
+            (now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60),
+          ),
+        )
       : null
 
     const words = todayUsage[0]?.words ?? 0
+    const remaining = Math.max(0, limit - used)
+    const percentage = limit > 0 ? Math.min(100, (used / limit) * 100) : 0
 
     return {
       user,
@@ -58,8 +65,8 @@ const getTodayUsage = createServerFn({ method: 'GET' })
         used,
         limit,
         words,
-        remaining: limit - used,
-        percentage: limit > 0 ? (used / limit) * 100 : 0,
+        remaining,
+        percentage,
         last_used,
       },
     }
