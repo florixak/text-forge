@@ -11,12 +11,19 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  /*emailVerification: {
+    sendVerificationEmail: async ({ user, url, token }, request) => {},
+  },*/
   user: {
     additionalFields: {
       plan: {
         type: 'string',
         options: ['free', 'pro'],
         default: 'free',
+      },
+      enabled: {
+        type: 'boolean',
+        default: true,
       },
     },
   },
