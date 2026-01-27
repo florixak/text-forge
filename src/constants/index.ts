@@ -32,7 +32,7 @@ const outputTypes = [
   'XML',
 ] as const
 
-type PlanLimits = {
+export type PlanLimits = {
   price: number
   description: string
   ai_generations_day: number
