@@ -116,11 +116,12 @@ function RouteComponent() {
             <div className="bg-primary/10 p-2 rounded-md">
               <Star className="text-primary" />
             </div>
-            {user.plan === 'free' && (
-              <Button size="sm" asChild>
-                <Link to="/plans">Upgrade</Link>
-              </Button>
-            )}
+
+            <Button size="sm" asChild>
+              <Link to="/plans">
+                {user.plan === 'free' ? 'Upgrade' : 'Manage'}
+              </Link>
+            </Button>
           </div>
           <div className="flex flex-col">
             <h4 className="text-lg font-bold">
