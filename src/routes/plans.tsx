@@ -63,7 +63,11 @@ function RouteComponent() {
             onClick={() => handleSelectPlan(plan)}
             role="button"
             tabIndex={0}
-            onKeyDown={() => handleSelectPlan(plan)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleSelectPlan(plan)
+              }
+            }}
             className={`relative w-sm ${selected === plan ? 'border-2 border-primary' : ''}`}
           >
             <CardHeader>
