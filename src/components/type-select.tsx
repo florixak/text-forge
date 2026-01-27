@@ -30,7 +30,7 @@ const TypeSelect = ({
       value={selectedType}
       onValueChange={setSelectedType}
     >
-      <SelectTrigger className="w-45" id={id}>
+      <SelectTrigger className="w-45 bg-card" id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

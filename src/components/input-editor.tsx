@@ -166,7 +166,7 @@ const InputEditor = ({
       <Textarea
         id="input-textarea"
         placeholder="Enter your text or code here..."
-        className="mt-4 h-120 w-full resize-none"
+        className="mt-4 h-120 w-full resize-none bg-card"
         value={input}
         onChange={(e) => handleValueChange(e.target.value)}
         onKeyDown={(e) => {
