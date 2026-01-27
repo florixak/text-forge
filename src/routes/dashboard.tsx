@@ -79,6 +79,9 @@ const getTodayUsage = createServerFn({ method: 'GET' })
 
 export const Route = createFileRoute('/dashboard')({
   component: RouteComponent,
+  server: {
+    middleware: [authMiddleware],
+  },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async () => {
