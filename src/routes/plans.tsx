@@ -66,12 +66,6 @@ function RouteComponent() {
             onKeyDown={() => handleSelectPlan(plan)}
             className={`relative w-sm ${selected === plan ? 'border-2 border-primary' : ''}`}
           >
-            {plan === userPlan.plan && userPlan.loggedIn && (
-              <span className="absolute top-2 right-2 bg-primary text-white rounded-full px-2 h-6 flex items-center justify-center">
-                Current
-              </span>
-            )}
-
             <CardHeader>
               <h3 className="text-lg capitalize text-primary">{plan}</h3>
               <p className="text-3xl">
@@ -81,7 +75,13 @@ function RouteComponent() {
               <p className="font-medium text-muted-foreground">
                 {limits.description}
               </p>
-              <Button className="mt-4 w-full">Choose {plan} plan</Button>
+              <Button className="mt-4 w-full" disabled={userPlan.plan === plan}>
+                {userPlan.loggedIn
+                  ? plan === userPlan.plan
+                    ? 'Current Plan'
+                    : `Choose ${plan} plan`
+                  : 'Sign in to choose plan'}
+              </Button>
             </CardHeader>
             <Separator />
             <CardContent>
