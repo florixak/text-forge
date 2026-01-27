@@ -7,7 +7,8 @@ export type InputType = (typeof inputTypes)[number]
 
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
-  { name: 'AI Tools', href: '/ai-tools' },
+  { name: 'AI Structuring', href: '/ai-structuring' },
+  { name: 'Plans', href: '/plans' },
 ]
 
 const inputTypes = [
@@ -31,20 +32,30 @@ const outputTypes = [
   'XML',
 ] as const
 
-const planLimits = {
+export type PlanLimits = {
+  price: number
+  description: string
+  ai_generations_day: number
+  ai_assist_calls: number
+  support: 'community' | 'priority'
+}
+
+export type Plan = 'free' | 'pro'
+
+const planLimits: Record<Plan, PlanLimits> = {
   free: {
+    price: 0,
+    description: 'Basic plan for personal use',
     ai_generations_day: 5,
     ai_assist_calls: 10,
-    storage_mb: 50,
     support: 'community',
-    features: ['basic-formatting'],
   },
   pro: {
+    price: 15,
+    description: 'For professionals and small teams',
     ai_generations_day: 100,
     ai_assist_calls: 500,
-    storage_mb: 1000,
     support: 'priority',
-    features: ['basic-formatting', 'advanced-ai', 'priority-support'],
   },
 } as const
 

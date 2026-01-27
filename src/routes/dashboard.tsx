@@ -1,13 +1,18 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { planLimits } from '@/constants'
+import { Plan, planLimits } from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { capitalizeFirstLetter } from '@/lib/utils'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
 import {
@@ -24,7 +29,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
     const { user } = context.session || {}
 
     if (!user) {
-      throw new Error('Unauthorized')
+      throw redirect({ to: '/signin' })
     }
 
     const now = new Date()
@@ -35,7 +40,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
       .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
       .limit(1)
 
-    const planKey = user.plan as keyof typeof planLimits
+    const planKey = user.plan as Plan
     const planConfig = planLimits[planKey]
     if (!planConfig) {
       throw new Error('Invalid plan configuration')
@@ -74,6 +79,9 @@ const getTodayUsage = createServerFn({ method: 'GET' })
 
 export const Route = createFileRoute('/dashboard')({
   component: RouteComponent,
+  server: {
+    middleware: [authMiddleware],
+  },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async () => {
