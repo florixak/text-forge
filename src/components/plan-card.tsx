@@ -46,7 +46,10 @@ const PlanCard = ({
         <p className="font-medium text-muted-foreground">
           {limits.description}
         </p>
-        <Button className="mt-4 w-full" disabled={userPlan.plan === plan}>
+        <Button
+          className="mt-4 w-full"
+          disabled={userPlan.plan === plan && userPlan.loggedIn}
+        >
           {userPlan.loggedIn
             ? plan === userPlan.plan
               ? 'Current Plan'
