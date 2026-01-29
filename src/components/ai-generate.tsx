@@ -12,6 +12,7 @@ const AIGenerate = () => {
   const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
     outputFormats[0],
   )
+  const [generatedData, setGeneratedData] = useState('')
 
   const handleGenerate = () => {
     // TODO: Implement generation logic
@@ -65,15 +66,14 @@ const AIGenerate = () => {
           </Button>
         </div>
       </div>
-      {
-        // TODO: Display generated structured data conditionally
+      {generatedData && generatedData.trim() !== '' ? (
         <Output
           input={description}
-          output={''}
-          success={false}
+          output={generatedData}
+          success={true}
           error={undefined}
         />
-      }
+      ) : null}
     </section>
   )
 }
