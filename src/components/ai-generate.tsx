@@ -1,5 +1,3 @@
-'use client'
-
 import { InputFormat, outputFormats } from '@/constants'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
