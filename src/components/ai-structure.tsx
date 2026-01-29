@@ -9,6 +9,7 @@ import { Textarea } from './ui/textarea'
 import { createServerFn } from '@tanstack/react-start'
 import { structureData } from '@/lib/google-ai'
 import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { input: string; format: InputFormat }) => data)
@@ -37,26 +38,20 @@ const AIStructure = () => {
   const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
     outputFormats[0],
   )
-  const [structuredData, setStructuredData] = useState('')
 
-  const handleStructure = async () => {
-    try {
-      const result = await structureTextFn({
-        data: { input: unstructuredData, format: selectedFormat },
-      })
-
-      if (result.success) {
-        setStructuredData(result.output)
+  const { data, isSuccess, isPending, mutate } = useMutation({
+    mutationFn: structureTextFn,
+    onSuccess: ({ success, error }) => {
+      if (success) {
         toast.success('Data structured successfully!')
       } else {
-        toast.error(
-          result.error || 'Failed to structure data. Please try again.',
-        )
+        toast.error(error || 'Failed to structure data. Please try again.')
       }
-    } catch (error) {
+    },
+    onError: () => {
       toast.error('Failed to structure data. Please try again.')
-    }
-  }
+    },
+  })
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -93,8 +88,12 @@ const AIStructure = () => {
             />
           </div>
           <Button
-            onClick={handleStructure}
-            disabled={!unstructuredData.trim()}
+            onClick={() =>
+              mutate({
+                data: { input: unstructuredData, format: selectedFormat },
+              })
+            }
+            disabled={isPending || unstructuredData.trim() === ''}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -103,10 +102,10 @@ const AIStructure = () => {
           </Button>
         </div>
       </div>
-      {structuredData && structuredData.trim() !== '' ? (
+      {isSuccess && data.output.trim() !== '' ? (
         <Output
           input={unstructuredData}
-          output={structuredData}
+          output={data.output}
           success={true}
           error={undefined}
         />
