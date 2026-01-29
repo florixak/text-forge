@@ -1,3 +1,5 @@
+'use client'
+
 import { navLinks } from '@/constants'
 import { Link } from '@tanstack/react-router'
 import { Terminal, User } from 'lucide-react'
