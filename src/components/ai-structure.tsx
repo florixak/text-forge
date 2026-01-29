@@ -6,18 +6,56 @@ import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { createServerFn } from '@tanstack/react-start'
+import { structureData } from '@/lib/google-ai'
+import { toast } from 'sonner'
+
+const structureTextFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { input: string; format: InputFormat }) => data)
+  .handler(
+    async ({
+      data,
+    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+      const { input, format } = data
+
+      try {
+        const structuredOutput = await structureData(input, format)
+
+        return { output: structuredOutput, success: true, error: null }
+      } catch (error: any) {
+        return {
+          output: '',
+          success: false,
+          error: error.message || 'An error occurred while structuring data.',
+        }
+      }
+    },
+  )
 
 const AIStructure = () => {
   const [unstructuredData, setUnstructuredData] = useState('')
   const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
     outputFormats[0],
   )
+  const [structuredData, setStructuredData] = useState('')
 
-  const handleGenerate = () => {
-    // TODO: Implement generation logic
-    console.log('Generating structured data...')
-    console.log('Input:', unstructuredData)
-    console.log('Format:', selectedFormat)
+  const handleStructure = async () => {
+    try {
+      const result = await structureTextFn({
+        data: { input: unstructuredData, format: selectedFormat },
+      })
+
+      if (result.success) {
+        setStructuredData(result.output)
+        toast.success('Data structured successfully!')
+      } else {
+        toast.error(
+          result.error || 'Failed to structure data. Please try again.',
+        )
+      }
+    } catch (error) {
+      toast.error('Failed to structure data. Please try again.')
+    }
   }
 
   return (
@@ -55,7 +93,7 @@ const AIStructure = () => {
             />
           </div>
           <Button
-            onClick={handleGenerate}
+            onClick={handleStructure}
             disabled={!unstructuredData.trim()}
             size="lg"
             className="w-full sm:w-auto"
@@ -65,15 +103,14 @@ const AIStructure = () => {
           </Button>
         </div>
       </div>
-      {
-        // TODO: Display generated structured data conditionally
+      {structuredData && structuredData.trim() !== '' ? (
         <Output
           input={unstructuredData}
-          output={''}
-          success={false}
+          output={structuredData}
+          success={true}
           error={undefined}
         />
-      }
+      ) : null}
     </section>
   )
 }
