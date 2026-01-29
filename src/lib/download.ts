@@ -1,6 +1,6 @@
-import { InputType } from '@/constants'
+import { InputFormat } from '@/constants'
 
-const getFileExtension = (type: InputType): string => {
+const getFileExtension = (type: InputFormat): string => {
   switch (type) {
     case 'JSON':
       return 'json'
@@ -21,7 +21,7 @@ const getFileExtension = (type: InputType): string => {
   }
 }
 
-const getMimeType = (type: InputType): string => {
+const getMimeType = (type: InputFormat): string => {
   switch (type) {
     case 'JSON':
       return 'application/json'
@@ -44,7 +44,7 @@ const getMimeType = (type: InputType): string => {
 
 export const downloadFile = (
   content: string,
-  type: InputType,
+  type: InputFormat,
   filename?: string,
 ) => {
   if (content.length === 0) return

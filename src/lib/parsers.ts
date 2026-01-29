@@ -1,10 +1,10 @@
-import { InputType } from '@/constants'
+import { InputFormat } from '@/constants'
 
 export interface ParseResult<T = unknown> {
   success: boolean
   data?: T
   error?: string
-  type: InputType
+  type: InputFormat
 }
 
 /**
@@ -286,7 +286,7 @@ export function parseText(input: string): ParseResult {
 /**
  * Auto-detect input type based on content
  */
-export function detectInputType(input: string): InputType {
+export function detectInputType(input: string): InputFormat {
   const trimmed = input.trim()
 
   // Try JSON
@@ -341,7 +341,7 @@ export function detectInputType(input: string): InputType {
 /**
  * Main parser function that routes to appropriate parser based on type
  */
-export function parseInput(input: string, type: InputType): ParseResult {
+export function parseInput(input: string, type: InputFormat): ParseResult {
   if (!input || !input.trim()) {
     return {
       success: false,

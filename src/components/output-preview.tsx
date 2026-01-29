@@ -1,4 +1,4 @@
-import { InputType } from '@/constants'
+import { InputFormat } from '@/constants'
 import useCopy from '@/hooks/useCopy'
 import { convertData } from '@/lib/converters'
 import { downloadFile } from '@/lib/download'
@@ -8,8 +8,8 @@ import { Button } from './ui/button'
 import Output from './output'
 
 interface PreviewOutputProps {
-  fromType: InputType
-  toType: InputType
+  fromType: InputFormat
+  toType: InputFormat
   inputText: string
 }
 

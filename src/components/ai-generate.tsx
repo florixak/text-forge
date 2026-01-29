@@ -1,4 +1,6 @@
-import { InputType, outputTypes } from '@/constants'
+'use client'
+
+import { InputFormat, outputFormats } from '@/constants'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import Output from './output'
@@ -9,7 +11,9 @@ import { Textarea } from './ui/textarea'
 
 const AIGenerate = () => {
   const [description, setDescription] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<InputType>('JSON')
+  const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
+    outputFormats[0],
+  )
 
   const handleGenerate = () => {
     // TODO: Implement generation logic
@@ -44,8 +48,8 @@ const AIGenerate = () => {
             </Label>
             <FormatSelect
               placeholder="Select Output Format"
-              defaultValue={outputTypes[0]}
-              inputTypes={outputTypes}
+              defaultValue={outputFormats[0]}
+              inputTypes={outputFormats}
               id="output-type-select"
               selectedFormat={selectedFormat}
               setSelectedFormat={setSelectedFormat}

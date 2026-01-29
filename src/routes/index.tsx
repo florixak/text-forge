@@ -1,6 +1,6 @@
 import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
-import { InputType } from '@/constants'
+import { InputFormat } from '@/constants'
 import useDebounce from '@/hooks/useDebounce'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -10,8 +10,8 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
-  const [fromType, setFromType] = useState<InputType>('Auto-detect')
-  const [toType, setToType] = useState<InputType>('JSON')
+  const [fromType, setFromType] = useState<InputFormat>('Auto-detect')
+  const [toType, setToType] = useState<InputFormat>('JSON')
   const [value, setValue] = useState<string>('')
   const { debouncedValue } = useDebounce({
     value: value,

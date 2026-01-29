@@ -3,7 +3,7 @@ interface NavLink {
   href: string
 }
 
-export type InputType = (typeof inputTypes)[number]
+export type InputFormat = (typeof inputFormats)[number]
 
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
@@ -11,7 +11,7 @@ const navLinks: NavLink[] = [
   { name: 'Plans', href: '/plans' },
 ]
 
-const inputTypes = [
+const inputFormats = [
   'Auto-detect',
   'JSON',
   'CSV',
@@ -22,7 +22,7 @@ const inputTypes = [
   'XML',
 ] as const
 
-const outputTypes = [
+const outputFormats = [
   'JSON',
   'CSV',
   'YAML',
@@ -59,4 +59,4 @@ const planLimits: Record<Plan, PlanLimits> = {
   },
 } as const
 
-export { navLinks, inputTypes, outputTypes, planLimits }
+export { navLinks, inputFormats, outputFormats, planLimits }

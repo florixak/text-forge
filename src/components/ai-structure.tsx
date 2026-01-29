@@ -1,6 +1,6 @@
 'use client'
 
-import { InputType, outputTypes } from '@/constants'
+import { InputFormat, outputFormats } from '@/constants'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import Output from './output'
@@ -11,8 +11,8 @@ import { Textarea } from './ui/textarea'
 
 const AIStructure = () => {
   const [unstructuredData, setUnstructuredData] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<InputType>(
-    outputTypes[0],
+  const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
+    outputFormats[0],
   )
 
   const handleGenerate = () => {
@@ -41,16 +41,16 @@ const AIStructure = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-0">
           <div className="w-full sm:w-fit">
             <Label
-              htmlFor="output-type-select"
+              htmlFor="output-format-select"
               className="mb-2 uppercase font-medium text-foreground text-sm"
             >
               Output Format
             </Label>
             <FormatSelect
-              placeholder="Select Output Type"
-              defaultValue={outputTypes[0]}
-              inputTypes={outputTypes}
-              id="output-type-select"
+              placeholder="Select Output Format"
+              defaultValue={outputFormats[0]}
+              inputTypes={outputFormats}
+              id="output-format-select"
               selectedFormat={selectedFormat}
               setSelectedFormat={setSelectedFormat}
               className="w-full sm:w-45"

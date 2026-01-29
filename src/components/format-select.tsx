@@ -1,4 +1,4 @@
-import { InputType } from '@/constants'
+import { InputFormat } from '@/constants'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -10,10 +10,10 @@ import {
 
 interface FormatSelectProps {
   placeholder?: string
-  selectedFormat?: InputType
-  setSelectedFormat?: (type: InputType) => void
-  defaultValue?: InputType
-  inputTypes: readonly InputType[]
+  selectedFormat?: InputFormat
+  setSelectedFormat?: (type: InputFormat) => void
+  defaultValue?: InputFormat
+  inputTypes: readonly InputFormat[]
   id?: string
   className?: string
 }
