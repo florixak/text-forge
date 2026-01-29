@@ -1,9 +1,9 @@
-import { InputType, inputTypes, outputTypes } from '@/constants'
+import { InputFormat, inputFormats, outputFormats } from '@/constants'
 import useDebounce from '@/hooks/useDebounce'
 import { authClient } from '@/lib/auth-client'
 import { createServerFn } from '@tanstack/react-start'
 import { ArrowRight, Sparkles } from 'lucide-react'
-import TypeSelect from './type-select'
+import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
@@ -13,21 +13,19 @@ const checkInputType = createServerFn({
 })
   .inputValidator((data: { input: string }) => data)
   .handler(
-    async ({
-      data,
-    }): Promise<{ type: (typeof inputTypes)[number]; valid: boolean }> => {
+    async ({ data }): Promise<{ format: InputFormat; valid: boolean }> => {
       const { input } = data
       // Try JSON
       try {
         JSON.parse(input)
-        return { type: 'JSON', valid: true }
+        return { format: 'JSON', valid: true }
       } catch {}
 
       if (
         /<\?xml[\s\S]*?\?>/.test(input) ||
         /<([a-z][\w-]*)(?:\s[^>]*)?\/?>/i.test(input)
       ) {
-        return { type: 'XML', valid: true }
+        return { format: 'XML', valid: true }
       }
 
       // Try YAML
@@ -35,7 +33,7 @@ const checkInputType = createServerFn({
       yaml.load(input)
       // Avoid false positives: YAML is a superset of JSON, so check for YAML-specific features
       if (/^---|:/.test(input)) {
-        return { type: 'YAML', valid: true }
+        return { format: 'YAML', valid: true }
       }
     } catch {}*/
 
@@ -45,7 +43,7 @@ const checkInputType = createServerFn({
         /^\s*[-*+]\s.+/m.test(input) ||
         /```[\s\S]*?```/m.test(input)
       ) {
-        return { type: 'Markdown', valid: true }
+        return { format: 'Markdown', valid: true }
       }
 
       // HTML: tag pattern
@@ -53,7 +51,7 @@ const checkInputType = createServerFn({
         /<([a-z][\w-]*)(?:\s[^>]*)?>[\s\S]*<\/\1>/i.test(input) ||
         input.trim().startsWith('<!DOCTYPE html')
       ) {
-        return { type: 'HTML', valid: true }
+        return { format: 'HTML', valid: true }
       }
 
       // CSV: at least two lines with same number of commas
@@ -61,26 +59,26 @@ const checkInputType = createServerFn({
       if (lines.length > 1) {
         const commaCounts = lines.map((l) => (l.match(/,/g) || []).length)
         if (commaCounts.every((c) => c === commaCounts[0] && c > 0)) {
-          return { type: 'CSV', valid: true }
+          return { format: 'CSV', valid: true }
         }
       }
 
       if (/^[\s\S]*$/.test(input) && input.trim().length > 0) {
-        return { type: 'Text', valid: true }
+        return { format: 'Text', valid: true }
       }
 
       // Fallback
-      return { type: 'Auto-detect', valid: false }
+      return { format: 'Auto-detect', valid: false }
     },
   )
 
 interface InputEditorProps {
   input: string
   setInput: (input: string) => void
-  fromType: InputType
-  setFromType: (type: InputType) => void
-  toType: InputType
-  setToType: (type: InputType) => void
+  fromType: InputFormat
+  setFromType: (type: InputFormat) => void
+  toType: InputFormat
+  setToType: (type: InputFormat) => void
 }
 
 const InputEditor = ({
@@ -103,11 +101,11 @@ const InputEditor = ({
 
   const handleTypeCheck = async (value: string) => {
     if (fromType !== 'Auto-detect') return
-    const { valid, type: detectedType } = await checkInputType({
+    const { valid, format: detectedFormat } = await checkInputType({
       data: { input: value },
     })
     if (valid) {
-      setFromType(detectedType as InputType)
+      setFromType(detectedFormat as InputFormat)
     }
   }
 
@@ -131,42 +129,42 @@ const InputEditor = ({
       <div className="flex items-center justify-between gap-4 mt-4 w-full">
         <div>
           <Label
-            htmlFor="input-type-select"
+            htmlFor="input-format-select"
             className="mb-2 uppercase font-medium text-foreground text-sm"
           >
-            Input Type
+            Input Format
           </Label>
-          <TypeSelect
-            placeholder="Select Input Type"
-            defaultValue={inputTypes[0]}
-            inputTypes={inputTypes}
-            id="input-type-select"
-            selectedType={fromType}
-            setSelectedType={setFromType}
+          <FormatSelect
+            placeholder="Select Input Format"
+            defaultValue={inputFormats[0]}
+            inputTypes={inputFormats}
+            id="input-format-select"
+            selectedFormat={fromType}
+            setSelectedFormat={setFromType}
           />
         </div>
         <ArrowRight className="text-muted-foreground" />
         <div>
           <Label
-            htmlFor="output-type-select"
+            htmlFor="output-format-select"
             className="mb-2 uppercase font-medium text-foreground text-sm"
           >
-            Output Type
+            Output Format
           </Label>
-          <TypeSelect
-            placeholder="Select Output Type"
-            defaultValue={outputTypes[0]}
-            inputTypes={outputTypes}
-            id="output-type-select"
-            selectedType={toType}
-            setSelectedType={setToType}
+          <FormatSelect
+            placeholder="Select Output Format"
+            defaultValue={outputFormats[0]}
+            inputTypes={outputFormats}
+            id="output-format-select"
+            selectedFormat={toType}
+            setSelectedFormat={setToType}
           />
         </div>
       </div>
       <Textarea
         id="input-textarea"
         placeholder="Enter your text or code here..."
-        className="mt-4 h-120 w-full resize-none"
+        className="mt-4 h-120 w-full resize-none bg-card"
         value={input}
         onChange={(e) => handleValueChange(e.target.value)}
         onKeyDown={(e) => {

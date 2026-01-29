@@ -19,10 +19,12 @@ export const auth = betterAuth({
       plan: {
         type: ['free', 'pro'],
         default: 'free',
+        required: true,
       },
       enabled: {
         type: 'boolean',
         default: true,
+        required: true,
       },
     },
   },
