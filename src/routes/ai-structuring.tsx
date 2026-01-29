@@ -2,7 +2,7 @@ import AIGenerate from '@/components/ai-generate'
 import AIStructure from '@/components/ai-structure'
 import { authMiddleware } from '@/lib/middleware'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import z from 'zod'
+import * as z from 'zod'
 
 const aiStructuringSchema = z.object({
   selected: z.enum(['structure', 'generate']).default('structure'),
