@@ -59,7 +59,7 @@ export function SignUpForm({
           name: value.name,
           callbackURL: '/dashboard',
           plan: 'free',
-          enabled: true,
+          enabled: true, // User is enabled by default
         },
         {
           onSuccess: () => {
