@@ -19,7 +19,7 @@ export default function Header() {
             </div>
           </Link>
         </h1>
-        <nav>
+        <nav className="hidden md:block">
           <ul className="flex gap-8 flex-row items-center justify-between w-full">
             {navLinks.map((link) => (
               <li key={link.href}>
