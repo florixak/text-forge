@@ -58,8 +58,8 @@ export function SignUpForm({
           password: value.password,
           name: value.name,
           callbackURL: '/dashboard',
+          enabled: true,
           plan: 'free',
-          enabled: true, // User is enabled by default
         },
         {
           onSuccess: () => {
