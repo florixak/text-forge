@@ -11,7 +11,9 @@ import { Textarea } from './ui/textarea'
 
 const AIStructure = () => {
   const [unstructuredData, setUnstructuredData] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<InputType>('JSON')
+  const [selectedFormat, setSelectedFormat] = useState<InputType>(
+    outputTypes[0],
+  )
 
   const handleGenerate = () => {
     // TODO: Implement generation logic
