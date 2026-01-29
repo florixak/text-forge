@@ -3,7 +3,7 @@ import useDebounce from '@/hooks/useDebounce'
 import { authClient } from '@/lib/auth-client'
 import { createServerFn } from '@tanstack/react-start'
 import { ArrowRight, Sparkles } from 'lucide-react'
-import TypeSelect from './type-select'
+import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
@@ -131,35 +131,35 @@ const InputEditor = ({
       <div className="flex items-center justify-between gap-4 mt-4 w-full">
         <div>
           <Label
-            htmlFor="input-type-select"
+            htmlFor="input-format-select"
             className="mb-2 uppercase font-medium text-foreground text-sm"
           >
-            Input Type
+            Input Format
           </Label>
-          <TypeSelect
-            placeholder="Select Input Type"
+          <FormatSelect
+            placeholder="Select Input Format"
             defaultValue={inputTypes[0]}
             inputTypes={inputTypes}
-            id="input-type-select"
-            selectedType={fromType}
-            setSelectedType={setFromType}
+            id="input-format-select"
+            selectedFormat={fromType}
+            setSelectedFormat={setFromType}
           />
         </div>
         <ArrowRight className="text-muted-foreground" />
         <div>
           <Label
-            htmlFor="output-type-select"
+            htmlFor="output-format-select"
             className="mb-2 uppercase font-medium text-foreground text-sm"
           >
-            Output Type
+            Output Format
           </Label>
-          <TypeSelect
-            placeholder="Select Output Type"
+          <FormatSelect
+            placeholder="Select Output Format"
             defaultValue={outputTypes[0]}
             inputTypes={outputTypes}
-            id="output-type-select"
-            selectedType={toType}
-            setSelectedType={setToType}
+            id="output-format-select"
+            selectedFormat={toType}
+            setSelectedFormat={setToType}
           />
         </div>
       </div>
