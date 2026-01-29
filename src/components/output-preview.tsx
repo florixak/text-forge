@@ -5,6 +5,7 @@ import { downloadFile } from '@/lib/download'
 import { getFileSize } from '@/lib/utils'
 import { Dot } from 'lucide-react'
 import { Button } from './ui/button'
+import Output from './output'
 
 interface PreviewOutputProps {
   fromType: InputType
@@ -29,11 +30,12 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
         Paste your text or code to begin conversion.
       </p>
       <div>
-        <pre className="mt-4 h-130 marble-gradient rounded-t-md overflow-y-auto">
-          <div className="p-4 font-mono text-sm whitespace-pre-wrap">
-            <code>{error ? error : success ? output : inputText}</code>
-          </div>
-        </pre>
+        <Output
+          input={inputText}
+          output={output || ''}
+          success={success}
+          error={error}
+        />
         <div className="bg-muted/30 w-full h-10 rounded-b-md border p-2 flex items-center gap-2">
           <div className="text-sm text-foreground font-medium flex items-center">
             <Dot
