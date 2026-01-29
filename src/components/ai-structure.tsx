@@ -1,96 +1,80 @@
 'use client'
 
-import { InputType, inputTypes } from '@/constants'
-import { getFileSize } from '@/lib/utils'
-import { Loader2, Sparkles } from 'lucide-react'
+import { InputType, outputTypes } from '@/constants'
+import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import TypeSelect from './type-select'
+import Output from './output'
+import FormatSelect from './format-select'
 import { Button } from './ui/button'
-
-interface AIStructureState {
-  input: string
-  outputType: InputType
-  isLoading: boolean
-  output: string | null
-  error: string | null
-  copied: boolean
-}
+import { Label } from './ui/label'
+import { Textarea } from './ui/textarea'
 
 const AIStructure = () => {
-  const [state, setState] = useState<AIStructureState>({
-    input: '',
-    outputType: 'JSON',
-    isLoading: false,
-    output: null,
-    error: null,
-    copied: false,
-  })
+  const [unstructuredData, setUnstructuredData] = useState('')
+  const [selectedFormat, setSelectedFormat] = useState<InputType>('JSON')
 
-  const handleInputChange = (value: string) => {
-    setState((prevState) => ({
-      ...prevState,
-      input: value,
-    }))
+  const handleGenerate = () => {
+    // TODO: Implement generation logic
+    console.log('Generating structured data...')
+    console.log('Input:', unstructuredData)
+    console.log('Format:', selectedFormat)
   }
 
-  const fileSize = getFileSize(state.output || '')
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Editor */}
-
-        <div>
-          <pre className="mt-4 h-130 marble-gradient rounded-t-md overflow-y-auto">
-            <div className="p-4 font-mono text-sm whitespace-pre-wrap">
-              <code>
-                {state.error
-                  ? state.error
-                  : state.output
-                    ? state.output
-                    : state.input}
-              </code>
-            </div>
-          </pre>
-          <div className="bg-muted/30 w-full h-10 rounded-b-md border p-2 flex items-center gap-2">
-            <div className="text-sm text-muted-foreground font-medium ml-auto">
-              {fileSize}
-            </div>
-          </div>
+    <section className="w-full max-w-4xl mx-auto space-y-6">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="unstructured-input" className="text-sm font-medium">
+            Enter your unstructured data
+          </Label>
+          <Textarea
+            id="unstructured-input"
+            placeholder="Enter your unstructured data here..."
+            value={unstructuredData}
+            onChange={(e) => setUnstructuredData(e.target.value)}
+            className="min-h-75 font-mono bg-card"
+          />
         </div>
-      </div>
 
-      <div className="pt-6">
-        <div className="flex flex-col sm:flex-row items-end gap-4">
-          <div className="flex-1 min-w-0">
-            <label className="text-sm font-medium mb-2 block">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-0">
+          <div className="w-full sm:w-fit">
+            <Label
+              htmlFor="output-type-select"
+              className="mb-2 uppercase font-medium text-foreground text-sm"
+            >
               Output Format
-            </label>
-            <TypeSelect
-              inputTypes={inputTypes}
-              selectedType={state.outputType}
+            </Label>
+            <FormatSelect
+              placeholder="Select Output Type"
+              defaultValue={outputTypes[0]}
+              inputTypes={outputTypes}
+              id="output-type-select"
+              selectedFormat={selectedFormat}
+              setSelectedFormat={setSelectedFormat}
+              className="w-full sm:w-45"
             />
           </div>
           <Button
-            disabled={state.isLoading || !state.input.trim()}
+            onClick={handleGenerate}
+            disabled={!unstructuredData.trim()}
             size="lg"
             className="w-full sm:w-auto"
           >
-            {state.isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Structuring...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Structure
-              </>
-            )}
+            <Sparkles className="w-4 h-4 mr-2" />
+            Structure Data
           </Button>
         </div>
       </div>
-    </div>
+      {
+        // TODO: Display generated structured data conditionally
+        <Output
+          input={unstructuredData}
+          output={''}
+          success={false}
+          error={undefined}
+        />
+      }
+    </section>
   )
 }
 
