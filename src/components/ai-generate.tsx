@@ -1,4 +1,4 @@
-import { InputFormat, outputFormats } from '@/constants'
+import { InputFormat, outputFormats, planLimits } from '@/constants'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import Output from './output'
@@ -6,20 +6,113 @@ import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { generateData } from '@/lib/google-ai'
+import { createServerFn } from '@tanstack/react-start'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { aiUsage } from '@/db/schema'
+import { db } from '@/db'
+import { and, eq } from 'drizzle-orm/sql/expressions/conditions'
+import { authClient } from '@/lib/auth-client'
+
+const generateDataFn = createServerFn({ method: 'POST' })
+  .inputValidator((data: { description: string; format: InputFormat }) => data)
+  .handler(
+    async ({
+      data,
+    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+      const { description, format } = data
+
+      try {
+        const session = await authClient.getSession()
+
+        if (!session.data) {
+          return {
+            output: '',
+            success: false,
+            error: 'User is not authenticated.',
+          }
+        }
+
+        const aiUsageRecord = await db
+          .select()
+          .from(aiUsage)
+          .where(
+            and(
+              eq(aiUsage.userId, session.data.user.id),
+              eq(aiUsage.day, new Date().toISOString().split('T')[0]),
+            ),
+          )
+          .limit(1)
+
+        const userPlanLimit = planLimits[session.data.user.plan]
+
+        if (
+          aiUsageRecord &&
+          aiUsageRecord[0].generate_ai >= userPlanLimit.generate_ai_day
+        ) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
+          }
+        } else {
+          if (!aiUsageRecord.length) {
+            await db.insert(aiUsage).values({
+              userId: session.data.user.id,
+              day: new Date().toISOString().split('T')[0],
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+          }
+        }
+
+        const generatedOutput = await generateData(description, format)
+
+        await db
+          .update(aiUsage)
+          .set({
+            generate_ai: Number(aiUsage.generate_ai) + 1,
+          })
+          .where(eq(aiUsage.userId, session.data.user.id))
+
+        return {
+          output: generatedOutput,
+          success: true,
+          error: null,
+        }
+      } catch (error) {
+        return {
+          output: '',
+          success: false,
+          error: (error as Error).message,
+        }
+      }
+    },
+  )
 
 const AIGenerate = () => {
   const [description, setDescription] = useState('')
   const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
     outputFormats[0],
   )
-  const [generatedData, setGeneratedData] = useState('')
 
-  const handleGenerate = () => {
-    // TODO: Implement generation logic
-    console.log('Generating data...')
-    console.log('Description:', description)
-    console.log('Format:', selectedFormat)
-  }
+  const { data, isSuccess, isPending, mutate } = useMutation({
+    mutationFn: generateDataFn,
+    onSuccess: ({ success, error }) => {
+      if (success) {
+        toast.success('Data structured successfully!')
+      } else {
+        toast.error(error || 'Failed to structure data. Please try again.')
+      }
+    },
+    onError: () => {
+      toast.error('Failed to structure data. Please try again.')
+    },
+  })
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -56,8 +149,10 @@ const AIGenerate = () => {
             />
           </div>
           <Button
-            onClick={handleGenerate}
-            disabled={!description.trim()}
+            onClick={() =>
+              mutate({ data: { description, format: selectedFormat } })
+            }
+            disabled={!description.trim() || isPending}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -66,10 +161,10 @@ const AIGenerate = () => {
           </Button>
         </div>
       </div>
-      {generatedData && generatedData.trim() !== '' ? (
+      {isSuccess && data && data.output.trim() !== '' ? (
         <Output
           input={description}
-          output={generatedData}
+          output={data.output}
           success={true}
           error={undefined}
         />
