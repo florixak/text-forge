@@ -35,8 +35,11 @@ const outputFormats = [
 export type PlanLimits = {
   price: number
   description: string
-  ai_generations_day: number
-  ai_assist_calls: number
+
+  assist_ai_day: number
+  structure_ai_day: number
+  generate_ai_day: number
+
   support: 'community' | 'priority'
 }
 
@@ -46,17 +49,21 @@ const planLimits: Record<Plan, PlanLimits> = {
   free: {
     price: 0,
     description: 'Basic plan for personal use',
-    ai_generations_day: 5,
-    ai_assist_calls: 10,
+    assist_ai_day: 20,
+    structure_ai_day: 20,
+    generate_ai_day: 20,
     support: 'community',
   },
   pro: {
     price: 15,
     description: 'For professionals and small teams',
-    ai_generations_day: 100,
-    ai_assist_calls: 500,
+    assist_ai_day: 500,
+    structure_ai_day: 100,
+    generate_ai_day: 100,
     support: 'priority',
   },
 } as const
 
-export { navLinks, inputFormats, outputFormats, planLimits }
+const MAX_INPUT_LENGTH = 5000
+
+export { navLinks, inputFormats, outputFormats, planLimits, MAX_INPUT_LENGTH }

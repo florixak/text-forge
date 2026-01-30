@@ -45,8 +45,8 @@ const getTodayUsage = createServerFn({ method: 'GET' })
     if (!planConfig) {
       throw new Error('Invalid plan configuration')
     }
-    const limit = Math.max(0, planConfig.ai_generations_day)
-    const used = Math.max(0, todayUsage[0]?.used ?? 0)
+    const limit = Math.max(0, planConfig.assist_ai_day)
+    const used = Math.max(0, todayUsage[0]?.assist_ai ?? 0)
 
     const lastUsedDate = todayUsage[0]?.last_used
       ? new Date(todayUsage[0].last_used)

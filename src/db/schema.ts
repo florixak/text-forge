@@ -96,7 +96,9 @@ export const aiUsage = pgTable(
 
     day: date('day').notNull(),
 
-    used: integer('used').default(0).notNull(),
+    assist_ai: integer('assist_ai').default(0).notNull(),
+    structure_ai: integer('structure_ai').default(0).notNull(),
+    generate_ai: integer('generate_ai').default(0).notNull(),
 
     last_used: timestamp('last_used')
       .defaultNow()
