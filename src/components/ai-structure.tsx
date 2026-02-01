@@ -5,7 +5,7 @@ import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -36,6 +36,19 @@ const structureTextFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
+
+        await db
+          .insert(aiUsage)
+          .values({
+            userId: session.user.id,
+            day: today,
+            assist_ai: 0,
+            structure_ai: 0,
+            generate_ai: 0,
+            words: 0,
+          })
+          .onConflictDoNothing()
+
         const aiUsageRecord = await db
           .select()
           .from(aiUsage)
@@ -56,28 +69,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
             error:
               'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
-        } else {
-          if (!aiUsageRecord.length) {
-            await db.insert(aiUsage).values({
-              userId: session.user.id,
-              day: today,
-              assist_ai: 0,
-              structure_ai: 0,
-              generate_ai: 0,
-              words: 0,
-            })
-          }
         }
 
         const structuredOutput = await structureData(input, format)
 
-        const structureAIUsage =
-          aiUsageRecord.length > 0 ? aiUsageRecord[0].structure_ai || 0 : 0
-
         await db
           .update(aiUsage)
           .set({
-            structure_ai: structureAIUsage + 1,
+            structure_ai: sql`${aiUsage.structure_ai} + 1`,
           })
           .where(
             and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
