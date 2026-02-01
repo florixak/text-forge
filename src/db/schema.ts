@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm'
+import { InferSelectModel, relations } from 'drizzle-orm'
 import {
   pgTable,
   text,
@@ -138,3 +138,5 @@ export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
     references: [user.id],
   }),
 }))
+
+export type AIUsage = InferSelectModel<typeof aiUsage>
