@@ -14,6 +14,7 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { redirect } from '@tanstack/react-router'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { input: string; format: InputFormat }) => data)
@@ -27,11 +28,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
       const { session } = context
 
       if (!session) {
-        return {
-          output: '',
-          success: false,
-          error: 'User is not authenticated.',
-        }
+        throw redirect({ to: '/signin' })
       }
 
       try {
