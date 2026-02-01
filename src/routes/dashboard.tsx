@@ -35,13 +35,13 @@ export const usageQueryOptions = () =>
 const getTodayUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
+    const { user } = context.session || {}
+
+    if (!user) {
+      throw redirect({ to: '/signin' })
+    }
+
     try {
-      const { user } = context.session || {}
-
-      if (!user) {
-        throw redirect({ to: '/signin' })
-      }
-
       const now = new Date()
       const today = now.toISOString().split('T')[0]
       const todayUsage = await db
@@ -109,6 +109,12 @@ export const Route = createFileRoute('/dashboard')({
   },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
+  beforeLoad: async (ctx) => {
+    const session = ctx.serverContext?.session
+    if (!session) {
+      throw redirect({ to: '/signin' })
+    }
+  },
   loader: async ({ context }) => {
     return context.queryClient.ensureQueryData(usageQueryOptions())
   },
@@ -257,7 +263,7 @@ function RouteComponent() {
               </p>
             </div>
             <p className="font-semibold text-base">
-              {usage.assist.used} / {usage.assist.limit} Generations
+              {usage.assist.used} / {usage.assist.limit} Assists
             </p>
           </div>
           <div className="flex items-center justify-between">
@@ -268,7 +274,7 @@ function RouteComponent() {
               </p>
             </div>
             <p className="font-semibold text-base">
-              {usage.structure.used} / {usage.structure.limit} Generations
+              {usage.structure.used} / {usage.structure.limit} Structurings
             </p>
           </div>
           <div className="flex items-center justify-between">
