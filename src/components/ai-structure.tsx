@@ -1,54 +1,53 @@
 import { InputFormat, outputFormats, planLimits } from '@/constants'
+import { db } from '@/db'
+import { aiUsage } from '@/db/schema'
+import { structureData } from '@/lib/google-ai'
+import { authMiddleware } from '@/lib/middleware'
+import { useMutation } from '@tanstack/react-query'
+import { createServerFn } from '@tanstack/react-start'
+import { and, eq } from 'drizzle-orm'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import Output from './output'
+import { toast } from 'sonner'
 import FormatSelect from './format-select'
+import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { createServerFn } from '@tanstack/react-start'
-import { structureData } from '@/lib/google-ai'
-import { toast } from 'sonner'
-import { useMutation } from '@tanstack/react-query'
-import { db } from '@/db'
-import { aiUsage } from '@/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { authClient } from '@/lib/auth-client'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { input: string; format: InputFormat }) => data)
+  .middleware([authMiddleware])
   .handler(
     async ({
       data,
+      context,
     }): Promise<{ success: boolean; output: string; error: string | null }> => {
       const { input, format } = data
+      const { session } = context
+
+      if (!session) {
+        return {
+          output: '',
+          success: false,
+          error: 'User is not authenticated.',
+        }
+      }
 
       try {
-        const session = await authClient.getSession()
-
-        if (!session.data) {
-          return {
-            output: '',
-            success: false,
-            error: 'User is not authenticated.',
-          }
-        }
-
+        const today = new Date().toISOString().split('T')[0]
         const aiUsageRecord = await db
           .select()
           .from(aiUsage)
           .where(
-            and(
-              eq(aiUsage.userId, session.data.user.id),
-              eq(aiUsage.day, new Date().toISOString().split('T')[0]),
-            ),
+            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
           )
           .limit(1)
 
-        const userPlanLimit = planLimits[session.data.user.plan]
+        const userPlanLimit = planLimits[session.user.plan]
 
         if (
-          aiUsageRecord &&
+          aiUsageRecord.length > 0 &&
           aiUsageRecord[0].structure_ai >= userPlanLimit.structure_ai_day
         ) {
           return {
@@ -60,8 +59,8 @@ const structureTextFn = createServerFn({ method: 'POST' })
         } else {
           if (!aiUsageRecord.length) {
             await db.insert(aiUsage).values({
-              userId: session.data.user.id,
-              day: new Date().toISOString().split('T')[0],
+              userId: session.user.id,
+              day: today,
               assist_ai: 0,
               structure_ai: 0,
               generate_ai: 0,
@@ -72,12 +71,17 @@ const structureTextFn = createServerFn({ method: 'POST' })
 
         const structuredOutput = await structureData(input, format)
 
+        const structureAIUsage =
+          aiUsageRecord.length > 0 ? aiUsageRecord[0].structure_ai || 0 : 0
+
         await db
           .update(aiUsage)
           .set({
-            structure_ai: Number(aiUsage.structure_ai) + 1,
+            structure_ai: structureAIUsage + 1,
           })
-          .where(eq(aiUsage.userId, session.data.user.id))
+          .where(
+            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+          )
 
         return { output: structuredOutput, success: true, error: null }
       } catch (error: any) {
