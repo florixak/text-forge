@@ -31,7 +31,6 @@ export const auth = betterAuth({
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path.startsWith('/sign-up')) {
-        console.log('Signup detected, initializing AI usage for user')
         const newSession = ctx.context.newSession
         if (newSession) {
           await db.insert(aiUsage).values({
@@ -43,8 +42,6 @@ export const auth = betterAuth({
             words: 0,
           })
         }
-      } else {
-        console.log('No action for path:', ctx.path)
       }
     }),
   },
