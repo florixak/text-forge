@@ -18,6 +18,7 @@ import { aiUsage } from '@/db/schema'
 import { db } from '@/db'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { eq, and, sql } from 'drizzle-orm'
+import { toast } from 'sonner'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -195,11 +196,11 @@ const InputEditor = ({
       if (success) {
         setInput(output)
       } else {
-        console.error('AI Assist Error:', error)
+        toast.error(error || 'AI Assist failed. Please try again.')
       }
     },
     onError: (error) => {
-      console.error('AI Assist Mutation Error:', error)
+      toast.error(error.message || 'AI Assist failed. Please try again.')
     },
   })
 
