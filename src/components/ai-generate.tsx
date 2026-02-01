@@ -5,7 +5,6 @@ import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq } from 'drizzle-orm/sql/expressions/conditions'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -14,6 +13,7 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { sql, eq, and } from 'drizzle-orm'
 
 const generateDataFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { description: string; format: InputFormat }) => data)
@@ -36,6 +36,19 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
+
+        await db
+          .insert(aiUsage)
+          .values({
+            userId: session.user.id,
+            day: today,
+            assist_ai: 0,
+            structure_ai: 0,
+            generate_ai: 0,
+            words: 0,
+          })
+          .onConflictDoNothing()
+
         const aiUsageRecord = await db
           .select()
           .from(aiUsage)
@@ -56,28 +69,13 @@ const generateDataFn = createServerFn({ method: 'POST' })
             error:
               'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
-        } else {
-          if (!aiUsageRecord.length) {
-            await db.insert(aiUsage).values({
-              userId: session.user.id,
-              day: today,
-              assist_ai: 0,
-              structure_ai: 0,
-              generate_ai: 0,
-              words: 0,
-            })
-          }
         }
-
         const generatedOutput = await generateData(description, format)
-
-        const generateAIUsage =
-          aiUsageRecord.length > 0 ? aiUsageRecord[0].generate_ai || 0 : 0
 
         await db
           .update(aiUsage)
           .set({
-            generate_ai: generateAIUsage + 1,
+            generate_ai: sql`${aiUsage.generate_ai} + 1`,
           })
           .where(
             and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
