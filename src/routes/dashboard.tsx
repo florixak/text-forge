@@ -156,13 +156,21 @@ function RouteComponent() {
         </Card>
         <Card className="p-4 flex-1">
           <div className="flex items-center">
-            <div className="bg-green-200/50 p-2 rounded-md">
-              <ShieldCheck className="text-green-400" />
+            <div
+              className={`${user.enabled ? (user.emailVerified ? 'bg-green-200/50' : 'bg-yellow-200/50') : 'bg-red-200/50'} p-2 rounded-md`}
+            >
+              <ShieldCheck
+                className={`${user.enabled ? (user.emailVerified ? 'text-green-400' : 'text-yellow-400') : 'text-red-400'}`}
+              />
             </div>
           </div>
           <div className="flex flex-col">
             <h4 className="text-lg font-bold">
-              {user.enabled ? 'Active' : 'Disabled'}
+              {user.enabled
+                ? user.emailVerified
+                  ? 'Active'
+                  : 'Unverified'
+                : 'Disabled'}
             </h4>
             <p className="text-sm text-muted-foreground">Account Status</p>
           </div>
