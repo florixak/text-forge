@@ -32,7 +32,14 @@ export async function assistText(
     )
     const end = text.substring(text.length - 300)
 
-    return `${start}\n...[truncated ${text.length - maxLength} characters]...\n${middle}\n...[truncated]...\n${end}`
+    const preservedLength = start.length + middle.length + end.length
+    const truncatedCount = text.length - preservedLength
+
+    return `${start}
+...[truncated ${truncatedCount} characters]...
+${middle}
+...[truncated]...
+${end}`
   }
 
   const sample = getSample(input, MAX_INPUT_LENGTH)
