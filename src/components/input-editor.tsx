@@ -1,4 +1,9 @@
-import { InputFormat, inputFormats, outputFormats } from '@/constants'
+import {
+  InputFormat,
+  inputFormats,
+  outputFormats,
+  planLimits,
+} from '@/constants'
 import useDebounce from '@/hooks/useDebounce'
 import { authClient } from '@/lib/auth-client'
 import { createServerFn } from '@tanstack/react-start'
@@ -9,6 +14,10 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 import { assistText } from '@/lib/google-ai'
 import { useMutation } from '@tanstack/react-query'
+import { aiUsage } from '@/db/schema'
+import { and, eq } from 'drizzle-orm/sql/expressions/conditions'
+import { db } from '@/db'
+import { authOptionalMiddleware } from '@/lib/middleware'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -17,14 +26,70 @@ const aiAssistFn = createServerFn({
     (data: { input: string; fromType: InputFormat; toType: InputFormat }) =>
       data,
   )
+  .middleware([authOptionalMiddleware])
   .handler(
     async ({
       data,
+      context,
     }): Promise<{ success: boolean; output: string; error: string | null }> => {
       const { input, fromType, toType } = data
+      const { session } = context
+
+      if (!session) {
+        return {
+          output: '',
+          success: false,
+          error: 'User is not authenticated.',
+        }
+      }
 
       try {
+        const today = new Date().toISOString().split('T')[0]
+        const aiUsageRecord = await db
+          .select()
+          .from(aiUsage)
+          .where(
+            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+          )
+          .limit(1)
+
+        const userPlanLimit = planLimits[session.user.plan]
+
+        if (
+          aiUsageRecord.length > 0 &&
+          aiUsageRecord[0].assist_ai >= userPlanLimit.assist_ai_day
+        ) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
+          }
+        } else {
+          if (!aiUsageRecord.length) {
+            await db.insert(aiUsage).values({
+              userId: session.user.id,
+              day: today,
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+          }
+        }
+
         const assistedOutput = await assistText(input, fromType, toType)
+
+        const assistAIUsage = aiUsageRecord[0].assist_ai || 0
+
+        await db
+          .update(aiUsage)
+          .set({
+            assist_ai: assistAIUsage + 1,
+          })
+          .where(
+            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+          )
 
         return {
           output: assistedOutput,
