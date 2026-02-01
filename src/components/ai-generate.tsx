@@ -36,33 +36,42 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
-
-        await db
-          .insert(aiUsage)
-          .values({
-            userId: session.user.id,
-            day: today,
-            assist_ai: 0,
-            structure_ai: 0,
-            generate_ai: 0,
-            words: 0,
-          })
-          .onConflictDoNothing()
-
-        const aiUsageRecord = await db
-          .select()
-          .from(aiUsage)
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-          )
-          .limit(1)
-
         const userPlanLimit = planLimits[session.user.plan]
 
-        if (
-          aiUsageRecord.length > 0 &&
-          aiUsageRecord[0].generate_ai >= userPlanLimit.generate_ai_day
-        ) {
+        const quotaReserved = await db.transaction(async (tx) => {
+          await tx
+            .insert(aiUsage)
+            .values({
+              userId: session.user.id,
+              day: today,
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+            .onConflictDoNothing()
+
+          const updateResult = await tx
+            .update(aiUsage)
+            .set({
+              generate_ai: sql`${aiUsage.generate_ai} + 1`,
+            })
+            .where(
+              and(
+                eq(aiUsage.userId, session.user.id),
+                eq(aiUsage.day, today),
+                sql`${aiUsage.generate_ai} < ${userPlanLimit.generate_ai_day}`,
+              ),
+            )
+
+          if (!updateResult.rowCount) {
+            return false
+          }
+
+          return updateResult.rowCount > 0
+        })
+
+        if (!quotaReserved) {
           return {
             output: '',
             success: false,
@@ -70,16 +79,8 @@ const generateDataFn = createServerFn({ method: 'POST' })
               'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
         }
-        const generatedOutput = await generateData(description, format)
 
-        await db
-          .update(aiUsage)
-          .set({
-            generate_ai: sql`${aiUsage.generate_ai} + 1`,
-          })
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-          )
+        const generatedOutput = await generateData(description, format)
 
         return {
           output: generatedOutput,

@@ -33,33 +33,42 @@ const structureTextFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
-
-        await db
-          .insert(aiUsage)
-          .values({
-            userId: session.user.id,
-            day: today,
-            assist_ai: 0,
-            structure_ai: 0,
-            generate_ai: 0,
-            words: 0,
-          })
-          .onConflictDoNothing()
-
-        const aiUsageRecord = await db
-          .select()
-          .from(aiUsage)
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-          )
-          .limit(1)
-
         const userPlanLimit = planLimits[session.user.plan]
 
-        if (
-          aiUsageRecord.length > 0 &&
-          aiUsageRecord[0].structure_ai >= userPlanLimit.structure_ai_day
-        ) {
+        const quotaReserved = await db.transaction(async (tx) => {
+          await tx
+            .insert(aiUsage)
+            .values({
+              userId: session.user.id,
+              day: today,
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+            .onConflictDoNothing()
+
+          const updateResult = await tx
+            .update(aiUsage)
+            .set({
+              structure_ai: sql`${aiUsage.structure_ai} + 1`,
+            })
+            .where(
+              and(
+                eq(aiUsage.userId, session.user.id),
+                eq(aiUsage.day, today),
+                sql`${aiUsage.structure_ai} < ${userPlanLimit.structure_ai_day}`,
+              ),
+            )
+
+          if (!updateResult.rowCount) {
+            return false
+          }
+
+          return updateResult.rowCount > 0
+        })
+
+        if (!quotaReserved) {
           return {
             output: '',
             success: false,
@@ -69,15 +78,6 @@ const structureTextFn = createServerFn({ method: 'POST' })
         }
 
         const structuredOutput = await structureData(input, format)
-
-        await db
-          .update(aiUsage)
-          .set({
-            structure_ai: sql`${aiUsage.structure_ai} + 1`,
-          })
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-          )
 
         return { output: structuredOutput, success: true, error: null }
       } catch (error: any) {
