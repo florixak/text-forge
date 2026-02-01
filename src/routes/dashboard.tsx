@@ -6,7 +6,8 @@ import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
-import { capitalizeFirstLetter } from '@/lib/utils'
+import { capitalizeFirstLetter, formatLimit } from '@/lib/utils'
+import { queryOptions } from '@tanstack/react-query'
 import {
   createFileRoute,
   Link,
@@ -23,57 +24,81 @@ import {
   TextAlignStart,
 } from 'lucide-react'
 
+export const usageQueryOptions = () =>
+  queryOptions({
+    queryKey: ['usage', 'today'],
+    queryFn: async () => {
+      return await getTodayUsage()
+    },
+  })
+
 const getTodayUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    const { user } = context.session || {}
+    try {
+      const { user } = context.session || {}
 
-    if (!user) {
-      throw redirect({ to: '/signin' })
-    }
+      if (!user) {
+        throw redirect({ to: '/signin' })
+      }
 
-    const now = new Date()
-    const today = now.toISOString().split('T')[0]
-    const todayUsage = await db
-      .select()
-      .from(aiUsage)
-      .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
-      .limit(1)
+      const now = new Date()
+      const today = now.toISOString().split('T')[0]
+      const todayUsage = await db
+        .select()
+        .from(aiUsage)
+        .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
+        .limit(1)
 
-    const planKey = user.plan as Plan
-    const planConfig = planLimits[planKey]
-    if (!planConfig) {
-      throw new Error('Invalid plan configuration')
-    }
-    const limit = Math.max(0, planConfig.assist_ai_day)
-    const used = Math.max(0, todayUsage[0]?.assist_ai ?? 0)
+      const planKey = user.plan as Plan
+      const planConfig = planLimits[planKey]
+      if (!planConfig) {
+        throw new Error('Invalid plan configuration')
+      }
+      const lastUsedDate = todayUsage[0]?.last_used
+        ? new Date(todayUsage[0].last_used)
+        : null
+      const last_used = lastUsedDate
+        ? Math.max(
+            0,
+            Math.floor(
+              (now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60),
+            ),
+          )
+        : null
 
-    const lastUsedDate = todayUsage[0]?.last_used
-      ? new Date(todayUsage[0].last_used)
-      : null
-    const last_used = lastUsedDate
-      ? Math.max(
-          0,
-          Math.floor(
-            (now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60),
-          ),
-        )
-      : null
+      const words = todayUsage[0]?.words ?? 0
 
-    const words = todayUsage[0]?.words ?? 0
-    const remaining = Math.max(0, limit - used)
-    const percentage = limit > 0 ? Math.min(100, (used / limit) * 100) : 0
+      const assistLimit = formatLimit(
+        planConfig,
+        todayUsage[0] || {},
+        'assist_ai',
+      )
+      const structureLimit = formatLimit(
+        planConfig,
+        todayUsage[0] || {},
+        'structure_ai',
+      )
+      const generateLimit = formatLimit(
+        planConfig,
+        todayUsage[0] || {},
+        'generate_ai',
+      )
 
-    return {
-      user,
-      usage: {
-        used,
-        limit,
+      const usage = {
         words,
-        remaining,
-        percentage,
         last_used,
-      },
+        assist: assistLimit,
+        structure: structureLimit,
+        generate: generateLimit,
+      }
+
+      return {
+        user,
+        usage,
+      }
+    } catch (error) {
+      throw new Error('Failed to fetch usage data')
     }
   })
 
@@ -84,8 +109,8 @@ export const Route = createFileRoute('/dashboard')({
   },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
-  loader: async () => {
-    return await getTodayUsage()
+  loader: async ({ context }) => {
+    return context.queryClient.ensureQueryData(usageQueryOptions())
   },
 })
 
@@ -139,15 +164,17 @@ function RouteComponent() {
           <div className="flex flex-col">
             <div className="flex items-center justify-between">
               <h4 className="text-lg font-bold">
-                {usage.used} / {usage.limit} used
+                {usage.assist.used} / {usage.assist.limit} used
               </h4>
-              <span className="text-xs">{Math.round(usage.percentage)}%</span>
+              <span className="text-xs">
+                {Math.round(usage.assist.percentage)}%
+              </span>
             </div>
 
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-2 bg-primary"
-                style={{ width: `${usage.percentage}%` }}
+                style={{ width: `${usage.assist.percentage}%` }}
               ></div>
             </div>
 
@@ -224,12 +251,36 @@ function RouteComponent() {
         <CardContent className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
-              <h5>Daily Limit</h5>
+              <h5>Daily AI Assist</h5>
               <p className="text-sm text-muted-foreground">
                 Standard for {user.plan} tier users
               </p>
             </div>
-            <p className="font-semibold text-base">{usage.limit} Generations</p>
+            <p className="font-semibold text-base">
+              {usage.assist.used} / {usage.assist.limit} Generations
+            </p>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h5>Daily AI Structuring</h5>
+              <p className="text-sm text-muted-foreground">
+                Standard for {user.plan} tier users
+              </p>
+            </div>
+            <p className="font-semibold text-base">
+              {usage.structure.used} / {usage.structure.limit} Generations
+            </p>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h5>Daily AI Generations</h5>
+              <p className="text-sm text-muted-foreground">
+                Standard for {user.plan} tier users
+              </p>
+            </div>
+            <p className="font-semibold text-base">
+              {usage.generate.used} / {usage.generate.limit} Generations
+            </p>
           </div>
           <div className="flex items-center justify-between">
             <div>
