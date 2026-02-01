@@ -64,6 +64,6 @@ const planLimits: Record<Plan, PlanLimits> = {
   },
 } as const
 
-const MAX_INPUT_LENGTH = 5000
+const MAX_INPUT_LENGTH = 1000
 
 export { navLinks, inputFormats, outputFormats, planLimits, MAX_INPUT_LENGTH }
