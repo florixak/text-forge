@@ -1,4 +1,7 @@
-const assistPrompt = `Suggest clear, concise improvements to the user's text.`
+import { InputFormat } from '.'
+
+const assistPrompt = (fromFormat: InputFormat, toFormat: InputFormat) =>
+  `Give few, short, clear tips to convert from ${fromFormat} to ${toFormat}. Do not provide the converted data, only the tips.`
 
 const structurePrompt = (format: string) =>
   `Convert text into structured ${format}. Return only valid ${format} data, without any extra text.`
