@@ -7,6 +7,39 @@ import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { assistText } from '@/lib/google-ai'
+import { useMutation } from '@tanstack/react-query'
+
+const aiAssistFn = createServerFn({
+  method: 'POST',
+})
+  .inputValidator(
+    (data: { input: string; fromType: InputFormat; toType: InputFormat }) =>
+      data,
+  )
+  .handler(
+    async ({
+      data,
+    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+      const { input, fromType, toType } = data
+
+      try {
+        const assistedOutput = await assistText(input, fromType, toType)
+
+        return {
+          output: assistedOutput,
+          success: true,
+          error: null,
+        }
+      } catch (error) {
+        return {
+          output: '',
+          success: false,
+          error: (error as Error).message,
+        }
+      }
+    },
+  )
 
 const checkInputType = createServerFn({
   method: 'POST',
@@ -90,6 +123,20 @@ const InputEditor = ({
   setToType,
 }: InputEditorProps) => {
   const { data } = authClient.useSession()
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: aiAssistFn,
+    onSuccess: ({ success, output, error }) => {
+      if (success) {
+        setInput(output)
+      } else {
+        console.error('AI Assist Error:', error)
+      }
+    },
+    onError: (error) => {
+      console.error('AI Assist Mutation Error:', error)
+    },
+  })
 
   useDebounce({
     value: input,
@@ -196,7 +243,11 @@ const InputEditor = ({
               Sign in to use AI Assist
             </span>
           )}
-          <Button variant="outline" disabled={!loggedIn}>
+          <Button
+            variant="outline"
+            disabled={!loggedIn || input.trim() === '' || isPending}
+            onClick={() => mutate({ data: { input, fromType, toType } })}
+          >
             <Sparkles />
             AI Assist
           </Button>
