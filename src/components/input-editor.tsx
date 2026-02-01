@@ -15,9 +15,9 @@ import { Textarea } from './ui/textarea'
 import { assistText } from '@/lib/google-ai'
 import { useMutation } from '@tanstack/react-query'
 import { aiUsage } from '@/db/schema'
-import { and, eq } from 'drizzle-orm/sql/expressions/conditions'
 import { db } from '@/db'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { eq, and, sql } from 'drizzle-orm'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -45,6 +45,19 @@ const aiAssistFn = createServerFn({
 
       try {
         const today = new Date().toISOString().split('T')[0]
+
+        await db
+          .insert(aiUsage)
+          .values({
+            userId: session.user.id,
+            day: today,
+            assist_ai: 0,
+            structure_ai: 0,
+            generate_ai: 0,
+            words: 0,
+          })
+          .onConflictDoNothing()
+
         const aiUsageRecord = await db
           .select()
           .from(aiUsage)
@@ -65,27 +78,14 @@ const aiAssistFn = createServerFn({
             error:
               'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
-        } else {
-          if (!aiUsageRecord.length) {
-            await db.insert(aiUsage).values({
-              userId: session.user.id,
-              day: today,
-              assist_ai: 0,
-              structure_ai: 0,
-              generate_ai: 0,
-              words: 0,
-            })
-          }
         }
 
         const assistedOutput = await assistText(input, fromType, toType)
 
-        const assistAIUsage = aiUsageRecord[0].assist_ai || 0
-
         await db
           .update(aiUsage)
           .set({
-            assist_ai: assistAIUsage + 1,
+            assist_ai: sql`${aiUsage.assist_ai} + 1`,
           })
           .where(
             and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
