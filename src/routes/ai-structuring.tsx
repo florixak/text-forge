@@ -1,7 +1,7 @@
 import AIGenerate from '@/components/ai-generate'
 import AIStructure from '@/components/ai-structure'
 import { authMiddleware } from '@/lib/middleware'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
 const aiStructuringSchema = z.object({
@@ -14,12 +14,6 @@ export const Route = createFileRoute('/ai-structuring')({
     middleware: [authMiddleware],
   },
   validateSearch: aiStructuringSchema,
-  beforeLoad: async (ctx) => {
-    const session = ctx.serverContext?.session
-    if (!session) {
-      throw redirect({ to: '/signin' })
-    }
-  },
 })
 
 function RouteComponent() {

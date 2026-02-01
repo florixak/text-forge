@@ -109,12 +109,6 @@ export const Route = createFileRoute('/dashboard')({
   },
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
-  beforeLoad: async (ctx) => {
-    const session = ctx.serverContext?.session
-    if (!session) {
-      throw redirect({ to: '/signin' })
-    }
-  },
   loader: async ({ context }) => {
     return context.queryClient.ensureQueryData(usageQueryOptions())
   },
