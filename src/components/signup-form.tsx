@@ -1,5 +1,3 @@
-import { useForm } from '@tanstack/react-form'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -17,10 +15,12 @@ import {
   FieldSeparator,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import * as z from 'zod'
-import { toast } from 'sonner'
 import { authClient } from '@/lib/auth-client'
+import { cn } from '@/lib/utils'
+import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import * as z from 'zod'
 
 const formSchema = z
   .object({

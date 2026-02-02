@@ -1,4 +1,11 @@
-import { InputFormat, inputFormats, outputFormats } from '@/constants'
+import {
+  InputFormat,
+  inputFormats,
+  MAX_INPUT_LENGTH,
+  OutputFormat,
+  outputFormats,
+  planLimits,
+} from '@/constants'
 import useDebounce from '@/hooks/useDebounce'
 import { authClient } from '@/lib/auth-client'
 import { createServerFn } from '@tanstack/react-start'
@@ -7,6 +14,137 @@ import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { assistText } from '@/lib/google-ai'
+import { useMutation } from '@tanstack/react-query'
+import { aiUsage } from '@/db/schema'
+import { db } from '@/db'
+import { authOptionalMiddleware } from '@/lib/middleware'
+import { eq, and, sql } from 'drizzle-orm'
+import { toast } from 'sonner'
+
+const aiAssistFn = createServerFn({
+  method: 'POST',
+})
+  .inputValidator(
+    (data: { input: string; fromType: InputFormat; toType: OutputFormat }) => {
+      if (!outputFormats.includes(data.toType)) {
+        throw new Error('Invalid output format.')
+      }
+      if (!inputFormats.includes(data.fromType)) {
+        throw new Error('Invalid input format.')
+      }
+      const input = data.input.trim()
+      if (input.length === 0) {
+        throw new Error('Input is required.')
+      }
+      if (input.length > MAX_INPUT_LENGTH) {
+        throw new Error(
+          `AI assist can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
+        )
+      }
+
+      return { ...data, input }
+    },
+  )
+  .middleware([authOptionalMiddleware])
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+      const { input, fromType, toType } = data
+      const { session } = context
+
+      if (!session) {
+        return {
+          output: '',
+          success: false,
+          error: 'User is not authenticated.',
+        }
+      }
+
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const userPlanLimit = planLimits[session.user.plan]
+
+        if (!userPlanLimit) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
+        const quotaReserved = await db.transaction(async (tx) => {
+          await tx
+            .insert(aiUsage)
+            .values({
+              userId: session.user.id,
+              day: today,
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+            .onConflictDoNothing()
+
+          const updateResult = await tx
+            .update(aiUsage)
+            .set({
+              structure_ai: sql`${aiUsage.structure_ai} + 1`,
+            })
+            .where(
+              and(
+                eq(aiUsage.userId, session.user.id),
+                eq(aiUsage.day, today),
+                sql`${aiUsage.structure_ai} < ${userPlanLimit.structure_ai_day}`,
+              ),
+            )
+
+          if (!updateResult.rowCount) {
+            return false
+          }
+
+          return updateResult.rowCount > 0
+        })
+
+        if (!quotaReserved) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
+          }
+        }
+
+        try {
+          const assistedOutput = await assistText(input, fromType, toType)
+
+          return { output: assistedOutput, success: true, error: null }
+        } catch (aiError) {
+          await db
+            .update(aiUsage)
+            .set({
+              assist_ai: sql`${aiUsage.assist_ai} - 1`,
+            })
+            .where(
+              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+            )
+
+          throw new Error(
+            'AI structuring failed: ' + (aiError as Error).message,
+          )
+        }
+      } catch (error) {
+        return {
+          output: '',
+          success: false,
+          error: 'AI assist failed, please try again later.',
+        }
+      }
+    },
+  )
 
 const checkInputType = createServerFn({
   method: 'POST',
@@ -77,8 +215,8 @@ interface InputEditorProps {
   setInput: (input: string) => void
   fromType: InputFormat
   setFromType: (type: InputFormat) => void
-  toType: InputFormat
-  setToType: (type: InputFormat) => void
+  toType: OutputFormat
+  setToType: (type: OutputFormat) => void
 }
 
 const InputEditor = ({
@@ -90,6 +228,20 @@ const InputEditor = ({
   setToType,
 }: InputEditorProps) => {
   const { data } = authClient.useSession()
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: aiAssistFn,
+    onSuccess: ({ success, output, error }) => {
+      if (success) {
+        setInput(output)
+      } else {
+        toast.error(error || 'AI Assist failed. Please try again.')
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || 'AI Assist failed. Please try again.')
+    },
+  })
 
   useDebounce({
     value: input,
@@ -105,7 +257,7 @@ const InputEditor = ({
       data: { input: value },
     })
     if (valid) {
-      setFromType(detectedFormat as InputFormat)
+      setFromType(detectedFormat)
     }
   }
 
@@ -134,7 +286,7 @@ const InputEditor = ({
           >
             Input Format
           </Label>
-          <FormatSelect
+          <FormatSelect<InputFormat>
             placeholder="Select Input Format"
             defaultValue={inputFormats[0]}
             inputTypes={inputFormats}
@@ -151,7 +303,7 @@ const InputEditor = ({
           >
             Output Format
           </Label>
-          <FormatSelect
+          <FormatSelect<OutputFormat>
             placeholder="Select Output Format"
             defaultValue={outputFormats[0]}
             inputTypes={outputFormats}
@@ -196,7 +348,11 @@ const InputEditor = ({
               Sign in to use AI Assist
             </span>
           )}
-          <Button variant="outline" disabled={!loggedIn}>
+          <Button
+            variant="outline"
+            disabled={!loggedIn || input.trim() === '' || isPending}
+            onClick={() => mutate({ data: { input, fromType, toType } })}
+          >
             <Sparkles />
             AI Assist
           </Button>

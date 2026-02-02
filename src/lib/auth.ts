@@ -1,7 +1,7 @@
-import { betterAuth } from 'better-auth'
-import { tanstackStartCookies } from 'better-auth/tanstack-start'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { db } from '@/db'
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { tanstackStartCookies } from 'better-auth/tanstack-start'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -18,16 +18,31 @@ export const auth = betterAuth({
     additionalFields: {
       plan: {
         type: ['free', 'pro'],
-        default: 'free',
         required: true,
       },
       enabled: {
         type: 'boolean',
-        default: true,
         required: true,
       },
     },
   },
+  /*hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.startsWith('/sign-up')) {
+        const newSession = ctx.context.newSession
+        if (newSession) {
+          await db.insert(aiUsage).values({
+            userId: newSession.user.id,
+            day: new Date().toISOString().split('T')[0],
+            assist_ai: 0,
+            structure_ai: 0,
+            generate_ai: 0,
+            words: 0,
+          })
+        }
+      }
+    }),
+  },*/
 })
 
 export type Auth = typeof auth

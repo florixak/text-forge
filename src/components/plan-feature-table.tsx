@@ -26,19 +26,6 @@ const PlanFeatureTable = ({ plans, selected }: PlanFeatureTableProps) => {
       <tbody>
         <tr className="border-t border-border">
           <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
-            AI Generations per Day
-          </td>
-          {plans.map(([plan, limits]) => (
-            <td
-              key={plan}
-              className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              {limits.ai_generations_day}
-            </td>
-          ))}
-        </tr>
-        <tr className="border-t border-border">
-          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
             AI Assist Calls
           </td>
           {plans.map(([plan, limits]) => (
@@ -46,7 +33,33 @@ const PlanFeatureTable = ({ plans, selected }: PlanFeatureTableProps) => {
               key={plan}
               className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
             >
-              {limits.ai_assist_calls}
+              {limits.assist_ai_day}
+            </td>
+          ))}
+        </tr>
+        <tr className="border-t border-border">
+          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
+            AI Structure Calls
+          </td>
+          {plans.map(([plan, limits]) => (
+            <td
+              key={plan}
+              className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              {limits.structure_ai_day}
+            </td>
+          ))}
+        </tr>
+        <tr className="border-t border-border">
+          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
+            AI Generate Calls
+          </td>
+          {plans.map(([plan, limits]) => (
+            <td
+              key={plan}
+              className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              {limits.generate_ai_day}
             </td>
           ))}
         </tr>

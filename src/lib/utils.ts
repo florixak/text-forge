@@ -1,3 +1,5 @@
+import { PlanLimits } from '@/constants'
+import { AIUsage } from '@/db/schema'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -27,4 +29,19 @@ export const formatCurrency = (amount: number): string => {
     style: 'currency',
     currency: 'USD',
   }).format(amount)
+}
+
+export const formatLimit = (
+  planConfig: PlanLimits,
+  todayUsage: AIUsage,
+  type: 'assist_ai' | 'structure_ai' | 'generate_ai',
+) => {
+  const assistLimit = Math.max(0, planConfig[`${type}_day`])
+  const used = Math.max(0, todayUsage[type] ?? 0)
+
+  const remaining = Math.max(0, assistLimit - used)
+  const percentage =
+    assistLimit > 0 ? Math.min(100, (used / assistLimit) * 100) : 0
+
+  return { used, limit: assistLimit, remaining, percentage }
 }

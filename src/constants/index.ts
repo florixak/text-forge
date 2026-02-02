@@ -4,6 +4,7 @@ interface NavLink {
 }
 
 export type InputFormat = (typeof inputFormats)[number]
+export type OutputFormat = (typeof outputFormats)[number]
 
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
@@ -35,9 +36,13 @@ const outputFormats = [
 export type PlanLimits = {
   price: number
   description: string
-  ai_generations_day: number
-  ai_assist_calls: number
+
+  assist_ai_day: number
+  structure_ai_day: number
+  generate_ai_day: number
+
   support: 'community' | 'priority'
+  max_input_length: number
 }
 
 export type Plan = 'free' | 'pro'
@@ -46,17 +51,23 @@ const planLimits: Record<Plan, PlanLimits> = {
   free: {
     price: 0,
     description: 'Basic plan for personal use',
-    ai_generations_day: 5,
-    ai_assist_calls: 10,
+    assist_ai_day: 20,
+    structure_ai_day: 15,
+    generate_ai_day: 10,
     support: 'community',
+    max_input_length: 1000,
   },
   pro: {
-    price: 15,
+    price: 12.99,
     description: 'For professionals and small teams',
-    ai_generations_day: 100,
-    ai_assist_calls: 500,
+    assist_ai_day: 100,
+    structure_ai_day: 75,
+    generate_ai_day: 50,
     support: 'priority',
+    max_input_length: 10000,
   },
 } as const
 
-export { navLinks, inputFormats, outputFormats, planLimits }
+const MAX_INPUT_LENGTH = planLimits.free.max_input_length
+
+export { navLinks, inputFormats, outputFormats, planLimits, MAX_INPUT_LENGTH }
