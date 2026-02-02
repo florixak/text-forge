@@ -61,7 +61,7 @@ code {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.141 0.005 285.823);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.53 0.27 261);
+  --primary: oklch(68.55% 0.16528 262.655);
   --primary-foreground: oklch(0.21 0.006 285.885);
   --secondary: oklch(0.62 0.28 261);
   --secondary-foreground: oklch(0.985 0 0);
@@ -148,6 +148,19 @@ code {
       120deg,
       rgba(224, 224, 224, 0.15) 0px,
       rgba(224, 224, 224, 0.15) 2px,
+      transparent 18px,
+      transparent 18px
+    );
+  background-blend-mode: lighten;
+}
+
+.dark .marble-gradient {
+  background:
+    linear-gradient(135deg, #23243a 0%, #2d3146 50%, #3a3e5a 100%),
+    repeating-linear-gradient(
+      120deg,
+      rgba(60, 60, 80, 0.15) 0px,
+      rgba(60, 60, 80, 0.15) 2px,
       transparent 18px,
       transparent 18px
     );
