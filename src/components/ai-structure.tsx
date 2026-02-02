@@ -52,6 +52,15 @@ const structureTextFn = createServerFn({ method: 'POST' })
         const today = new Date().toISOString().split('T')[0]
         const userPlanLimit = planLimits[session.user.plan]
 
+        if (!userPlanLimit) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
         const quotaReserved = await db.transaction(async (tx) => {
           await tx
             .insert(aiUsage)
