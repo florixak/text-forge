@@ -1,6 +1,7 @@
 import {
   InputFormat,
   inputFormats,
+  MAX_INPUT_LENGTH,
   OutputFormat,
   outputFormats,
   planLimits,
@@ -25,8 +26,25 @@ const aiAssistFn = createServerFn({
   method: 'POST',
 })
   .inputValidator(
-    (data: { input: string; fromType: InputFormat; toType: OutputFormat }) =>
-      data,
+    (data: { input: string; fromType: InputFormat; toType: OutputFormat }) => {
+      if (!outputFormats.includes(data.toType)) {
+        throw new Error('Invalid output format.')
+      }
+      if (!inputFormats.includes(data.fromType)) {
+        throw new Error('Invalid input format.')
+      }
+      const input = data.input.trim()
+      if (input.length === 0) {
+        throw new Error('Input is required.')
+      }
+      if (input.length > MAX_INPUT_LENGTH) {
+        throw new Error(
+          `AI assist can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
+        )
+      }
+
+      return { ...data, input }
+    },
   )
   .middleware([authOptionalMiddleware])
   .handler(
