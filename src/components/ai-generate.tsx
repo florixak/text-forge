@@ -130,7 +130,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
         return {
           output: '',
           success: false,
-          error: (error as Error).message,
+          error: 'AI generation failed, please try again later.',
         }
       }
     },

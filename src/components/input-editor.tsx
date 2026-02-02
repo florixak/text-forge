@@ -122,7 +122,7 @@ const aiAssistFn = createServerFn({
         return {
           output: '',
           success: false,
-          error: (error as Error).message,
+          error: 'AI assist failed, please try again later.',
         }
       }
     },

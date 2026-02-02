@@ -124,9 +124,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
         return {
           output: '',
           success: false,
-          error:
-            (error as Error).message ||
-            'An error occurred while structuring data.',
+          error: 'AI structuring failed, please try again later.',
         }
       }
     },
