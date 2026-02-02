@@ -1,3 +1,4 @@
+import { isValidTheme } from '@/lib/utils'
 import { createContext, useContext, useEffect, useState } from 'react'
 
 export type Theme = 'dark' | 'light' | 'system'
@@ -26,14 +27,13 @@ export function ThemeProvider({
   storageKey = 'textforge-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme)
-
-  useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null
-    if (storedTheme) {
-      setTheme(storedTheme)
-    }
-  }, [storageKey])
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return defaultTheme
+    const storedTheme = localStorage.getItem(storageKey)
+    return isValidTheme(storedTheme ?? '')
+      ? (storedTheme as Theme)
+      : defaultTheme
+  })
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -71,6 +71,7 @@ export function ThemeProvider({
 
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext)
-  if (!context) throw new Error('useTheme must be used within a ThemeProvider')
+  if (context === undefined)
+    throw new Error('useTheme must be used within a ThemeProvider')
   return context
 }
