@@ -4,6 +4,7 @@ interface NavLink {
 }
 
 export type InputFormat = (typeof inputFormats)[number]
+export type OutputFormat = (typeof outputFormats)[number]
 
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
