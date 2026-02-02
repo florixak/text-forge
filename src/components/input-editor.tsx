@@ -1,6 +1,7 @@
 import {
   InputFormat,
   inputFormats,
+  OutputFormat,
   outputFormats,
   planLimits,
 } from '@/constants'
@@ -24,7 +25,7 @@ const aiAssistFn = createServerFn({
   method: 'POST',
 })
   .inputValidator(
-    (data: { input: string; fromType: InputFormat; toType: InputFormat }) =>
+    (data: { input: string; fromType: InputFormat; toType: OutputFormat }) =>
       data,
   )
   .middleware([authOptionalMiddleware])
@@ -176,8 +177,8 @@ interface InputEditorProps {
   setInput: (input: string) => void
   fromType: InputFormat
   setFromType: (type: InputFormat) => void
-  toType: InputFormat
-  setToType: (type: InputFormat) => void
+  toType: OutputFormat
+  setToType: (type: OutputFormat) => void
 }
 
 const InputEditor = ({
@@ -218,7 +219,7 @@ const InputEditor = ({
       data: { input: value },
     })
     if (valid) {
-      setFromType(detectedFormat as InputFormat)
+      setFromType(detectedFormat)
     }
   }
 
@@ -247,7 +248,7 @@ const InputEditor = ({
           >
             Input Format
           </Label>
-          <FormatSelect
+          <FormatSelect<InputFormat>
             placeholder="Select Input Format"
             defaultValue={inputFormats[0]}
             inputTypes={inputFormats}
@@ -264,7 +265,7 @@ const InputEditor = ({
           >
             Output Format
           </Label>
-          <FormatSelect
+          <FormatSelect<OutputFormat>
             placeholder="Select Output Format"
             defaultValue={outputFormats[0]}
             inputTypes={outputFormats}
