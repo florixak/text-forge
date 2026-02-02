@@ -19,7 +19,7 @@ function App() {
   })
 
   return (
-    <main className="min-h-screen container mx-auto mt-8">
+    <main className="min-h-screen container mx-auto mt-8 bg-background">
       <div className="flex md:flex-row flex-col gap-4 w-full">
         <InputEditor
           input={value}

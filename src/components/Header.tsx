@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Terminal, User } from 'lucide-react'
 import { Button } from './ui/button'
 import { authClient } from '@/lib/auth-client'
+import ThemeSwitcher from './theme-switcher'
 
 export default function Header() {
   const { data: session } = authClient.useSession()
@@ -30,22 +31,24 @@ export default function Header() {
             ))}
           </ul>
         </nav>
-
-        {!session ? (
-          <Button variant="ghost" asChild>
-            <Link to="/signin">
-              <User className="text-foreground" />
-              <span>Sign In</span>
-            </Link>
-          </Button>
-        ) : (
-          <Button variant="ghost" asChild>
-            <Link to="/dashboard">
-              <User className="text-foreground" />
-              <span>{session.user?.name ?? session.user?.email}</span>
-            </Link>
-          </Button>
-        )}
+        <div className="flex flex-row items-center gap-4">
+          {!session ? (
+            <Button variant="ghost" asChild>
+              <Link to="/signin">
+                <User className="text-foreground" />
+                <span>Sign In</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost" asChild>
+              <Link to="/dashboard">
+                <User className="text-foreground" />
+                <span>{session.user?.name ?? session.user?.email}</span>
+              </Link>
+            </Button>
+          )}
+          <ThemeSwitcher />
+        </div>
       </div>
     </header>
   )

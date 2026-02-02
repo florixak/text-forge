@@ -42,7 +42,7 @@ function RouteComponent() {
   }
 
   return (
-    <section className="min-h-screen flex-center font-bold flex-col gap-8 p-4">
+    <section className="min-h-screen bg-background flex-center font-bold flex-col gap-8 p-4">
       <div className="text-center space-y-2">
         <h2 className="text-2xl">Choose the right plan for your workflow</h2>
         <p className="max-w-xl text-muted-foreground">

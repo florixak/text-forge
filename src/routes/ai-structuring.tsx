@@ -24,7 +24,7 @@ function RouteComponent() {
   const activeClass = 'border-primary border-b-2'
 
   return (
-    <section className="min-h-screen max-w-5xl mx-auto w-full flex flex-col gap-8 p-4 mt-20">
+    <section className="min-h-screen bg-background max-w-5xl mx-auto w-full flex flex-col gap-8 p-4 mt-20">
       <div
         className="w-full flex-center flex-row gap-6"
         role="tablist"
