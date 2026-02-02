@@ -97,12 +97,25 @@ const generateDataFn = createServerFn({ method: 'POST' })
           }
         }
 
-        const generatedOutput = await generateData(description, format)
+        try {
+          const generatedOutput = await generateData(description, format)
 
-        return {
-          output: generatedOutput,
-          success: true,
-          error: null,
+          return {
+            output: generatedOutput,
+            success: true,
+            error: null,
+          }
+        } catch (aiError) {
+          await db
+            .update(aiUsage)
+            .set({
+              generate_ai: sql`${aiUsage.generate_ai} - 1`,
+            })
+            .where(
+              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+            )
+
+          throw new Error('AI generation failed: ' + (aiError as Error).message)
         }
       } catch (error) {
         return {

@@ -93,15 +93,31 @@ const structureTextFn = createServerFn({ method: 'POST' })
               'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
         }
+        try {
+          const structuredOutput = await structureData(input, format)
 
-        const structuredOutput = await structureData(input, format)
+          return { output: structuredOutput, success: true, error: null }
+        } catch (aiError) {
+          await db
+            .update(aiUsage)
+            .set({
+              structure_ai: sql`${aiUsage.structure_ai} - 1`,
+            })
+            .where(
+              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+            )
 
-        return { output: structuredOutput, success: true, error: null }
-      } catch (error: any) {
+          throw new Error(
+            'AI structuring failed: ' + (aiError as Error).message,
+          )
+        }
+      } catch (error) {
         return {
           output: '',
           success: false,
-          error: error.message || 'An error occurred while structuring data.',
+          error:
+            (error as Error).message ||
+            'An error occurred while structuring data.',
         }
       }
     },
