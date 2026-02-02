@@ -45,3 +45,7 @@ export const formatLimit = (
 
   return { used, limit: assistLimit, remaining, percentage }
 }
+
+export const isValidTheme = (theme: string) => {
+  return ['light', 'dark', 'system'].includes(theme)
+}
