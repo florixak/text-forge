@@ -1,4 +1,3 @@
-import { InputFormat } from '@/constants'
 import { cn } from '@/lib/utils'
 import {
   Select,
@@ -8,17 +7,17 @@ import {
   SelectValue,
 } from './ui/select'
 
-interface FormatSelectProps {
+interface FormatSelectProps<T> {
   placeholder?: string
-  selectedFormat?: InputFormat
-  setSelectedFormat?: (type: InputFormat) => void
-  defaultValue?: InputFormat
-  inputTypes: readonly InputFormat[]
+  selectedFormat?: T
+  setSelectedFormat?: (type: T) => void
+  defaultValue?: T
+  inputTypes: readonly T[]
   id?: string
   className?: string
 }
 
-const FormatSelect = ({
+const FormatSelect = <T,>({
   placeholder = 'Select',
   selectedFormat,
   setSelectedFormat,
@@ -26,20 +25,20 @@ const FormatSelect = ({
   inputTypes,
   id,
   className,
-}: FormatSelectProps) => {
+}: FormatSelectProps<T>) => {
   return (
     <Select
-      defaultValue={defaultValue}
-      value={selectedFormat}
-      onValueChange={setSelectedFormat}
+      defaultValue={defaultValue as string}
+      value={selectedFormat as string}
+      onValueChange={setSelectedFormat as (value: string) => void}
     >
       <SelectTrigger className={cn(`w-45 bg-card`, className)} id={id}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {inputTypes.map((type) => (
-          <SelectItem key={type} value={type}>
-            {type}
+          <SelectItem key={type as string} value={type as string}>
+            {String(type)}
           </SelectItem>
         ))}
       </SelectContent>
