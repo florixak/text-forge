@@ -129,7 +129,7 @@ function RouteComponent() {
   }
 
   return (
-    <section className="max-w-3xl mx-auto min-h-screen flex flex-col items-start justify-center gap-8 mt-8">
+    <section className="max-w-3xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 mt-8">
       <div className="text-left">
         <h2 className="text-3xl font-bold mb-2">Hi, {user?.name}</h2>
         <p>Manage your account and AI usage</p>
