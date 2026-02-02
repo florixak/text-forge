@@ -47,33 +47,51 @@ const aiAssistFn = createServerFn({
 
       try {
         const today = new Date().toISOString().split('T')[0]
-
-        await db
-          .insert(aiUsage)
-          .values({
-            userId: session.user.id,
-            day: today,
-            assist_ai: 0,
-            structure_ai: 0,
-            generate_ai: 0,
-            words: 0,
-          })
-          .onConflictDoNothing()
-
-        const aiUsageRecord = await db
-          .select()
-          .from(aiUsage)
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-          )
-          .limit(1)
-
         const userPlanLimit = planLimits[session.user.plan]
 
-        if (
-          aiUsageRecord.length > 0 &&
-          aiUsageRecord[0].assist_ai >= userPlanLimit.assist_ai_day
-        ) {
+        if (!userPlanLimit) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
+        const quotaReserved = await db.transaction(async (tx) => {
+          await tx
+            .insert(aiUsage)
+            .values({
+              userId: session.user.id,
+              day: today,
+              assist_ai: 0,
+              structure_ai: 0,
+              generate_ai: 0,
+              words: 0,
+            })
+            .onConflictDoNothing()
+
+          const updateResult = await tx
+            .update(aiUsage)
+            .set({
+              structure_ai: sql`${aiUsage.structure_ai} + 1`,
+            })
+            .where(
+              and(
+                eq(aiUsage.userId, session.user.id),
+                eq(aiUsage.day, today),
+                sql`${aiUsage.structure_ai} < ${userPlanLimit.structure_ai_day}`,
+              ),
+            )
+
+          if (!updateResult.rowCount) {
+            return false
+          }
+
+          return updateResult.rowCount > 0
+        })
+
+        if (!quotaReserved) {
           return {
             output: '',
             success: false,
@@ -82,21 +100,23 @@ const aiAssistFn = createServerFn({
           }
         }
 
-        const assistedOutput = await assistText(input, fromType, toType)
+        try {
+          const assistedOutput = await assistText(input, fromType, toType)
 
-        await db
-          .update(aiUsage)
-          .set({
-            assist_ai: sql`${aiUsage.assist_ai} + 1`,
-          })
-          .where(
-            and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+          return { output: assistedOutput, success: true, error: null }
+        } catch (aiError) {
+          await db
+            .update(aiUsage)
+            .set({
+              assist_ai: sql`${aiUsage.assist_ai} - 1`,
+            })
+            .where(
+              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
+            )
+
+          throw new Error(
+            'AI structuring failed: ' + (aiError as Error).message,
           )
-
-        return {
-          output: assistedOutput,
-          success: true,
-          error: null,
         }
       } catch (error) {
         return {
