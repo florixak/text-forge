@@ -31,7 +31,9 @@ const structureTextFn = createServerFn({ method: 'POST' })
       throw new Error('Input is required.')
     }
     if (input.length > MAX_INPUT_LENGTH) {
-      throw new Error(`Input exceeds ${MAX_INPUT_LENGTH} characters.`)
+      throw new Error(
+        `AI structuring can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
+      )
     }
     return { ...data, input }
   })
