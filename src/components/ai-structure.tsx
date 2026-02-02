@@ -1,9 +1,15 @@
-import { InputFormat, outputFormats, planLimits } from '@/constants'
+import {
+  MAX_INPUT_LENGTH,
+  OutputFormat,
+  outputFormats,
+  planLimits,
+} from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
+import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { Sparkles } from 'lucide-react'
@@ -14,10 +20,21 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { redirect } from '@tanstack/react-router'
 
 const structureTextFn = createServerFn({ method: 'POST' })
-  .inputValidator((data: { input: string; format: InputFormat }) => data)
+  .inputValidator((data: { input: string; format: OutputFormat }) => {
+    if (!outputFormats.includes(data.format)) {
+      throw new Error('Invalid output format.')
+    }
+    const input = data.input.trim()
+    if (input.length === 0) {
+      throw new Error('Input is required.')
+    }
+    if (input.length > MAX_INPUT_LENGTH) {
+      throw new Error(`Input exceeds ${MAX_INPUT_LENGTH} characters.`)
+    }
+    return { ...data, input }
+  })
   .middleware([authMiddleware])
   .handler(
     async ({
@@ -92,7 +109,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
 
 const AIStructure = () => {
   const [unstructuredData, setUnstructuredData] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
+  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(
     outputFormats[0],
   )
 
@@ -134,7 +151,7 @@ const AIStructure = () => {
             >
               Output Format
             </Label>
-            <FormatSelect
+            <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
               defaultValue={outputFormats[0]}
               inputTypes={outputFormats}
