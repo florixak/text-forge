@@ -1,10 +1,16 @@
-import { InputFormat, outputFormats, planLimits } from '@/constants'
+import {
+  MAX_INPUT_LENGTH,
+  OutputFormat,
+  outputFormats,
+  planLimits,
+} from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
+import { and, eq, sql } from 'drizzle-orm'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -13,10 +19,21 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { sql, eq, and } from 'drizzle-orm'
 
 const generateDataFn = createServerFn({ method: 'POST' })
-  .inputValidator((data: { description: string; format: InputFormat }) => data)
+  .inputValidator((data: { description: string; format: OutputFormat }) => {
+    if (!outputFormats.includes(data.format)) {
+      throw new Error('Invalid output format.')
+    }
+    const input = data.description.trim()
+    if (input.length === 0) {
+      throw new Error('Input is required.')
+    }
+    if (input.length > MAX_INPUT_LENGTH) {
+      throw new Error(`Input exceeds ${MAX_INPUT_LENGTH} characters.`)
+    }
+    return { ...data, description: input }
+  })
   .middleware([authMiddleware])
   .handler(
     async ({
@@ -99,7 +116,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
 const AIGenerate = () => {
   const [description, setDescription] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<InputFormat>(
+  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(
     outputFormats[0],
   )
 
@@ -107,13 +124,13 @@ const AIGenerate = () => {
     mutationFn: generateDataFn,
     onSuccess: ({ success, error }) => {
       if (success) {
-        toast.success('Data structured successfully!')
+        toast.success('Data generated successfully!')
       } else {
-        toast.error(error || 'Failed to structure data. Please try again.')
+        toast.error(error || 'Failed to generate data. Please try again.')
       }
     },
     onError: () => {
-      toast.error('Failed to structure data. Please try again.')
+      toast.error('Failed to generate data. Please try again.')
     },
   })
 
@@ -141,7 +158,7 @@ const AIGenerate = () => {
             >
               Output Format
             </Label>
-            <FormatSelect
+            <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
               defaultValue={outputFormats[0]}
               inputTypes={outputFormats}
