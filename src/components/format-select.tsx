@@ -30,7 +30,7 @@ const FormatSelect = <T,>({
     <Select
       defaultValue={defaultValue as string}
       value={selectedFormat as string}
-      onValueChange={setSelectedFormat as (value: string) => void}
+      onValueChange={(value) => setSelectedFormat?.(value as T)}
     >
       <SelectTrigger className={cn(`w-45 bg-card`, className)} id={id}>
         <SelectValue placeholder={placeholder} />
