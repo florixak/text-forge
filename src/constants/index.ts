@@ -42,6 +42,7 @@ export type PlanLimits = {
   generate_ai_day: number
 
   support: 'community' | 'priority'
+  max_input_length: number
 }
 
 export type Plan = 'free' | 'pro'
@@ -54,6 +55,7 @@ const planLimits: Record<Plan, PlanLimits> = {
     structure_ai_day: 15,
     generate_ai_day: 10,
     support: 'community',
+    max_input_length: 1000,
   },
   pro: {
     price: 12.99,
@@ -62,9 +64,10 @@ const planLimits: Record<Plan, PlanLimits> = {
     structure_ai_day: 75,
     generate_ai_day: 50,
     support: 'priority',
+    max_input_length: 10000,
   },
 } as const
 
-const MAX_INPUT_LENGTH = 1000
+const MAX_INPUT_LENGTH = planLimits.free.max_input_length
 
 export { navLinks, inputFormats, outputFormats, planLimits, MAX_INPUT_LENGTH }
