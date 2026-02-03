@@ -45,7 +45,6 @@ function App() {
 
   const handleToTypeChange = (newToType: OutputFormat) => {
     navigate({
-      to: '/',
       search: (prev) => ({
         ...prev,
         to: newToType,
