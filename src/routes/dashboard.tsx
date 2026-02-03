@@ -143,7 +143,7 @@ function RouteComponent() {
             </div>
 
             <Button size="sm" asChild>
-              <Link to="/plans">
+              <Link to="/plans" search={{ plan: user.plan }}>
                 {user.plan === 'free' ? 'Upgrade' : 'Manage'}
               </Link>
             </Button>
@@ -306,7 +306,11 @@ function RouteComponent() {
         <CardFooter className="bg-border/50 flex flex-col items-center p-4">
           <p className="text-sm">
             Need more power?{' '}
-            <Link to="/plans" className="text-primary font-semibold">
+            <Link
+              to="/plans"
+              search={{ plan: user.plan }}
+              className="text-primary font-semibold"
+            >
               Compare all plans
             </Link>
           </p>

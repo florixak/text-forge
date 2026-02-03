@@ -60,9 +60,9 @@ const PlanCard = ({
       <Separator />
       <CardContent>
         <ul className="list-disc list-inside space-y-1 text-sm font-medium">
-          <li>{limits.ai_generations_day} AI generations per day</li>
-          <li>{limits.ai_assist_calls} AI assist calls</li>
-          <li>Support: {limits.support}</li>
+          {limits.features.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
         </ul>
       </CardContent>
     </Card>

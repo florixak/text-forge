@@ -4,7 +4,13 @@ import { Plan, PlanLimits, planLimits } from '@/constants'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { useState } from 'react'
+import * as z from 'zod'
+
+const planSchema = z
+  .object({
+    plan: z.enum(['free', 'pro']).catch('free'),
+  })
+  .catch({ plan: 'free' })
 
 export interface UserPlan {
   loggedIn: boolean
@@ -24,6 +30,7 @@ const getUserPlan = createServerFn()
 
 export const Route = createFileRoute('/plans')({
   component: RouteComponent,
+  validateSearch: planSchema,
   errorComponent: () => <div>Failed to load plans.</div>,
   pendingComponent: () => <div>Loading plans...</div>,
   loader: async () => {
@@ -33,16 +40,23 @@ export const Route = createFileRoute('/plans')({
 })
 
 function RouteComponent() {
+  const { plan: selected } = Route.useSearch()
+  const navigate = Route.useNavigate()
   const { userPlan } = Route.useLoaderData()
-  const [selected, setSelected] = useState<Plan>(userPlan.plan)
+
   const plans = Array.from(Object.entries(planLimits)) as [Plan, PlanLimits][]
 
   const handleSelectPlan = (plan: Plan) => {
-    setSelected(plan)
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        plan,
+      }),
+    })
   }
 
   return (
-    <section className="min-h-screen bg-background flex-center font-bold flex-col gap-8 p-4">
+    <section className="min-h-screen bg-background flex-center font-bold flex-col gap-8 p-4 mt-10">
       <div className="text-center space-y-2">
         <h2 className="text-2xl">Choose the right plan for your workflow</h2>
         <p className="max-w-xl text-muted-foreground">
