@@ -43,6 +43,7 @@ export type PlanLimits = {
 
   support: 'community' | 'priority'
   max_input_length: number
+  features: string[]
 }
 
 export type Plan = 'free' | 'pro'
@@ -56,6 +57,13 @@ const planLimits: Record<Plan, PlanLimits> = {
     generate_ai_day: 10,
     support: 'community',
     max_input_length: 1000,
+    features: [
+      '20 AI assist calls per day',
+      '15 AI structuring calls per day',
+      '10 AI generations per day',
+      'Community support',
+      'Max input length: 1000 characters',
+    ],
   },
   pro: {
     price: 12.99,
@@ -65,6 +73,13 @@ const planLimits: Record<Plan, PlanLimits> = {
     generate_ai_day: 50,
     support: 'priority',
     max_input_length: 10000,
+    features: [
+      '100 AI assist calls per day',
+      '75 AI structuring calls per day',
+      '50 AI generations per day',
+      'Priority support',
+      'Max input length: 10,000 characters',
+    ],
   },
 } as const
 
