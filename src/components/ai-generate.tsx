@@ -186,7 +186,6 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             </Label>
             <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
-              defaultValue={selectedFormat}
               inputTypes={outputFormats}
               id="output-type-select"
               selectedFormat={selectedFormat}

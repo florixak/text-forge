@@ -183,7 +183,6 @@ const AIStructure = ({
             </Label>
             <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
-              defaultValue={selectedFormat}
               inputTypes={outputFormats}
               id="output-format-select"
               selectedFormat={selectedFormat}
