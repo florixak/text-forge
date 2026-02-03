@@ -132,11 +132,16 @@ const structureTextFn = createServerFn({ method: 'POST' })
     },
   )
 
-const AIStructure = () => {
+interface AIStructureProps {
+  selectedFormat: OutputFormat
+  setSelectedFormat: (format: OutputFormat) => void
+}
+
+const AIStructure = ({
+  selectedFormat,
+  setSelectedFormat,
+}: AIStructureProps) => {
   const [unstructuredData, setUnstructuredData] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState<OutputFormat>(
-    outputFormats[0],
-  )
 
   const { data, isSuccess, isPending, mutate } = useMutation({
     mutationFn: structureTextFn,
@@ -178,7 +183,7 @@ const AIStructure = () => {
             </Label>
             <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
-              defaultValue={outputFormats[0]}
+              defaultValue={selectedFormat}
               inputTypes={outputFormats}
               id="output-format-select"
               selectedFormat={selectedFormat}

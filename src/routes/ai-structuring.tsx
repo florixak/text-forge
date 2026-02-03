@@ -1,12 +1,19 @@
 import AIGenerate from '@/components/ai-generate'
 import AIStructure from '@/components/ai-structure'
+import { outputFormats } from '@/constants'
 import { authMiddleware } from '@/lib/middleware'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
-const aiStructuringSchema = z.object({
-  selected: z.enum(['structure', 'generate']).default('structure'),
-})
+const aiStructuringSchema = z
+  .object({
+    selected: z
+      .enum(['structure', 'generate'])
+      .default('structure')
+      .catch('structure'),
+    to: z.enum(outputFormats).default('JSON').catch('JSON'),
+  })
+  .catch({ selected: 'structure', to: 'JSON' })
 
 export const Route = createFileRoute('/ai-structuring')({
   component: RouteComponent,
@@ -17,9 +24,24 @@ export const Route = createFileRoute('/ai-structuring')({
 })
 
 function RouteComponent() {
-  const { selected } = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const { selected, to } = Route.useSearch()
 
-  const Component = selected === 'structure' ? <AIStructure /> : <AIGenerate />
+  const handleFormatChange = (format: (typeof outputFormats)[number]) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        to: format,
+      }),
+    })
+  }
+
+  const Component =
+    selected === 'structure' ? (
+      <AIStructure selectedFormat={to} setSelectedFormat={handleFormatChange} />
+    ) : (
+      <AIGenerate selectedFormat={to} setSelectedFormat={handleFormatChange} />
+    )
 
   const activeClass = 'border-primary border-b-2'
 
@@ -32,7 +54,7 @@ function RouteComponent() {
       >
         <Link
           to="/ai-structuring"
-          search={{ selected: 'structure' }}
+          search={(prev) => ({ ...prev, selected: 'structure' })}
           className={`${selected === 'structure' ? activeClass : ''}`}
           role="tab"
           aria-selected={selected === 'structure'}
@@ -45,7 +67,7 @@ function RouteComponent() {
         </Link>
         <Link
           to="/ai-structuring"
-          search={{ selected: 'generate' }}
+          search={(prev) => ({ ...prev, selected: 'generate' })}
           className={`${selected === 'generate' ? activeClass : ''}`}
           role="tab"
           aria-selected={selected === 'generate'}
