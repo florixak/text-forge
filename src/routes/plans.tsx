@@ -59,7 +59,7 @@ function RouteComponent() {
     <section className="min-h-screen bg-background flex-center font-bold flex-col gap-8 p-4 mt-10">
       <div className="text-center space-y-2">
         <h2 className="text-2xl">Choose the right plan for your workflow</h2>
-        <p className="max-w-xl text-muted-foreground">
+        <p className="max-w-xl text-muted-foreground font-normal">
           Simple and transparent pricing. Upgrade, downgrade, or cancel anytime.
         </p>
       </div>
