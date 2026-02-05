@@ -15,7 +15,7 @@ import {
   FieldSeparator,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { authClient } from '@/lib/auth-client'
+import { authClient, handleGoogleLogin } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
@@ -74,31 +74,6 @@ export function SignUpForm({
       )
     },
   })
-
-  const handleGoogleLogin = async () => {
-    const loadingToastId = toast.loading('Redirecting to Google...')
-    try {
-      await authClient.signIn.social(
-        {
-          provider: 'google',
-          callbackURL: '/dashboard',
-        },
-        {
-          onSuccess: () => {
-            toast.dismiss(loadingToastId)
-            toast.success(`Redirecting to Google`)
-          },
-          onError: (ctx) => {
-            toast.dismiss(loadingToastId)
-            toast.error(ctx.error.message)
-          },
-        },
-      )
-    } catch (error) {
-      toast.dismiss(loadingToastId)
-      toast.error('An unexpected error occurred. Please try again.')
-    }
-  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>

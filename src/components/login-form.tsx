@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import * as z from 'zod'
 import { toast } from 'sonner'
-import { authClient } from '@/lib/auth-client'
+import { authClient, handleGoogleLogin } from '@/lib/auth-client'
 import { Link } from '@tanstack/react-router'
 
 const formSchema = z.object({
@@ -60,26 +60,6 @@ export function LoginForm({
       )
     },
   })
-
-  const handleGoogleLogin = async () => {
-    const loadingToastId = toast.loading('Redirecting to Google...')
-    await authClient.signIn.social(
-      {
-        provider: 'google',
-        callbackURL: '/dashboard',
-      },
-      {
-        onSuccess: () => {
-          toast.dismiss(loadingToastId)
-          toast.success(`Redirecting to Google`)
-        },
-        onError: (ctx) => {
-          toast.dismiss(loadingToastId)
-          toast.error(ctx.error.message)
-        },
-      },
-    )
-  }
 
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
