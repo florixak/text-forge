@@ -5,7 +5,7 @@ import {
   planLimits,
 } from '@/constants'
 import { db } from '@/db'
-import { aiUsage } from '@/db/schema'
+import { aiUsage, historyUsage } from '@/db/schema'
 import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
@@ -110,6 +110,14 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
         try {
           const generatedOutput = await generateData(description, format)
+          try {
+            await db.insert(historyUsage).values({
+              userId: session.user.id,
+              action: 'generate',
+              from: 'Text',
+              to: format,
+            })
+          } catch (historyError) {}
 
           return {
             output: generatedOutput,

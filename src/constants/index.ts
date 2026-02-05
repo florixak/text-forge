@@ -10,6 +10,7 @@ const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
   { name: 'AI Structuring', href: '/ai-structuring' },
   { name: 'Plans', href: '/plans' },
+  { name: 'History', href: '/history' },
 ]
 
 const inputFormats = [

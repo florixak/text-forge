@@ -46,8 +46,8 @@ export const downloadFile = (
   content: string,
   type: InputFormat,
   filename?: string,
-) => {
-  if (content.length === 0) return
+): boolean => {
+  if (content.length === 0) return false
 
   const extension = getFileExtension(type)
   const mimeType = getMimeType(type)
@@ -64,4 +64,5 @@ export const downloadFile = (
 
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
+  return true
 }

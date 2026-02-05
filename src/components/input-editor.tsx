@@ -6,21 +6,21 @@ import {
   outputFormats,
   planLimits,
 } from '@/constants'
+import { db } from '@/db'
+import { aiUsage } from '@/db/schema'
 import useDebounce from '@/hooks/useDebounce'
 import { authClient } from '@/lib/auth-client'
+import { assistText } from '@/lib/google-ai'
+import { authOptionalMiddleware } from '@/lib/middleware'
+import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
+import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { assistText } from '@/lib/google-ai'
-import { useMutation } from '@tanstack/react-query'
-import { aiUsage } from '@/db/schema'
-import { db } from '@/db'
-import { authOptionalMiddleware } from '@/lib/middleware'
-import { eq, and, sql } from 'drizzle-orm'
-import { toast } from 'sonner'
 
 const aiAssistFn = createServerFn({
   method: 'POST',

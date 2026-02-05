@@ -1,3 +1,4 @@
+import { InputFormat, OutputFormat } from '@/constants'
 import { InferSelectModel, relations } from 'drizzle-orm'
 import {
   pgTable,
@@ -111,6 +112,27 @@ export const aiUsage = pgTable(
     index('ai_usage_userId_idx').on(table.userId),
     unique('ai_usage_userId_day_unique').on(table.userId, table.day),
   ],
+)
+
+export const historyUsage = pgTable(
+  'history_usage',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+
+    action: text('action')
+      .$type<'convert' | 'structure' | 'generate'>()
+      .notNull(),
+
+    from: text('from').$type<InputFormat>().notNull(),
+    to: text('to').$type<OutputFormat>().notNull(),
+  },
+  (table) => [index('history_usage_userId_idx').on(table.userId)],
 )
 
 export const userRelations = relations(user, ({ many }) => ({

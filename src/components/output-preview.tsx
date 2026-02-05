@@ -1,4 +1,4 @@
-import { InputFormat } from '@/constants'
+import { InputFormat, OutputFormat } from '@/constants'
 import useCopy from '@/hooks/useCopy'
 import { convertData } from '@/lib/converters'
 import { downloadFile } from '@/lib/download'
@@ -6,19 +6,61 @@ import { getFileSize } from '@/lib/utils'
 import { Dot } from 'lucide-react'
 import { Button } from './ui/button'
 import Output from './output'
+import { useMutation } from '@tanstack/react-query'
+import { authOptionalMiddleware } from '@/lib/middleware'
+import { createServerFn } from '@tanstack/react-start'
+import { historyUsage } from '@/db/schema'
+import { db } from '@/db'
 
 interface PreviewOutputProps {
   fromType: InputFormat
-  toType: InputFormat
+  toType: OutputFormat
   inputText: string
 }
 
+const saveConversionHistory = createServerFn({
+  method: 'POST',
+})
+  .inputValidator((data: { from: InputFormat; to: OutputFormat }) => data)
+  .middleware([authOptionalMiddleware])
+  .handler(async ({ data, context }) => {
+    const { from, to } = data
+    const { session } = context
+
+    if (!session) {
+      return
+    }
+
+    try {
+      await db.insert(historyUsage).values({
+        userId: session.user.id,
+        action: 'convert',
+        from,
+        to,
+      })
+    } catch (error) {}
+  })
+
 const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
   const { copied, handleCopy } = useCopy()
+  const { mutate } = useMutation({
+    mutationFn: saveConversionHistory,
+  })
+
   const { success, error, output } = convertData(inputText, fromType, toType)
 
-  const handleDownload = () => {
-    downloadFile(output || '', toType)
+  const handleCopyWithHistory = async () => {
+    const isCopied = await handleCopy(output || '')
+    if (success && output && isCopied) {
+      mutate({ data: { from: fromType, to: toType } })
+    }
+  }
+
+  const handleDownloadWithHistory = () => {
+    const isDownloaded = downloadFile(output || '', toType)
+    if (success && output && isDownloaded) {
+      mutate({ data: { from: fromType, to: toType } })
+    }
   }
 
   const fileSize = getFileSize(output || '')
@@ -54,12 +96,16 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
       <div className="flex items-center justify-end mt-4 gap-2">
         <Button
           variant="outline"
-          onClick={() => handleCopy(output || '')}
+          onClick={handleCopyWithHistory}
           disabled={!success}
         >
           {copied ? 'Copied!' : 'Copy Output'}
         </Button>
-        <Button variant="outline" onClick={handleDownload} disabled={!success}>
+        <Button
+          variant="outline"
+          onClick={handleDownloadWithHistory}
+          disabled={!success}
+        >
           Download Output
         </Button>
       </div>
