@@ -40,9 +40,7 @@ const saveConversionHistory = createServerFn({
         from,
         to,
       })
-    } catch (error) {
-      console.error('Failed to save conversion history:', error)
-    }
+    } catch (error) {}
   })
 
 const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
@@ -53,9 +51,9 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
 
   const { success, error, output } = convertData(inputText, fromType, toType)
 
-  const handleCopyWithHistory = () => {
-    handleCopy(output || '')
-    if (success && output && copied) {
+  const handleCopyWithHistory = async () => {
+    const isCopied = await handleCopy(output || '')
+    if (success && output && isCopied) {
       mutate({ data: { from: fromType, to: toType, input: inputText } })
     }
   }
