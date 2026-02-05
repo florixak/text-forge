@@ -106,13 +106,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
         }
         try {
           const structuredOutput = await structureData(input, format)
-
-          await db.insert(historyUsage).values({
-            userId: session.user.id,
-            action: 'structure',
-            from: 'Text',
-            to: format,
-          })
+          try {
+            await db.insert(historyUsage).values({
+              userId: session.user.id,
+              action: 'structure',
+              from: 'Text',
+              to: format,
+            })
+          } catch (historyError) {}
 
           return { output: structuredOutput, success: true, error: null }
         } catch (aiError) {
