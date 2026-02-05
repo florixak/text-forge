@@ -7,7 +7,7 @@ interface HistoryListProps {
 
 const HistoryList = ({ history }: HistoryListProps) => {
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-col w-full gap-4">
       {history.map((item) => (
         <HistoryItem key={item.id} {...item} />
       ))}
