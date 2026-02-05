@@ -59,8 +59,8 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
   }
 
   const handleDownloadWithHistory = () => {
-    downloadFile(output || '', toType)
-    if (success && output) {
+    const isDownloaded = downloadFile(output || '', toType)
+    if (success && output && isDownloaded) {
       mutate({ data: { from: fromType, to: toType, input: inputText } })
     }
   }
