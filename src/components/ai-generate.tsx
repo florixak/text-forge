@@ -110,13 +110,14 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
         try {
           const generatedOutput = await generateData(description, format)
-
-          await db.insert(historyUsage).values({
-            userId: session.user.id,
-            action: 'generate',
-            from: 'Text',
-            to: format,
-          })
+          try {
+            await db.insert(historyUsage).values({
+              userId: session.user.id,
+              action: 'generate',
+              from: 'Text',
+              to: format,
+            })
+          } catch (historyError) {}
 
           return {
             output: generatedOutput,
