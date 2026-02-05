@@ -1,4 +1,4 @@
-import type { HistoryItem as HistoryItemType } from 'types'
+import type { HistoryItem as HistoryItemType } from '@/types'
 import HistoryItem from './history-item'
 
 interface HistoryListProps {
