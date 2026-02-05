@@ -21,9 +21,7 @@ interface PreviewOutputProps {
 const saveConversionHistory = createServerFn({
   method: 'POST',
 })
-  .inputValidator(
-    (data: { from: InputFormat; to: OutputFormat; input: string }) => data,
-  )
+  .inputValidator((data: { from: InputFormat; to: OutputFormat }) => data)
   .middleware([authOptionalMiddleware])
   .handler(async ({ data, context }) => {
     const { from, to } = data
@@ -54,14 +52,14 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
   const handleCopyWithHistory = async () => {
     const isCopied = await handleCopy(output || '')
     if (success && output && isCopied) {
-      mutate({ data: { from: fromType, to: toType, input: inputText } })
+      mutate({ data: { from: fromType, to: toType } })
     }
   }
 
   const handleDownloadWithHistory = () => {
     const isDownloaded = downloadFile(output || '', toType)
     if (success && output && isDownloaded) {
-      mutate({ data: { from: fromType, to: toType, input: inputText } })
+      mutate({ data: { from: fromType, to: toType } })
     }
   }
 
