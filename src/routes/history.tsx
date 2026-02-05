@@ -1,3 +1,4 @@
+import HistoryFilter from '@/components/history-filter'
 import HistoryList from '@/components/history-list'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
@@ -46,9 +47,9 @@ const getUserHistoryFn = createServerFn({ method: 'GET' })
 
     if (day) {
       const startOfDay = new Date(day)
-      startOfDay.setHours(0, 0, 0, 0)
+      startOfDay.setUTCHours(0, 0, 0, 0)
       const endOfDay = new Date(day)
-      endOfDay.setHours(23, 59, 59, 999)
+      endOfDay.setUTCHours(23, 59, 59, 999)
 
       conditions.push(
         gte(historyUsage.createdAt, startOfDay),
@@ -87,7 +88,7 @@ export const Route = createFileRoute('/history')({
 function RouteComponent() {
   const { history } = Route.useLoaderData()
   return (
-    <section className="min-h-screen bg-background flex-center flex-col gap-8 p-4 mt-10">
+    <section className="min-h-screen bg-background flex items-center justify-start flex-col gap-8 p-4 mt-10">
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold">Your activity history</h2>
         <p className="max-w-xl text-muted-foreground">
@@ -95,7 +96,10 @@ function RouteComponent() {
           generations.
         </p>
       </div>
-      <HistoryList history={history} />
+      <div className="max-w-4xl w-full flex flex-col gap-4">
+        <HistoryFilter />
+        <HistoryList history={history} />
+      </div>
     </section>
   )
 }
