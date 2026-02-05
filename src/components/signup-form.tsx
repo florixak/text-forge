@@ -77,22 +77,27 @@ export function SignUpForm({
 
   const handleGoogleLogin = async () => {
     const loadingToastId = toast.loading('Redirecting to Google...')
-    await authClient.signIn.social(
-      {
-        provider: 'google',
-        callbackURL: '/dashboard',
-      },
-      {
-        onSuccess: () => {
-          toast.dismiss(loadingToastId)
-          toast.success(`Redirecting to Google`)
+    try {
+      await authClient.signIn.social(
+        {
+          provider: 'google',
+          callbackURL: '/dashboard',
         },
-        onError: (ctx) => {
-          toast.dismiss(loadingToastId)
-          toast.error(ctx.error.message)
+        {
+          onSuccess: () => {
+            toast.dismiss(loadingToastId)
+            toast.success(`Redirecting to Google`)
+          },
+          onError: (ctx) => {
+            toast.dismiss(loadingToastId)
+            toast.error(ctx.error.message)
+          },
         },
-      },
-    )
+      )
+    } catch (error) {
+      toast.dismiss(loadingToastId)
+      toast.error('An unexpected error occurred. Please try again.')
+    }
   }
 
   return (
