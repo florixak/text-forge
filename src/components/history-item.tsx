@@ -67,7 +67,7 @@ const HistoryItem = ({
           {inputFormat} → {outputFormat}
         </div>
         <div className="text-sm text-muted-foreground">
-          {createdAt.toLocaleString()}
+          {new Date(createdAt).toLocaleString()}
         </div>
       </div>
       <Button
