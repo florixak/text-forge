@@ -5,7 +5,7 @@ import {
   planLimits,
 } from '@/constants'
 import { db } from '@/db'
-import { aiUsage } from '@/db/schema'
+import { aiUsage, historyUsage } from '@/db/schema'
 import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { useMutation } from '@tanstack/react-query'
@@ -106,6 +106,13 @@ const structureTextFn = createServerFn({ method: 'POST' })
         }
         try {
           const structuredOutput = await structureData(input, format)
+
+          await db.insert(historyUsage).values({
+            userId: session.user.id,
+            action: 'structure',
+            from: 'Text',
+            to: format,
+          })
 
           return { output: structuredOutput, success: true, error: null }
         } catch (aiError) {
