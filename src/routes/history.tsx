@@ -7,7 +7,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
-import type { HistoryItem } from 'types'
+import type { HistoryItem } from '@/types'
 import * as z from 'zod'
 
 const historySearchSchema = z.object({

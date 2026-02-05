@@ -1,4 +1,4 @@
-import type { HistoryItem as HistoryItemType } from 'types'
+import type { HistoryItem as HistoryItemType } from '@/types'
 import { Card } from './ui/card'
 import { capitalizeFirstLetter } from '@/lib/utils'
 import { Bolt, Bot, RefreshCcw, WandSparkles } from 'lucide-react'
