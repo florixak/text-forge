@@ -14,6 +14,12 @@ export const auth = betterAuth({
   /*emailVerification: {
     sendVerificationEmail: async ({ user, url, token }, request) => {},
   },*/
+  socialProviders: {
+    google: {
+      clientId: process.env.CLIENT_ID || '',
+      clientSecret: process.env.CLIENT_SECRET || '',
+    },
+  },
   user: {
     additionalFields: {
       plan: {
