@@ -3,6 +3,15 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
 
+const googleClientId = process.env.GOOGLE_CLIENT_ID
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+
+if (!googleClientId || !googleClientSecret) {
+  throw new Error(
+    'Google OAuth credentials are not set in environment variables.',
+  )
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -16,8 +25,8 @@ export const auth = betterAuth({
   },*/
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: googleClientId,
+      clientSecret: googleClientSecret,
     },
   },
   user: {
