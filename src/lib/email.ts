@@ -27,7 +27,7 @@ export async function sendEmail({
   }
   try {
     const { data, error } = await resend.emails.send({
-      from: `Ondřej <${FROM_EMAIL!}>`,
+      from: `TextForge <${FROM_EMAIL!}>`,
       to,
       subject,
       html,
