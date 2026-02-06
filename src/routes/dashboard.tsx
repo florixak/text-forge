@@ -18,7 +18,9 @@ import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
 import {
   CirclePile,
+  ShieldAlert,
   ShieldCheck,
+  ShieldClose,
   Sparkles,
   Star,
   TextAlignStart,
@@ -183,12 +185,16 @@ function RouteComponent() {
         </Card>
         <Card className="p-4 flex-1">
           <div className="flex items-center">
-            <div
-              className={`${user.enabled ? (user.emailVerified ? 'bg-green-200/50' : 'bg-yellow-200/50') : 'bg-red-200/50'} p-2 rounded-md`}
-            >
-              <ShieldCheck
-                className={`${user.enabled ? (user.emailVerified ? 'text-green-400' : 'text-yellow-400') : 'text-red-400'}`}
-              />
+            <div className={`bg-primary/10 p-2 rounded-md`}>
+              {user.enabled ? (
+                user.emailVerified ? (
+                  <ShieldCheck className="text-green-400" />
+                ) : (
+                  <ShieldAlert className="text-yellow-400" />
+                )
+              ) : (
+                <ShieldClose className="text-red-400" />
+              )}
             </div>
           </div>
           <div className="flex flex-col">

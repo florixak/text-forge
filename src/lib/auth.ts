@@ -2,15 +2,18 @@ import { db } from '@/db'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
+import { sendEmail } from './email'
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
-if (!googleClientId || !googleClientSecret) {
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   throw new Error(
     'Google OAuth credentials are not set in environment variables.',
   )
 }
+
+const APP_URL = process.env.BETTER_AUTH_URL || 'http://localhost:3000'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -20,13 +23,29 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  /*emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }, request) => {},
-  },*/
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, token }) => {
+      const verifyURL = `${APP_URL}/verify-email?token=${encodeURIComponent(token)}`
+      try {
+        await sendEmail({
+          to: user.email!,
+          subject: 'Verify your email address',
+          html: `
+            <p>Click the link below to verify your email address:</p>
+            <a href="${verifyURL}">${verifyURL}</a>
+            <p>If you did not request this, please ignore this email.</p>
+          `,
+        })
+      } catch (error) {
+        throw error
+      }
+    },
+  },
   socialProviders: {
     google: {
-      clientId: googleClientId,
-      clientSecret: googleClientSecret,
+      clientId: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
     },
   },
   user: {
