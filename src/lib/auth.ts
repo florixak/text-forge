@@ -2,6 +2,7 @@ import { db } from '@/db'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
+import { sendEmail } from './email'
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
@@ -20,9 +21,25 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  /*emailVerification: {
-    sendVerificationEmail: async ({ user, url, token }, request) => {},
-  },*/
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url, token }) => {
+      const verifyURL = `${new URL(url).origin}/verify-email?token=${token}`
+      try {
+        await sendEmail({
+          to: user.email!,
+          subject: 'Verify your email address',
+          html: `
+            <p>Click the link below to verify your email address:</p>
+            <a href="${verifyURL}">${verifyURL}</a>
+            <p>If you did not request this, please ignore this email.</p>
+          `,
+        })
+      } catch (error) {
+        throw error
+      }
+    },
+  },
   socialProviders: {
     google: {
       clientId: googleClientId,
