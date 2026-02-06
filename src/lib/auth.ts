@@ -26,7 +26,7 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, token }) => {
-      const verifyURL = `${APP_URL}/verify-email?token=${token}`
+      const verifyURL = `${APP_URL}/verify-email?token=${encodeURIComponent(token)}`
       try {
         await sendEmail({
           to: user.email!,
