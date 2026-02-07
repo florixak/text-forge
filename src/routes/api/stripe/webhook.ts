@@ -67,6 +67,19 @@ async function POST({ request }: { request: Request }) {
             break
           }
 
+          const existing = await db
+            .select()
+            .from(subscription)
+            .where(eq(subscription.stripeSubscriptionId, subscriptionId))
+            .limit(1)
+
+          if (existing.length > 0) {
+            console.log(
+              `Subscription ${subscriptionId} already exists, skipping creation`,
+            )
+            break
+          }
+
           const stripeSubscription = (await stripe.subscriptions.retrieve(
             subscriptionId,
           )) as Stripe.Subscription
@@ -128,6 +141,12 @@ async function POST({ request }: { request: Request }) {
         const currentPeriodEnd = new Date(currentPeriodEndTs * 1000)
 
         await db.transaction(async (tx) => {
+          const existingSub = await tx
+            .select()
+            .from(subscription)
+            .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
+            .limit(1)
+
           await tx
             .update(subscription)
             .set({
@@ -139,18 +158,8 @@ async function POST({ request }: { request: Request }) {
             })
             .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
 
-          if (!userId) {
-            const subscriptionRecord = await tx
-              .select()
-              .from(subscription)
-              .where(
-                eq(subscription.stripeSubscriptionId, stripeSubscription.id),
-              )
-              .limit(1)
-
-            if (subscriptionRecord.length > 0) {
-              userId = subscriptionRecord[0].userId
-            }
+          if (!userId && existingSub.length > 0) {
+            userId = existingSub[0].userId
           }
 
           if (userId) {
@@ -182,24 +191,27 @@ async function POST({ request }: { request: Request }) {
         let userId = stripeSubscription.metadata?.userId
 
         await db.transaction(async (tx) => {
+          const existingSub = await tx
+            .select()
+            .from(subscription)
+            .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
+            .limit(1)
+
+          if (existingSub.length === 0) {
+            console.warn(
+              `Subscription ${stripeSubscription.id} not found in database, skipping deletion handling`,
+            )
+            return
+          }
+
+          if (!userId) {
+            userId = existingSub[0].userId
+          }
+
           await tx
             .update(subscription)
             .set({ status: 'canceled' })
             .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
-
-          if (!userId) {
-            const subscriptionRecord = await tx
-              .select()
-              .from(subscription)
-              .where(
-                eq(subscription.stripeSubscriptionId, stripeSubscription.id),
-              )
-              .limit(1)
-
-            if (subscriptionRecord.length > 0) {
-              userId = subscriptionRecord[0].userId
-            }
-          }
 
           if (userId) {
             await tx
