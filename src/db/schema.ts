@@ -135,6 +135,69 @@ export const historyUsage = pgTable(
   (table) => [index('history_usage_userId_idx').on(table.userId)],
 )
 
+export const stripeCustomerCache = pgTable(
+  'stripe_customer_cache',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' })
+      .unique(),
+    stripeCustomerId: text('stripe_customer_id').notNull().unique(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index('stripe_customer_cache_userId_idx').on(table.userId)],
+)
+
+export const subscription = pgTable(
+  'subscription',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+    stripeCustomerId: text('stripe_customer_id').notNull(),
+    stripePriceId: text('stripe_price_id').notNull(),
+    status: text('status')
+      .$type<
+        | 'active'
+        | 'canceled'
+        | 'incomplete'
+        | 'incomplete_expired'
+        | 'past_due'
+        | 'trialing'
+        | 'unpaid'
+      >()
+      .notNull(),
+    currentPeriodStart: timestamp('current_period_start').notNull(),
+    currentPeriodEnd: timestamp('current_period_end').notNull(),
+    cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('subscription_userId_idx').on(table.userId),
+    index('subscription_stripeSubscriptionId_idx').on(
+      table.stripeSubscriptionId,
+    ),
+  ],
+)
+
+export const subscriptionRelations = relations(subscription, ({ one }) => ({
+  user: one(user, {
+    fields: [subscription.userId],
+    references: [user.id],
+  }),
+}))
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -162,3 +225,4 @@ export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
 }))
 
 export type AIUsage = InferSelectModel<typeof aiUsage>
+export type Subscription = InferSelectModel<typeof subscription>
