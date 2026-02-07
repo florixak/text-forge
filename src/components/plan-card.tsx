@@ -1,9 +1,12 @@
 import { Plan, PlanLimits } from '@/constants'
+import { createCheckoutSession } from '@/lib/stripe'
 import { formatCurrency } from '@/lib/utils'
+import { UserPlan } from '@/routes/plans'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { Separator } from './ui/separator'
-import { UserPlan } from '@/routes/plans'
 
 interface PlanCardProps {
   plan: Plan
@@ -20,9 +23,25 @@ const PlanCard = ({
   onSelect,
   userPlan,
 }: PlanCardProps) => {
+  const { mutate } = useMutation({
+    mutationFn: () => createCheckoutSession(),
+    onError: (error) => {
+      console.error('Error creating checkout session:', error)
+      toast.error('Failed to create checkout session. Please try again.')
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        toast.error('No checkout URL returned. Please try again.')
+      }
+    },
+  })
+
   const handleSelectPlan = (plan: Plan) => {
     onSelect(plan)
   }
+
   return (
     <Card
       key={plan}
@@ -49,6 +68,18 @@ const PlanCard = ({
         <Button
           className="mt-4 w-full"
           disabled={userPlan.plan === plan && userPlan.loggedIn}
+          onClick={async (e) => {
+            e.stopPropagation()
+            if (!userPlan.loggedIn) {
+              toast.error('Please sign in to choose a plan.')
+              return
+            }
+            if (userPlan.plan === plan) {
+              toast('You are already on this plan.')
+              return
+            }
+            mutate()
+          }}
         >
           {userPlan.loggedIn
             ? plan === userPlan.plan
