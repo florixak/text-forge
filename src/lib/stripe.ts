@@ -1,9 +1,9 @@
+import { db } from '@/db'
+import { stripeCustomerCache, subscription } from '@/db/schema'
 import { createServerFn } from '@tanstack/react-start'
+import { eq } from 'drizzle-orm'
 import Stripe from 'stripe'
 import { authMiddleware } from './middleware'
-import { db } from '@/db'
-import { stripeCustomerCache } from '@/db/schema'
-import { eq } from 'drizzle-orm'
 
 const BASE_URL = process.env.VITE_BASE_URL || 'http://localhost:3000'
 
@@ -65,4 +65,37 @@ export const createCheckoutSession = createServerFn()
     })
 
     return { url: session.url }
+  })
+
+export const downgradeToFree = createServerFn()
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const userId = context.session.user.id
+
+    const subs = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, userId))
+
+    if (subs.length === 0) {
+      throw new Error('No subscription found for user')
+    }
+
+    const cancelPromises = subs.map(async (sub) => {
+      try {
+        await stripe.subscriptions.cancel(sub.stripeSubscriptionId)
+      } catch (error) {
+        console.error(
+          `Failed to cancel subscription ${sub.stripeSubscriptionId}:`,
+          error,
+        )
+      }
+    })
+
+    await Promise.all(cancelPromises)
+
+    return {
+      success: true,
+      message: 'Subscription canceled and downgraded to free plan',
+    }
   })
