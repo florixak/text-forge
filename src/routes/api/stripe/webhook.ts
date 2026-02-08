@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { subscription, user } from '@/db/schema'
 import { sendEmail } from '@/lib/email'
+import { formatPeriodStartEnd, getSubscriptionItem } from '@/lib/stripe'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
@@ -80,9 +81,8 @@ async function POST({ request }: { request: Request }) {
             break
           }
 
-          const stripeSubscription = (await stripe.subscriptions.retrieve(
-            subscriptionId,
-          )) as Stripe.Subscription
+          const stripeSubscription =
+            await stripe.subscriptions.retrieve(subscriptionId)
 
           if (stripeSubscription.items.data.length === 0) {
             console.error(
@@ -90,20 +90,16 @@ async function POST({ request }: { request: Request }) {
             )
             break
           }
+          const subscriptionItem = getSubscriptionItem(stripeSubscription)
+          const { currentPeriodStart, currentPeriodEnd } =
+            formatPeriodStartEnd(stripeSubscription)
 
-          const currentPeriodStartTs =
-            stripeSubscription.items.data[0].current_period_start
-          const currentPeriodEndTs =
-            stripeSubscription.items.data[0].current_period_end
-
-          const currentPeriodStart = new Date(currentPeriodStartTs * 1000)
-          const currentPeriodEnd = new Date(currentPeriodEndTs * 1000)
           await db.transaction(async (tx) => {
             await tx.insert(subscription).values({
               userId,
               stripeSubscriptionId: subscriptionId,
               stripeCustomerId: customerId,
-              stripePriceId: stripeSubscription.items.data[0].price.id,
+              stripePriceId: subscriptionItem.price.id,
               status: stripeSubscription.status as any,
               currentPeriodStart,
               currentPeriodEnd,
@@ -132,13 +128,9 @@ async function POST({ request }: { request: Request }) {
           break
         }
 
-        const currentPeriodStartTs =
-          stripeSubscription.items.data[0].current_period_start
-        const currentPeriodEndTs =
-          stripeSubscription.items.data[0].current_period_end
-
-        const currentPeriodStart = new Date(currentPeriodStartTs * 1000)
-        const currentPeriodEnd = new Date(currentPeriodEndTs * 1000)
+        const subscriptionItem = getSubscriptionItem(stripeSubscription)
+        const { currentPeriodStart, currentPeriodEnd } =
+          formatPeriodStartEnd(stripeSubscription)
 
         await db.transaction(async (tx) => {
           const existingSub = await tx
@@ -154,7 +146,7 @@ async function POST({ request }: { request: Request }) {
               currentPeriodStart,
               currentPeriodEnd,
               cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
-              stripePriceId: stripeSubscription.items.data[0].price.id,
+              stripePriceId: subscriptionItem.price.id,
             })
             .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
 
