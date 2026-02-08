@@ -1,7 +1,11 @@
 import { db } from '@/db'
 import { subscription, user } from '@/db/schema'
 import { sendEmail } from '@/lib/email'
-import { formatPeriodStartEnd, getSubscriptionItem } from '@/lib/stripe'
+import {
+  formatPeriodStartEnd,
+  getSubscriptionItem,
+  toSubscriptionStatus,
+} from '@/lib/stripe'
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { eq } from 'drizzle-orm'
@@ -100,7 +104,7 @@ async function POST({ request }: { request: Request }) {
               stripeSubscriptionId: subscriptionId,
               stripeCustomerId: customerId,
               stripePriceId: subscriptionItem.price.id,
-              status: stripeSubscription.status as any,
+              status: toSubscriptionStatus(stripeSubscription.status),
               currentPeriodStart,
               currentPeriodEnd,
               cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
@@ -149,7 +153,7 @@ async function POST({ request }: { request: Request }) {
           await tx
             .update(subscription)
             .set({
-              status: stripeSubscription.status as any,
+              status: toSubscriptionStatus(stripeSubscription.status),
               currentPeriodStart,
               currentPeriodEnd,
               cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
