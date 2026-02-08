@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm'
 import Stripe from 'stripe'
 import { authMiddleware } from './middleware'
 
-const BASE_URL = process.env.VITE_BASE_URL || 'http://localhost:3000'
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-01-28.clover',
@@ -63,6 +63,10 @@ export const createCheckoutSession = createServerFn()
         userId: ctx.context.session.user.id,
       },
     })
+
+    if (!session.url) {
+      throw new Error('Failed to create checkout session')
+    }
 
     return { url: session.url }
   })
