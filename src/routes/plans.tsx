@@ -3,9 +3,16 @@ import PlanFeatureTable from '@/components/plan-feature-table'
 import { Plan, PlanLimits, planLimits } from '@/constants'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { getUserSubscription } from '@/lib/stripe'
+import { queryOptions } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import * as z from 'zod'
+
+const planQueryOptions = () =>
+  queryOptions({
+    queryKey: ['userPlan'],
+    queryFn: async () => await getUserPlan(),
+  })
 
 const planSchema = z
   .object({
@@ -57,8 +64,9 @@ export const Route = createFileRoute('/plans')({
   validateSearch: planSchema,
   errorComponent: () => <div>Failed to load plans.</div>,
   pendingComponent: () => <div>Loading plans...</div>,
-  loader: async () => {
-    const userPlan = await getUserPlan()
+  loader: async ({ context }) => {
+    const userPlan =
+      await context.queryClient.ensureQueryData(planQueryOptions())
     return { userPlan }
   },
 })
