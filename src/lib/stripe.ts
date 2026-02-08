@@ -67,7 +67,7 @@ export const createCheckoutSession = createServerFn()
     return { url: session.url }
   })
 
-export const downgradeToFree = createServerFn()
+export const cancelSubscription = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const userId = context.session.user.id
@@ -83,7 +83,9 @@ export const downgradeToFree = createServerFn()
 
     const cancelPromises = subs.map(async (sub) => {
       try {
-        await stripe.subscriptions.cancel(sub.stripeSubscriptionId)
+        await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+          cancel_at_period_end: true,
+        })
       } catch (error) {
         console.error(
           `Failed to cancel subscription ${sub.stripeSubscriptionId}:`,
@@ -99,3 +101,40 @@ export const downgradeToFree = createServerFn()
       message: 'Subscription canceled and downgraded to free plan',
     }
   })
+
+export const getUserSubscription = createServerFn()
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const userId = context.session.user.id
+
+    const subs = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, userId))
+      .limit(1)
+
+    if (subs.length === 0) {
+      return null
+    }
+
+    return subs[0]
+  })
+
+export const getSubscriptionItem = (subscription: Stripe.Subscription) => {
+  if (subscription.items.data.length === 0) {
+    throw new Error(`Subscription ${subscription.id} has no items`)
+  }
+
+  return subscription.items.data[0]
+}
+
+export const formatPeriodStartEnd = (subscription: Stripe.Subscription) => {
+  const subscriptionItem = getSubscriptionItem(subscription)
+  const currentPeriodStartTs = subscriptionItem.current_period_start
+  const currentPeriodEndTs = subscriptionItem.current_period_end
+
+  return {
+    currentPeriodStart: new Date(currentPeriodStartTs * 1000),
+    currentPeriodEnd: new Date(currentPeriodEndTs * 1000),
+  }
+}
