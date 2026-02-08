@@ -34,10 +34,19 @@ export const getOrCreateStripeCustomer = createServerFn()
       },
     })
 
-    await db.insert(stripeCustomerCache).values({
-      userId: authUser.id,
-      stripeCustomerId: customer.id,
-    })
+    try {
+      await db.insert(stripeCustomerCache).values({
+        userId: authUser.id,
+        stripeCustomerId: customer.id,
+      })
+    } catch (error) {
+      const cached = await db
+        .select()
+        .from(stripeCustomerCache)
+        .where(eq(stripeCustomerCache.userId, authUser.id))
+        .limit(1)
+      return cached[0].stripeCustomerId
+    }
 
     return customer.id
   })
@@ -85,24 +94,23 @@ export const cancelSubscription = createServerFn()
       throw new Error('No subscription found for user')
     }
 
-    const cancelPromises = subs.map(async (sub) => {
-      try {
+    const results = await Promise.allSettled(
+      subs.map(async (sub) => {
         await stripe.subscriptions.update(sub.stripeSubscriptionId, {
           cancel_at_period_end: true,
         })
-      } catch (error) {
-        console.error(
-          `Failed to cancel subscription ${sub.stripeSubscriptionId}:`,
-          error,
-        )
-      }
-    })
-
-    await Promise.all(cancelPromises)
-
+      }),
+    )
+    const failures = results.filter((r) => r.status === 'rejected')
+    if (failures.length === subs.length) {
+      throw new Error('Failed to cancel all subscriptions')
+    }
     return {
       success: true,
-      message: 'Subscription canceled and downgraded to free plan',
+      message:
+        failures.length > 0
+          ? 'Some subscriptions could not be canceled'
+          : 'Subscription canceled and downgraded to free plan',
     }
   })
 
@@ -141,4 +149,26 @@ export const formatPeriodStartEnd = (subscription: Stripe.Subscription) => {
     currentPeriodStart: new Date(currentPeriodStartTs * 1000),
     currentPeriodEnd: new Date(currentPeriodEndTs * 1000),
   }
+}
+
+const VALID_STATUSES = [
+  'active',
+  'canceled',
+  'incomplete',
+  'incomplete_expired',
+  'past_due',
+  'trialing',
+  'unpaid',
+] as const
+
+type SubscriptionStatus = (typeof VALID_STATUSES)[number]
+
+export const toSubscriptionStatus = (status: string): SubscriptionStatus => {
+  if (VALID_STATUSES.includes(status as any)) {
+    return status as SubscriptionStatus
+  }
+  console.warn(
+    `Unknown subscription status: ${status}, defaulting to 'incomplete'`,
+  )
+  return 'incomplete'
 }
