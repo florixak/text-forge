@@ -46,11 +46,11 @@ const PlanCard = ({
   const { mutate: cancelSubscriptionMutate, isPending: isCanceling } =
     useMutation({
       mutationFn: () => cancelSubscription(),
-      onError: (error) => {
-        console.error('Error downgrading to free plan:', error)
+      onError: () => {
         toast.error('Failed to downgrade to free plan. Please try again.')
       },
       onSuccess: () => {
+        setIsPlanDialogOpen(false)
         toast.success('Successfully downgraded to free plan.')
       },
     })
