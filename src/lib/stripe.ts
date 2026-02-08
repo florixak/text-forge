@@ -114,6 +114,38 @@ export const cancelSubscription = createServerFn()
     }
   })
 
+export const reactivateSubscription = createServerFn()
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const userId = context.session.user.id
+
+    const subs = await db
+      .select()
+      .from(subscription)
+      .where(eq(subscription.userId, userId))
+      .limit(1)
+
+    if (subs.length === 0) {
+      throw new Error('No subscription found for user')
+    }
+
+    const sub = subs[0]
+
+    try {
+      await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+        cancel_at_period_end: false,
+      })
+    } catch (error) {
+      console.error('Error reactivating subscription:', error)
+      throw new Error('Failed to reactivate subscription')
+    }
+
+    return {
+      success: true,
+      message: 'Subscription reactivated and will remain on pro plan',
+    }
+  })
+
 export const getUserSubscription = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
