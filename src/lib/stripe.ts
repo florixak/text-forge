@@ -45,7 +45,11 @@ export const getOrCreateStripeCustomer = createServerFn()
         .from(stripeCustomerCache)
         .where(eq(stripeCustomerCache.userId, authUser.id))
         .limit(1)
-      return cached[0].stripeCustomerId
+
+      if (cached.length > 0) {
+        return cached[0].stripeCustomerId
+      }
+      throw error
     }
 
     return customer.id
@@ -56,13 +60,18 @@ export const createCheckoutSession = createServerFn()
   .handler(async (ctx) => {
     const customerId = await getOrCreateStripeCustomer()
 
+    const priceId = process.env.STRIPE_PRO_PRICE_ID
+    if (!priceId) {
+      throw new Error('STRIPE_PRO_PRICE_ID is not configured')
+    }
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
         {
-          price: process.env.STRIPE_PRO_PRICE_ID!,
+          price: priceId,
           quantity: 1,
         },
       ],
