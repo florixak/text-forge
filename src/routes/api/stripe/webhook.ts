@@ -139,6 +139,13 @@ async function POST({ request }: { request: Request }) {
             .where(eq(subscription.stripeSubscriptionId, stripeSubscription.id))
             .limit(1)
 
+          if (existingSub.length === 0) {
+            console.warn(
+              `Subscription ${stripeSubscription.id} not found in database, skipping update handling`,
+            )
+            return
+          }
+
           await tx
             .update(subscription)
             .set({
@@ -224,10 +231,15 @@ async function POST({ request }: { request: Request }) {
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
-        console.log(`Payment succeeded for invoice ${invoice.id}`)
+        if (!invoice.customer_email) {
+          console.error(
+            `Invoice ${invoice.id} has no customer email, cannot send payment success email`,
+          )
+          break
+        }
         try {
           await sendEmail({
-            to: invoice.customer_email!,
+            to: invoice.customer_email,
             subject: 'Payment Successful',
             html: `<p>Dear customer,</p>
           <p>Thank you for your payment! Your subscription is now active. If you have any questions, feel free to contact our support team.</p>
@@ -242,10 +254,15 @@ async function POST({ request }: { request: Request }) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        console.error(`Payment failed for invoice ${invoice.id}`)
+        if (!invoice.customer_email) {
+          console.error(
+            `Invoice ${invoice.id} has no customer email, cannot send payment failure email`,
+          )
+          break
+        }
         try {
           await sendEmail({
-            to: invoice.customer_email!,
+            to: invoice.customer_email,
             subject: 'Payment Failed',
             html: `<p>Dear customer,</p>
             <p>We regret to inform you that your recent payment for the subscription has failed. Please update your payment information to avoid interruption of your service.</p>
