@@ -32,7 +32,9 @@ export const formatCurrency = (amount: number): string => {
 }
 
 export const formatDate = (date: Date) => {
-  return new Date(date).toLocaleDateString('en-US', {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return 'N/A'
+  return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
