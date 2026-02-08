@@ -32,10 +32,18 @@ const PlanDialog = ({
         <DialogHeader>
           <DialogTitle>Cancel Subscription?</DialogTitle>
           <DialogDescription>
-            Your Pro features will remain active until{' '}
-            {userPlan.subscription &&
-              formatDate(userPlan.subscription.currentPeriodEnd)}
-            . After that, you'll be automatically downgraded to the Free plan.
+            {userPlan.subscription ? (
+              <>
+                Your Pro features will remain active until{' '}
+                {formatDate(userPlan.subscription.currentPeriodEnd)}. After
+                that, you'll be automatically downgraded to the Free plan.
+              </>
+            ) : (
+              <>
+                Your subscription will be canceled and you'll be downgraded to
+                the Free plan.
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
