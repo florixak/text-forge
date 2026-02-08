@@ -85,7 +85,11 @@ const PlanCard = ({
       userPlan.plan === 'free' ||
       (userPlan.plan === 'pro' && userPlan.subscription?.cancelAtPeriodEnd)
     ) {
-      toast('You are already on the free plan.')
+      toast(
+        userPlan.plan === 'free'
+          ? 'You are already on the free plan.'
+          : 'Your subscription is already scheduled for cancellation.',
+      )
       return
     }
     setIsPlanDialogOpen(true)
