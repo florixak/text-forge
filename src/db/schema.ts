@@ -159,6 +159,7 @@ export const subscription = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     userId: text('user_id')
       .notNull()
+      .unique()
       .references(() => user.id, { onDelete: 'cascade' }),
     stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
     stripeCustomerId: text('stripe_customer_id').notNull(),
