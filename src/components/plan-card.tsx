@@ -1,8 +1,12 @@
 import { Plan, PlanLimits } from '@/constants'
-import { createCheckoutSession, cancelSubscription } from '@/lib/stripe'
+import {
+  createCheckoutSession,
+  cancelSubscription,
+  reactivateSubscription,
+} from '@/lib/stripe'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { UserPlan } from '@/routes/plans'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
@@ -26,6 +30,7 @@ const PlanCard = ({
   userPlan,
 }: PlanCardProps) => {
   const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { mutate: createCheckoutSessionMutate, isPending: isUpgrading } =
     useMutation({
@@ -51,7 +56,22 @@ const PlanCard = ({
       },
       onSuccess: () => {
         setIsPlanDialogOpen(false)
-        toast.success('Successfully downgraded to free plan.')
+        toast.success(
+          'Subscription canceled. You will be downgraded to the free plan at the end of your current billing period.',
+        )
+        queryClient.invalidateQueries({ queryKey: ['userPlan'] })
+      },
+    })
+
+  const { mutate: reactivateSubscriptionMutate, isPending: isReactivating } =
+    useMutation({
+      mutationFn: () => reactivateSubscription(),
+      onError: () => {
+        toast.error('Failed to reactivate subscription. Please try again.')
+      },
+      onSuccess: () => {
+        toast.success('Subscription reactivated successfully.')
+        queryClient.invalidateQueries({ queryKey: ['userPlan'] })
       },
     })
 
@@ -61,7 +81,10 @@ const PlanCard = ({
       toast.error('Please sign in to downgrade your plan.')
       return
     }
-    if (userPlan.plan === 'free') {
+    if (
+      userPlan.plan === 'free' ||
+      (userPlan.plan === 'pro' && userPlan.subscription?.cancelAtPeriodEnd)
+    ) {
       toast('You are already on the free plan.')
       return
     }
@@ -86,6 +109,23 @@ const PlanCard = ({
     createCheckoutSessionMutate()
   }
 
+  const handleReactivate = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (!userPlan.loggedIn) {
+      toast.error('Please sign in to reactivate your subscription.')
+      return
+    }
+    if (userPlan.plan === 'free') {
+      toast('You are already on the free plan.')
+      return
+    }
+    if (userPlan.plan === 'pro' && !userPlan.subscription?.cancelAtPeriodEnd) {
+      toast('Your subscription is already active.')
+      return
+    }
+    reactivateSubscriptionMutate()
+  }
+
   const handleSelectPlan = (plan: Plan) => {
     onSelect(plan)
   }
@@ -104,7 +144,7 @@ const PlanCard = ({
     }
     if (plan === 'pro') {
       if (userPlan.plan === 'pro') {
-        if (isCanceledPro) return 'Canceling at Period End'
+        if (isCanceledPro) return 'Reactivate Subscription'
         return 'Current Plan'
       }
       return 'Upgrade to Pro'
@@ -140,11 +180,22 @@ const PlanCard = ({
           <Button
             className="mt-4 w-full"
             disabled={
-              (isCurrentPlan && !isCanceledPro) || isUpgrading || isCanceling
+              (isCurrentPlan && !isCanceledPro) ||
+              isUpgrading ||
+              isCanceling ||
+              isReactivating
             }
-            onClick={plan === 'pro' ? handleUpgrade : handleCancelClick}
+            onClick={
+              plan === 'pro'
+                ? isCanceledPro
+                  ? handleReactivate
+                  : handleUpgrade
+                : handleCancelClick
+            }
           >
-            {isUpgrading || isCanceling ? 'Processing...' : getButtonText()}
+            {isUpgrading || isCanceling || isReactivating
+              ? 'Processing...'
+              : getButtonText()}
           </Button>
           {plan === 'pro' &&
             userPlan.plan === 'pro' &&
