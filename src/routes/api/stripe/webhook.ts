@@ -166,7 +166,7 @@ async function POST({ request }: { request: Request }) {
           }
 
           if (userId) {
-            const isActive = ['active', 'trialing'].includes(
+            const isActive = ['active', 'trialing', 'past_due'].includes(
               stripeSubscription.status,
             )
             console.log(
