@@ -80,6 +80,11 @@ export const createCheckoutSession = createServerFn()
       metadata: {
         userId: ctx.context.session.user.id,
       },
+      subscription_data: {
+        metadata: {
+          userId: ctx.context.session.user.id,
+        },
+      },
     })
 
     if (!session.url) {
