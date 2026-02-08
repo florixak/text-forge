@@ -31,6 +31,14 @@ export const formatCurrency = (amount: number): string => {
   }).format(amount)
 }
 
+export const formatDate = (date: Date) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
 export const formatLimit = (
   planConfig: PlanLimits,
   todayUsage: AIUsage,
