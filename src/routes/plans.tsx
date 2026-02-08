@@ -2,9 +2,17 @@ import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
 import { Plan, PlanLimits, planLimits } from '@/constants'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { getUserSubscription } from '@/lib/stripe'
+import { queryOptions } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import * as z from 'zod'
+
+const planQueryOptions = () =>
+  queryOptions({
+    queryKey: ['userPlan'],
+    queryFn: async () => await getUserPlan(),
+  })
 
 const planSchema = z
   .object({
@@ -15,6 +23,11 @@ const planSchema = z
 export interface UserPlan {
   loggedIn: boolean
   plan: Plan
+  subscription?: {
+    cancelAtPeriodEnd: boolean
+    currentPeriodEnd: Date
+    status: string
+  } | null
 }
 
 const getUserPlan = createServerFn()
@@ -25,7 +38,25 @@ const getUserPlan = createServerFn()
       return { loggedIn: false, plan: 'free' }
     }
 
-    return { loggedIn: true, plan: user.plan as Plan }
+    let subscriptionInfo: UserPlan['subscription'] = null
+    try {
+      const sub = await getUserSubscription()
+      if (sub) {
+        subscriptionInfo = {
+          cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
+          currentPeriodEnd: sub.currentPeriodEnd,
+          status: sub.status,
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user subscription:', error)
+    }
+
+    return {
+      loggedIn: true,
+      plan: user.plan as Plan,
+      subscription: subscriptionInfo,
+    }
   })
 
 export const Route = createFileRoute('/plans')({
@@ -33,8 +64,9 @@ export const Route = createFileRoute('/plans')({
   validateSearch: planSchema,
   errorComponent: () => <div>Failed to load plans.</div>,
   pendingComponent: () => <div>Loading plans...</div>,
-  loader: async () => {
-    const userPlan = await getUserPlan()
+  loader: async ({ context }) => {
+    const userPlan =
+      await context.queryClient.ensureQueryData(planQueryOptions())
     return { userPlan }
   },
 })

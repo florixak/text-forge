@@ -13,7 +13,7 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   )
 }
 
-const APP_URL = process.env.BETTER_AUTH_URL || 'http://localhost:3000'
+const APP_URL = process.env.VITE_BASE_URL || 'http://localhost:3000'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
