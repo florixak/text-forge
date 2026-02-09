@@ -61,7 +61,7 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
             <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-2 bg-primary"
-                style={{ width: `${usage.assist.percentage}%` }}
+                style={{ width: `${Math.min(usage.assist.percentage, 100)}%` }}
               ></div>
             </div>
 
