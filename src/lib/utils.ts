@@ -1,5 +1,5 @@
-import { MAX_INPUT_LENGTH, OUTPUT_FORMATS } from '@/constants'
-import { AIUsage } from '@/db/schema'
+import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import { AIUsage, User } from '@/db/schema'
 import { OutputFormat, PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -71,6 +71,7 @@ export const isValidTheme = (theme: string) => {
 export const validateAIServerFnInput = (data: {
   input: string
   format: OutputFormat
+  plan: User['plan']
 }) => {
   if (!OUTPUT_FORMATS.includes(data.format)) {
     throw new Error('Invalid output format.')
@@ -79,9 +80,9 @@ export const validateAIServerFnInput = (data: {
   if (input.length === 0) {
     throw new Error('Input is required.')
   }
-  if (input.length > MAX_INPUT_LENGTH) {
+  if (input.length > PLAN_LIMITS[data.plan].max_input_length) {
     throw new Error(
-      `AI structuring can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
+      `AI can handle up to ${PLAN_LIMITS[data.plan].max_input_length} characters. ${data.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
     )
   }
   return { ...data, input }
