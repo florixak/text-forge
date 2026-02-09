@@ -1,11 +1,10 @@
 import {
-  InputFormat,
   inputFormats,
   MAX_INPUT_LENGTH,
-  OutputFormat,
   outputFormats,
   planLimits,
 } from '@/constants'
+import { InputFormat, OutputFormat } from '@/types'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import useDebounce from '@/hooks/useDebounce'

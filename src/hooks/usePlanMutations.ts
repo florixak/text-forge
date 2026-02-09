@@ -4,7 +4,7 @@ import {
   createCheckoutSession,
   reactivateSubscription,
 } from '@/lib/stripe'
-import { UserPlan } from '@/routes/plans'
+import { UserPlan } from '@/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 

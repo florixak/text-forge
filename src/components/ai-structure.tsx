@@ -1,9 +1,5 @@
-import {
-  MAX_INPUT_LENGTH,
-  OutputFormat,
-  outputFormats,
-  planLimits,
-} from '@/constants'
+import { MAX_INPUT_LENGTH, outputFormats, planLimits } from '@/constants'
+import { OutputFormat } from '@/types'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
 import { structureData } from '@/lib/google-ai'

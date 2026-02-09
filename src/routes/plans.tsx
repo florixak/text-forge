@@ -1,9 +1,10 @@
 import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
-import { Plan, PlanLimits, planLimits } from '@/constants'
+import { planLimits } from '@/constants'
 import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { getUserSubscription } from '@/lib/stripe'
+import { Plan, PlanLimits, UserPlan } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -14,16 +15,6 @@ const planSchema = z
     plan: z.enum(['free', 'pro']).catch('free'),
   })
   .catch({ plan: 'free' })
-
-export interface UserPlan {
-  loggedIn: boolean
-  plan: Plan
-  subscription?: {
-    cancelAtPeriodEnd: boolean
-    currentPeriodEnd: Date
-    status: string
-  } | null
-}
 
 export const getUserPlan = createServerFn()
   .middleware([authOptionalMiddleware])
@@ -60,10 +51,7 @@ export const Route = createFileRoute('/plans')({
   errorComponent: () => <div>Failed to load plans.</div>,
   pendingComponent: () => <div>Loading plans...</div>,
   loader: async ({ context }) => {
-    const userPlan = await context.queryClient.ensureQueryData(
-      createPlanQueryOptions(),
-    )
-    return { userPlan }
+    await context.queryClient.ensureQueryData(createPlanQueryOptions())
   },
 })
 

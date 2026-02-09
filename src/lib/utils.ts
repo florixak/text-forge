@@ -1,5 +1,5 @@
-import { PlanLimits } from '@/constants'
 import { AIUsage } from '@/db/schema'
+import { PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 

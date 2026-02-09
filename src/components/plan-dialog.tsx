@@ -1,5 +1,4 @@
 import { formatDate } from '@/lib/utils'
-import { UserPlan } from '@/routes/plans'
 import { Button } from './ui/button'
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
+import { UserPlan } from '@/types'
 
 interface PlanDialogProps {
   open: boolean

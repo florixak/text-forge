@@ -1,13 +1,13 @@
-import { Plan, PlanLimits } from '@/constants'
+import { PlanLimits } from '@/types'
 import usePlanMutations from '@/hooks/usePlanMutations'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { UserPlan } from '@/routes/plans'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import PlanDialog from './plan-dialog'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { Separator } from './ui/separator'
+import { Plan, UserPlan } from '@/types'
 
 interface PlanCardProps {
   plan: Plan

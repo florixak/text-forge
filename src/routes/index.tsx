@@ -1,11 +1,7 @@
 import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
-import {
-  InputFormat,
-  inputFormats,
-  OutputFormat,
-  outputFormats,
-} from '@/constants'
+import { inputFormats, outputFormats } from '@/constants'
+import { InputFormat, OutputFormat } from '@/types'
 import useDebounce from '@/hooks/useDebounce'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'

@@ -1,9 +1,4 @@
-import {
-  MAX_INPUT_LENGTH,
-  OutputFormat,
-  outputFormats,
-  planLimits,
-} from '@/constants'
+import { MAX_INPUT_LENGTH, outputFormats, planLimits } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
 import { generateData } from '@/lib/google-ai'
@@ -19,6 +14,7 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
+import { OutputFormat } from '@/types'
 
 const generateDataFn = createServerFn({ method: 'POST' })
   .inputValidator((data: { description: string; format: OutputFormat }) => {
