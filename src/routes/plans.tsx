@@ -1,18 +1,13 @@
 import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
 import { Plan, PlanLimits, planLimits } from '@/constants'
+import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { getUserSubscription } from '@/lib/stripe'
-import { queryOptions } from '@tanstack/react-query'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import * as z from 'zod'
-
-const planQueryOptions = () =>
-  queryOptions({
-    queryKey: ['userPlan'],
-    queryFn: async () => await getUserPlan(),
-  })
 
 const planSchema = z
   .object({
@@ -30,7 +25,7 @@ export interface UserPlan {
   } | null
 }
 
-const getUserPlan = createServerFn()
+export const getUserPlan = createServerFn()
   .middleware([authOptionalMiddleware])
   .handler(async ({ context }): Promise<UserPlan> => {
     const { user } = context.session || {}
@@ -65,8 +60,9 @@ export const Route = createFileRoute('/plans')({
   errorComponent: () => <div>Failed to load plans.</div>,
   pendingComponent: () => <div>Loading plans...</div>,
   loader: async ({ context }) => {
-    const userPlan =
-      await context.queryClient.ensureQueryData(planQueryOptions())
+    const userPlan = await context.queryClient.ensureQueryData(
+      createPlanQueryOptions(),
+    )
     return { userPlan }
   },
 })
@@ -74,7 +70,7 @@ export const Route = createFileRoute('/plans')({
 function RouteComponent() {
   const { plan: selected } = Route.useSearch()
   const navigate = Route.useNavigate()
-  const { userPlan } = Route.useLoaderData()
+  const { data: userPlan } = useSuspenseQuery(createPlanQueryOptions())
 
   const plans = Array.from(Object.entries(planLimits)) as [Plan, PlanLimits][]
 
