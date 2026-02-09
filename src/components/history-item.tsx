@@ -1,11 +1,11 @@
-import type { HistoryItem as HistoryItemType } from '@/types'
+import type { ActionType, HistoryItem as HistoryItemType } from '@/types'
 import { Card } from './ui/card'
 import { capitalizeFirstLetter } from '@/lib/utils'
 import { Bolt, Bot, RefreshCcw, WandSparkles } from 'lucide-react'
 import { Button } from './ui/button'
 import { useNavigate } from '@tanstack/react-router'
 
-const getActionIcon = (action: 'convert' | 'structure' | 'generate') => {
+const getActionIcon = (action: ActionType) => {
   switch (action) {
     case 'convert':
       return <RefreshCcw className="h-8 w-8 text-green-500" />
@@ -18,7 +18,7 @@ const getActionIcon = (action: 'convert' | 'structure' | 'generate') => {
   }
 }
 
-const getActionPath = (action: 'convert' | 'structure' | 'generate') => {
+const getActionPath = (action: ActionType) => {
   switch (action) {
     case 'convert':
       return '/'

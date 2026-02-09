@@ -1,14 +1,13 @@
 import { Route } from '@/routes/history'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
+import { ActionType } from '@/types'
 
 const HistoryFilter = () => {
   const navigate = Route.useNavigate()
   const { action, day } = Route.useSearch()
 
-  const handleFilterClick = (
-    newAction: 'convert' | 'structure' | 'generate' | undefined,
-  ) => {
+  const handleFilterClick = (newAction: ActionType | undefined) => {
     navigate({ search: (prev) => ({ ...prev, action: newAction }) })
   }
 
