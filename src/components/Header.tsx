@@ -1,9 +1,9 @@
-import { navLinks } from '@/constants'
 import { Link } from '@tanstack/react-router'
 import { Terminal, User } from 'lucide-react'
 import { Button } from './ui/button'
 import { authClient } from '@/lib/auth-client'
 import ThemeSwitcher from './theme-switcher'
+import { NAV_LINKS } from '@/constants'
 
 export default function Header() {
   const { data: session } = authClient.useSession()
@@ -22,7 +22,7 @@ export default function Header() {
         </h1>
         <nav className="hidden md:block">
           <ul className="flex gap-8 flex-row items-center justify-between w-full">
-            {navLinks.map((link) => (
+            {NAV_LINKS.map((link) => (
               <li key={link.href}>
                 <Link to={link.href} className="hover:underline">
                   {link.name}
