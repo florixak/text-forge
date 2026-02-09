@@ -4,6 +4,7 @@ const QUERY_KEYS = {
   usageToday: ['usage', 'today'] as const,
   userPlan: ['userPlan'] as const,
   history: (day?: string, action?: string) => ['history', day, action] as const,
+  currentUser: ['currentUser'] as const,
 }
 
 const NAV_LINKS: {
@@ -62,25 +63,16 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     structure_ai_day: 75,
     generate_ai_day: 50,
     support: 'priority',
-    max_input_length: 10000,
+    max_input_length: 7000,
     features: [
       '100 AI assist calls per day',
       '75 AI structuring calls per day',
       '50 AI generations per day',
       'Unlimited history records',
       'Priority support',
-      'Max input length: 10,000 characters',
+      'Max input length: 7,000 characters',
     ],
   },
 } as const
 
-const MAX_INPUT_LENGTH = PLAN_LIMITS.free.max_input_length
-
-export {
-  NAV_LINKS,
-  INPUT_FORMATS,
-  OUTPUT_FORMATS,
-  PLAN_LIMITS,
-  MAX_INPUT_LENGTH,
-  QUERY_KEYS,
-}
+export { NAV_LINKS, INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS, QUERY_KEYS }

@@ -1,9 +1,10 @@
-import { MAX_INPUT_LENGTH } from '@/constants'
+import { PLAN_LIMITS } from '@/constants'
 import {
   assistPrompt,
   generatePrompt,
   structurePrompt,
 } from '@/constants/prompts'
+import { User } from '@/db/schema'
 import { InputFormat, OutputFormat } from '@/types'
 import { generateText, LanguageModel } from 'ai'
 
@@ -12,6 +13,7 @@ export async function baseAssistText(
   fromType: InputFormat,
   toType: OutputFormat,
   model: LanguageModel,
+  plan: User['plan'],
 ) {
   if (!model) {
     throw new Error('No language model specified for text assistance.')
@@ -33,7 +35,7 @@ export async function baseAssistText(
     return `${start}...[truncated ${truncatedCount} characters]...${middle}...[truncated]...${end}`
   }
 
-  const sample = getSample(input, MAX_INPUT_LENGTH)
+  const sample = getSample(input, PLAN_LIMITS[plan].max_input_length)
 
   try {
     const result = await generateText({
@@ -53,12 +55,13 @@ export async function baseStructureData(
   input: string,
   format: OutputFormat,
   model: LanguageModel,
+  plan: User['plan'],
 ) {
   if (!model) {
     throw new Error('No language model specified for data structuring.')
   }
 
-  const MAX_LENGTH = 2000
+  const MAX_LENGTH = PLAN_LIMITS[plan].max_input_length
 
   if (input.length <= MAX_LENGTH) {
     try {
@@ -94,6 +97,7 @@ export async function baseGenerateData(
   description: string,
   format: OutputFormat,
   model: LanguageModel,
+  plan: User['plan'],
 ) {
   if (!model) {
     throw new Error('No language model specified for data generation.')
