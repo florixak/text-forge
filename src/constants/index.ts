@@ -6,7 +6,7 @@ const QUERY_KEYS = {
   history: (day?: string, action?: string) => ['history', day, action] as const,
 }
 
-const navLinks: {
+const NAV_LINKS: {
   name: string
   href: string
 }[] = [
@@ -16,7 +16,7 @@ const navLinks: {
   { name: 'History', href: '/history' },
 ]
 
-const inputFormats = [
+const INPUT_FORMATS = [
   'Auto-detect',
   'JSON',
   'CSV',
@@ -27,7 +27,7 @@ const inputFormats = [
   'XML',
 ] as const
 
-const outputFormats = [
+const OUTPUT_FORMATS = [
   'JSON',
   'CSV',
   'YAML',
@@ -37,7 +37,7 @@ const outputFormats = [
   'XML',
 ] as const
 
-const planLimits: Record<Plan, PlanLimits> = {
+const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: {
     price: 0,
     description: 'Basic plan for personal use',
@@ -74,13 +74,13 @@ const planLimits: Record<Plan, PlanLimits> = {
   },
 } as const
 
-const MAX_INPUT_LENGTH = planLimits.free.max_input_length
+const MAX_INPUT_LENGTH = PLAN_LIMITS.free.max_input_length
 
 export {
-  navLinks,
-  inputFormats,
-  outputFormats,
-  planLimits,
+  NAV_LINKS,
+  INPUT_FORMATS,
+  OUTPUT_FORMATS,
+  PLAN_LIMITS,
   MAX_INPUT_LENGTH,
   QUERY_KEYS,
 }
