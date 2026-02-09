@@ -31,19 +31,21 @@ const usePlanMutations = (callbacks: UsePlanMutationsOptions = {}) => {
     },
   })
 
-  const handleSubscriptionUpdate = (message: string) => {
+  const handleSubscriptionUpdate = (
+    message: string,
+    cancelAtPeriodEnd: boolean,
+  ) => {
     toast.success(message)
     queryClient.setQueryData(
       QUERY_KEYS.userPlan,
       (oldData: UserPlan | undefined) => {
-        if (!oldData || !oldData.loggedIn) return oldData
+        if (!oldData || !oldData.loggedIn || !oldData.subscription)
+          return oldData
         return {
           ...oldData,
           subscription: {
             ...oldData.subscription,
-            cancelAtPeriodEnd: !(
-              oldData.subscription?.cancelAtPeriodEnd ?? false
-            ),
+            cancelAtPeriodEnd,
           },
         }
       },
@@ -59,6 +61,7 @@ const usePlanMutations = (callbacks: UsePlanMutationsOptions = {}) => {
       callbacks?.onCancelSuccess?.()
       handleSubscriptionUpdate(
         'Subscription will be canceled at the end of the billing period.',
+        true,
       )
     },
   })
@@ -70,7 +73,7 @@ const usePlanMutations = (callbacks: UsePlanMutationsOptions = {}) => {
     },
     onSuccess: () => {
       callbacks?.onReactivateSuccess?.()
-      handleSubscriptionUpdate('Subscription reactivated successfully.')
+      handleSubscriptionUpdate('Subscription reactivated successfully.', false)
     },
   })
 
