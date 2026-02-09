@@ -1,40 +1,31 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
-import { Plan, planLimits } from '@/constants'
+import DashboardFooter from '@/components/dashboard/dashboard-footer'
+import DashboardHeader from '@/components/dashboard/dashboard-header'
+import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
+import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
+import { planLimits } from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
-import { authClient } from '@/lib/auth-client'
+import { createUsageQueryOptions } from '@/hooks/query-options'
 import { authMiddleware } from '@/lib/middleware'
-import { capitalizeFirstLetter, formatLimit } from '@/lib/utils'
-import { queryOptions } from '@tanstack/react-query'
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from '@tanstack/react-router'
+import { formatLimit, FormatLimitResult } from '@/lib/utils'
+import { DashboardUser } from '@/types'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
-import {
-  CirclePile,
-  ShieldAlert,
-  ShieldCheck,
-  ShieldClose,
-  Sparkles,
-  Star,
-  TextAlignStart,
-} from 'lucide-react'
 
-export const usageQueryOptions = () =>
-  queryOptions({
-    queryKey: ['usage', 'today'],
-    queryFn: async () => {
-      return await getTodayUsage()
-    },
-  })
+export interface DashboardData {
+  user: DashboardUser
+  usage: {
+    words: number
+    last_used: number | null
+    assist: FormatLimitResult
+    structure: FormatLimitResult
+    generate: FormatLimitResult
+  }
+}
 
-const getTodayUsage = createServerFn({ method: 'GET' })
+export const getTodayUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { user } = context.session || {}
@@ -52,7 +43,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
         .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
         .limit(1)
 
-      const planKey = user.plan as Plan
+      const planKey = user.plan
       const planConfig = planLimits[planKey]
       if (!planConfig) {
         throw new Error('Invalid plan configuration')
@@ -87,7 +78,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
         'generate_ai',
       )
 
-      const usage = {
+      const usage: DashboardData['usage'] = {
         words,
         last_used,
         assist: assistLimit,
@@ -112,220 +103,23 @@ export const Route = createFileRoute('/dashboard')({
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async ({ context }) => {
-    return context.queryClient.ensureQueryData(usageQueryOptions())
+    await context.queryClient.ensureQueryData(createUsageQueryOptions())
   },
 })
 
 function RouteComponent() {
-  const { user, usage } = Route.useLoaderData()
-  const navigate = useNavigate()
-
-  const handleLogout = async () => {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          navigate({ to: '/signin', replace: true })
-        },
-      },
-    })
-  }
-
+  const {
+    data: { user, usage },
+  } = useSuspenseQuery(createUsageQueryOptions())
   return (
-    <section className="max-w-3xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 mt-8">
-      <div className="text-left">
-        <h2 className="text-3xl font-bold mb-2">Hi, {user?.name}</h2>
-        <p>Manage your account and AI usage</p>
-      </div>
+    <section className="max-w-3xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
+      <DashboardHeader data={{ user, usage }} />
 
-      <div className="flex flex-wrap gap-4 w-full">
-        <Card className="p-4 flex-1">
-          <div className="flex items-center justify-between">
-            <div className="bg-primary/10 p-2 rounded-md">
-              <Star className="text-primary" />
-            </div>
+      <DashboardQuickActions />
 
-            <Button size="sm" asChild>
-              <Link to="/plans" search={{ plan: user.plan }}>
-                {user.plan === 'free' ? 'Upgrade' : 'Manage'}
-              </Link>
-            </Button>
-          </div>
-          <div className="flex flex-col">
-            <h4 className="text-lg font-bold">
-              {capitalizeFirstLetter(user.plan)}
-            </h4>
-            <p className="text-sm text-muted-foreground">Current Plan</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex-1">
-          <div className="flex items-center">
-            <div className="bg-primary/10 p-2 rounded-md">
-              <Sparkles className="text-primary" />
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-bold">
-                {usage.assist.used} / {usage.assist.limit} used
-              </h4>
-              <span className="text-xs">
-                {Math.round(usage.assist.percentage)}%
-              </span>
-            </div>
+      <DashboardUsageInfo data={{ user, usage }} />
 
-            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-2 bg-primary"
-                style={{ width: `${usage.assist.percentage}%` }}
-              ></div>
-            </div>
-
-            <p className="text-sm text-muted-foreground">Resets at midnight</p>
-          </div>
-        </Card>
-        <Card className="p-4 flex-1">
-          <div className="flex items-center">
-            <div className={`bg-primary/10 p-2 rounded-md`}>
-              {user.enabled ? (
-                user.emailVerified ? (
-                  <ShieldCheck className="text-green-400" />
-                ) : (
-                  <ShieldAlert className="text-yellow-400" />
-                )
-              ) : (
-                <ShieldClose className="text-red-400" />
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <h4 className="text-lg font-bold">
-              {user.enabled
-                ? user.emailVerified
-                  ? 'Active'
-                  : 'Unverified'
-                : 'Disabled'}
-            </h4>
-            <p className="text-sm text-muted-foreground">Account Status</p>
-          </div>
-        </Card>
-      </div>
-
-      <div className="w-full flex flex-col">
-        <h3 className="text-2xl font-bold mb-2">Quick Actions</h3>
-        <div className="flex flex-wrap gap-4 w-full">
-          <Link to="/" className="flex-1">
-            <Card className="p-4 mb-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-accent/50">
-              <div className="flex items-center">
-                <div className="bg-primary/10 p-2 rounded-md">
-                  <TextAlignStart className="text-primary" />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <h4 className="font-bold">Go To Formatter</h4>
-                <p className="text-sm text-muted-foreground">
-                  Clean and beautify your data
-                </p>
-              </div>
-            </Card>
-          </Link>
-          <Link to="/ai-structuring" className="flex-1">
-            <Card className="p-4 mb-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-accent/50">
-              <div className="flex items-center">
-                <div className="bg-primary/10 p-2 rounded-md">
-                  <CirclePile className="text-primary" />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <h4 className="font-bold">AI Structuring</h4>
-                <p className="text-sm text-muted-foreground">
-                  Structure unorganized data using AI
-                </p>
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </div>
-
-      <Card className="w-full pb-0">
-        <CardHeader className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Usage Info</h3>
-          <Link to="/history" className="text-primary">
-            View History
-          </Link>
-        </CardHeader>
-        <Separator />
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h5>Daily AI Assist</h5>
-              <p className="text-sm text-muted-foreground">
-                Standard for {user.plan} tier users
-              </p>
-            </div>
-            <p className="font-semibold text-base">
-              {usage.assist.used} / {usage.assist.limit} Assists
-            </p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h5>Daily AI Structuring</h5>
-              <p className="text-sm text-muted-foreground">
-                Standard for {user.plan} tier users
-              </p>
-            </div>
-            <p className="font-semibold text-base">
-              {usage.structure.used} / {usage.structure.limit} Structurings
-            </p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h5>Daily AI Generations</h5>
-              <p className="text-sm text-muted-foreground">
-                Standard for {user.plan} tier users
-              </p>
-            </div>
-            <p className="font-semibold text-base">
-              {usage.generate.used} / {usage.generate.limit} Generations
-            </p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h5>Words Processed Today</h5>
-              <p className="text-sm text-muted-foreground">
-                Total words processed so far today
-              </p>
-            </div>
-            <p className="font-semibold text-base">{usage.words} words</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h5>Last Used</h5>
-              <p className="text-sm text-muted-foreground">
-                Your most recent AI generation
-              </p>
-            </div>
-            <p className="font-semibold text-base">
-              {usage.last_used ? `${usage.last_used} hours ago` : 'Never'}
-            </p>
-          </div>
-        </CardContent>
-        <CardFooter className="bg-border/50 flex flex-col items-center p-4">
-          <p className="text-sm">
-            Need more power?{' '}
-            <Link
-              to="/plans"
-              search={{ plan: user.plan }}
-              className="text-primary font-semibold"
-            >
-              Compare all plans
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-
-      <Button variant="destructive" onClick={handleLogout}>
-        Logout
-      </Button>
+      <DashboardFooter />
     </section>
   )
 }

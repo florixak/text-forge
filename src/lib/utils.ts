@@ -41,11 +41,18 @@ export const formatDate = (date: Date) => {
   })
 }
 
+export interface FormatLimitResult {
+  used: number
+  limit: number
+  remaining: number
+  percentage: number
+}
+
 export const formatLimit = (
   planConfig: PlanLimits,
   todayUsage: AIUsage,
   type: 'assist_ai' | 'structure_ai' | 'generate_ai',
-) => {
+): FormatLimitResult => {
   const assistLimit = Math.max(0, planConfig[`${type}_day`])
   const used = Math.max(0, todayUsage[type] ?? 0)
 

@@ -3,32 +3,20 @@ import HistoryList from '@/components/history-list'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { authMiddleware } from '@/lib/middleware'
-import { queryOptions } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import type { HistoryItem } from '@/types'
 import * as z from 'zod'
+import { createHistoryQueryOptions } from '@/hooks/query-options'
+import { useSuspenseQuery } from '@tanstack/react-query'
 
 const historySearchSchema = z.object({
   day: z.string().optional(),
   action: z.enum(['convert', 'structure', 'generate']).optional(),
 })
 
-interface HistoryQueryOptions {
-  day?: string
-  action?: 'convert' | 'structure' | 'generate'
-}
-
-export const historyQueryOptions = ({ day, action }: HistoryQueryOptions) =>
-  queryOptions({
-    queryKey: ['history', day, action],
-    queryFn: async () => {
-      return await getUserHistoryFn({ data: { day, action } })
-    },
-  })
-
-const getUserHistoryFn = createServerFn({ method: 'GET' })
+export const getUserHistoryFn = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .inputValidator(historySearchSchema)
   .handler(async ({ context, data }): Promise<{ history: HistoryItem[] }> => {
@@ -81,12 +69,16 @@ export const Route = createFileRoute('/history')({
   },
   loaderDeps: ({ search }) => ({ day: search.day, action: search.action }),
   loader: async ({ context, deps }) => {
-    return context.queryClient.ensureQueryData(historyQueryOptions(deps))
+    await context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))
   },
 })
 
 function RouteComponent() {
-  const { history } = Route.useLoaderData()
+  const { day, action } = Route.useSearch()
+  const {
+    data: { history },
+  } = useSuspenseQuery(createHistoryQueryOptions({ day, action }))
+
   return (
     <section className="min-h-screen bg-background flex items-center justify-start flex-col gap-8 p-4 mt-10">
       <div className="text-center space-y-2">

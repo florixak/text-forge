@@ -1,18 +1,13 @@
 import { Plan, PlanLimits } from '@/constants'
-import {
-  createCheckoutSession,
-  cancelSubscription,
-  reactivateSubscription,
-} from '@/lib/stripe'
+import usePlanMutations from '@/hooks/usePlanMutations'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { UserPlan } from '@/routes/plans'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { toast } from 'sonner'
+import PlanDialog from './plan-dialog'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader } from './ui/card'
 import { Separator } from './ui/separator'
-import PlanDialog from './plan-dialog'
-import { useState } from 'react'
 
 interface PlanCardProps {
   plan: Plan
@@ -30,50 +25,16 @@ const PlanCard = ({
   userPlan,
 }: PlanCardProps) => {
   const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false)
-  const queryClient = useQueryClient()
-
-  const { mutate: createCheckoutSessionMutate, isPending: isUpgrading } =
-    useMutation({
-      mutationFn: () => createCheckoutSession(),
-      onError: (error) => {
-        console.error('Error creating checkout session:', error)
-        toast.error('Failed to create checkout session. Please try again.')
-      },
-      onSuccess: (data) => {
-        if (data.url) {
-          window.location.href = data.url
-        } else {
-          toast.error('No checkout URL returned. Please try again.')
-        }
-      },
-    })
-
-  const { mutate: cancelSubscriptionMutate, isPending: isCanceling } =
-    useMutation({
-      mutationFn: () => cancelSubscription(),
-      onError: () => {
-        toast.error('Failed to downgrade to free plan. Please try again.')
-      },
-      onSuccess: () => {
-        setIsPlanDialogOpen(false)
-        toast.success(
-          'Subscription canceled. You will be downgraded to the free plan at the end of your current billing period.',
-        )
-        queryClient.invalidateQueries({ queryKey: ['userPlan'] })
-      },
-    })
-
-  const { mutate: reactivateSubscriptionMutate, isPending: isReactivating } =
-    useMutation({
-      mutationFn: () => reactivateSubscription(),
-      onError: () => {
-        toast.error('Failed to reactivate subscription. Please try again.')
-      },
-      onSuccess: () => {
-        toast.success('Subscription reactivated successfully.')
-        queryClient.invalidateQueries({ queryKey: ['userPlan'] })
-      },
-    })
+  const {
+    checkout: { mutate: createCheckoutSessionMutate, isPending: isUpgrading },
+    cancel: { mutate: cancelSubscriptionMutate, isPending: isCanceling },
+    reactivate: {
+      mutate: reactivateSubscriptionMutate,
+      isPending: isReactivating,
+    },
+  } = usePlanMutations({
+    onCancelSuccess: () => setIsPlanDialogOpen(false),
+  })
 
   const handleCancelClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()

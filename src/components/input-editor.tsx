@@ -92,13 +92,13 @@ const aiAssistFn = createServerFn({
           const updateResult = await tx
             .update(aiUsage)
             .set({
-              structure_ai: sql`${aiUsage.structure_ai} + 1`,
+              assist_ai: sql`${aiUsage.assist_ai} + 1`,
             })
             .where(
               and(
                 eq(aiUsage.userId, session.user.id),
                 eq(aiUsage.day, today),
-                sql`${aiUsage.structure_ai} < ${userPlanLimit.structure_ai_day}`,
+                sql`${aiUsage.assist_ai} < ${userPlanLimit.assist_ai_day}`,
               ),
             )
 
@@ -132,9 +132,7 @@ const aiAssistFn = createServerFn({
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error(
-            'AI structuring failed: ' + (aiError as Error).message,
-          )
+          throw new Error('AI assist failed: ' + (aiError as Error).message)
         }
       } catch (error) {
         return {

@@ -6,6 +6,12 @@ interface NavLink {
 export type InputFormat = (typeof inputFormats)[number]
 export type OutputFormat = (typeof outputFormats)[number]
 
+const QUERY_KEYS = {
+  usageToday: ['usage', 'today'] as const,
+  userPlan: ['userPlan'] as const,
+  history: (day?: string, action?: string) => ['history', day, action] as const,
+}
+
 const navLinks: NavLink[] = [
   { name: 'Home', href: '/' },
   { name: 'AI Structuring', href: '/ai-structuring' },
@@ -88,4 +94,11 @@ const planLimits: Record<Plan, PlanLimits> = {
 
 const MAX_INPUT_LENGTH = planLimits.free.max_input_length
 
-export { navLinks, inputFormats, outputFormats, planLimits, MAX_INPUT_LENGTH }
+export {
+  navLinks,
+  inputFormats,
+  outputFormats,
+  planLimits,
+  MAX_INPUT_LENGTH,
+  QUERY_KEYS,
+}

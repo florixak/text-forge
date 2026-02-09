@@ -1,4 +1,5 @@
 import { InputFormat, OutputFormat } from '@/constants'
+import { ActionType } from '@/types'
 import { InferSelectModel, relations } from 'drizzle-orm'
 import {
   pgTable,
@@ -125,9 +126,7 @@ export const historyUsage = pgTable(
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
 
-    action: text('action')
-      .$type<'convert' | 'structure' | 'generate'>()
-      .notNull(),
+    action: text('action').$type<ActionType>().notNull(),
 
     from: text('from').$type<InputFormat>().notNull(),
     to: text('to').$type<OutputFormat>().notNull(),
@@ -227,3 +226,4 @@ export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
 
 export type AIUsage = InferSelectModel<typeof aiUsage>
 export type Subscription = InferSelectModel<typeof subscription>
+export type User = InferSelectModel<typeof user>
