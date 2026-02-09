@@ -1,5 +1,5 @@
 import { InputFormat, OutputFormat } from '@/types'
-import useCopy from '@/hooks/useCopy'
+import useCopy from '@/hooks/use-copy'
 import { convertData } from '@/lib/converters'
 import { downloadFile } from '@/lib/download'
 import { getFileSize } from '@/lib/utils'

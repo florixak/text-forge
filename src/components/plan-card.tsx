@@ -1,5 +1,5 @@
 import { PlanLimits } from '@/types'
-import usePlanMutations from '@/hooks/usePlanMutations'
+import usePlanMutations from '@/hooks/use-plan-mutations'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { useState } from 'react'
 import { toast } from 'sonner'

@@ -1,6 +1,6 @@
 import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
-import { planLimits } from '@/constants'
+import { PLAN_LIMITS } from '@/constants'
 import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { getUserSubscription } from '@/lib/stripe'
@@ -60,7 +60,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate()
   const { data: userPlan } = useSuspenseQuery(createPlanQueryOptions())
 
-  const plans = Array.from(Object.entries(planLimits)) as [Plan, PlanLimits][]
+  const plans = Array.from(Object.entries(PLAN_LIMITS)) as [Plan, PlanLimits][]
 
   const handleSelectPlan = (plan: Plan) => {
     navigate({

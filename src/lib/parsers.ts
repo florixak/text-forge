@@ -1,4 +1,4 @@
-import { InputFormat } from '@/constants'
+import { InputFormat } from '@/types'
 
 export interface ParseResult<T = unknown> {
   success: boolean

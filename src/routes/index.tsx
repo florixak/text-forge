@@ -1,16 +1,17 @@
 import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
-import { inputFormats, outputFormats } from '@/constants'
+
 import { InputFormat, OutputFormat } from '@/types'
-import useDebounce from '@/hooks/useDebounce'
+import useDebounce from '@/hooks/use-debounce'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import * as z from 'zod'
+import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
 
 const indexSchema = z
   .object({
-    from: z.enum(inputFormats).default('Auto-detect').catch('Auto-detect'),
-    to: z.enum(outputFormats).default('JSON').catch('JSON'),
+    from: z.enum(INPUT_FORMATS).default('Auto-detect').catch('Auto-detect'),
+    to: z.enum(OUTPUT_FORMATS).default('JSON').catch('JSON'),
   })
   .catch({ from: 'Auto-detect', to: 'JSON' })
 

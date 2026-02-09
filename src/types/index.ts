@@ -1,12 +1,12 @@
-import { inputFormats, outputFormats } from '@/constants'
+import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
 import { User } from '@/db/schema'
 
 export type ActionType = 'convert' | 'structure' | 'generate'
 
 export type Plan = 'free' | 'pro'
 
-export type InputFormat = (typeof inputFormats)[number]
-export type OutputFormat = (typeof outputFormats)[number]
+export type InputFormat = (typeof INPUT_FORMATS)[number]
+export type OutputFormat = (typeof OUTPUT_FORMATS)[number]
 
 export interface HistoryItem {
   id: string

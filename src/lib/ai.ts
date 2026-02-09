@@ -1,9 +1,10 @@
-import { InputFormat, MAX_INPUT_LENGTH, OutputFormat } from '@/constants'
+import { MAX_INPUT_LENGTH } from '@/constants'
 import {
   assistPrompt,
   generatePrompt,
   structurePrompt,
 } from '@/constants/prompts'
+import { InputFormat, OutputFormat } from '@/types'
 import { generateText, LanguageModel } from 'ai'
 
 export async function baseAssistText(

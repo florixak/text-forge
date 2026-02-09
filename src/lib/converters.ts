@@ -1,5 +1,5 @@
-import { InputFormat } from '@/constants'
 import { parseInput } from './parsers'
+import { InputFormat, OutputFormat } from '@/types'
 
 export interface ConversionResult {
   success: boolean
@@ -276,7 +276,7 @@ export function toXML(data: any, rootName = 'root'): ConversionResult {
 export function convertData(
   input: string,
   fromType: InputFormat,
-  toType: InputFormat,
+  toType: OutputFormat,
 ): ConversionResult {
   const parseResult = parseInput(input, fromType)
 

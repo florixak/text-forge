@@ -2,7 +2,8 @@ import DashboardFooter from '@/components/dashboard/dashboard-footer'
 import DashboardHeader from '@/components/dashboard/dashboard-header'
 import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
 import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
-import { planLimits } from '@/constants'
+import { PLAN_LIMITS } from '@/constants'
+
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
@@ -44,7 +45,7 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
         .limit(1)
 
       const planKey = user.plan
-      const planConfig = planLimits[planKey]
+      const planConfig = PLAN_LIMITS[planKey]
       if (!planConfig) {
         throw new Error('Invalid plan configuration')
       }

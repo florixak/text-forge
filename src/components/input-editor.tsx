@@ -1,13 +1,13 @@
 import {
-  inputFormats,
+  INPUT_FORMATS,
   MAX_INPUT_LENGTH,
-  outputFormats,
-  planLimits,
+  OUTPUT_FORMATS,
+  PLAN_LIMITS,
 } from '@/constants'
 import { InputFormat, OutputFormat } from '@/types'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
-import useDebounce from '@/hooks/useDebounce'
+import useDebounce from '@/hooks/use-debounce'
 import { authClient } from '@/lib/auth-client'
 import { assistText } from '@/lib/google-ai'
 import { authOptionalMiddleware } from '@/lib/middleware'
@@ -26,10 +26,10 @@ const aiAssistFn = createServerFn({
 })
   .inputValidator(
     (data: { input: string; fromType: InputFormat; toType: OutputFormat }) => {
-      if (!outputFormats.includes(data.toType)) {
+      if (!OUTPUT_FORMATS.includes(data.toType)) {
         throw new Error('Invalid output format.')
       }
-      if (!inputFormats.includes(data.fromType)) {
+      if (!INPUT_FORMATS.includes(data.fromType)) {
         throw new Error('Invalid input format.')
       }
       const input = data.input.trim()
@@ -64,7 +64,7 @@ const aiAssistFn = createServerFn({
 
       try {
         const today = new Date().toISOString().split('T')[0]
-        const userPlanLimit = planLimits[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[session.user.plan]
 
         if (!userPlanLimit) {
           return {
@@ -285,8 +285,8 @@ const InputEditor = ({
           </Label>
           <FormatSelect<InputFormat>
             placeholder="Select Input Format"
-            defaultValue={inputFormats[0]}
-            inputTypes={inputFormats}
+            defaultValue={INPUT_FORMATS[0]}
+            inputTypes={INPUT_FORMATS}
             id="input-format-select"
             selectedFormat={fromType}
             setSelectedFormat={setFromType}
@@ -302,8 +302,8 @@ const InputEditor = ({
           </Label>
           <FormatSelect<OutputFormat>
             placeholder="Select Output Format"
-            defaultValue={outputFormats[0]}
-            inputTypes={outputFormats}
+            defaultValue={OUTPUT_FORMATS[0]}
+            inputTypes={OUTPUT_FORMATS}
             id="output-format-select"
             selectedFormat={toType}
             setSelectedFormat={setToType}
