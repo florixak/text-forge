@@ -1,4 +1,4 @@
-import { Plan, PlanLimits } from '@/constants'
+import { Plan, PlanLimits } from '@/types'
 
 interface PlanFeatureTableProps {
   plans: [Plan, PlanLimits][]

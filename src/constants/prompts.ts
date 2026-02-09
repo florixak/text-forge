@@ -1,4 +1,4 @@
-import { InputFormat } from '.'
+import { InputFormat } from '@/types'
 
 const assistPrompt = (fromFormat: InputFormat, toFormat: InputFormat) =>
   `Give few, short, clear tips to convert from ${fromFormat} to ${toFormat}. Do not provide the converted data, only the tips.`

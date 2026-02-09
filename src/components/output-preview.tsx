@@ -1,4 +1,4 @@
-import { InputFormat, OutputFormat } from '@/constants'
+import { InputFormat, OutputFormat } from '@/types'
 import useCopy from '@/hooks/useCopy'
 import { convertData } from '@/lib/converters'
 import { downloadFile } from '@/lib/download'
