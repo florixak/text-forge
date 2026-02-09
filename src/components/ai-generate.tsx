@@ -1,6 +1,7 @@
 import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
+import { authClient } from '@/lib/auth-client'
 import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { validateAIServerFnInput } from '@/lib/utils'
@@ -13,9 +14,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { Textarea } from './ui/textarea'
 
 const generateDataFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -92,7 +93,11 @@ const generateDataFn = createServerFn({ method: 'POST' })
         }
 
         try {
-          const generatedOutput = await generateData(input, format)
+          const generatedOutput = await generateData(
+            input,
+            format,
+            session.user.plan,
+          )
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -135,6 +140,7 @@ interface AIGenerateProps {
 }
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
+  const { data: session } = authClient.useSession()
   const [input, setInput] = useState('')
 
   const { data, isSuccess, isPending, mutate } = useMutation({
@@ -151,6 +157,18 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     },
   })
 
+  const handleValueChange = (value: string) => {
+    if (
+      value.length > PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+    ) {
+      toast.error(
+        `Input exceeds maximum length of ${PLAN_LIMITS[session?.user.plan || 'free'].max_input_length} characters for your plan.`,
+      )
+      return
+    }
+    setInput(value)
+  }
+
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
       <div className="space-y-4">
@@ -158,12 +176,30 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           <Label htmlFor="data-description" className="text-sm font-medium">
             Describe the data you want to generate
           </Label>
-          <Textarea
+          <TextareaWithCounter
             id="data-description"
             placeholder="Example: Generate a list of 10 fictional users with name, email, age, and city..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleValueChange(e.target.value)}
             className="min-h-75 bg-card"
+            maxLength={
+              PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+            }
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const textarea = e.target as HTMLTextAreaElement
+                const start = textarea.selectionStart
+                const end = textarea.selectionEnd
+                const newValue =
+                  input.substring(0, start) + '\t' + input.substring(end)
+                handleValueChange(newValue)
+
+                setTimeout(() => {
+                  textarea.selectionStart = textarea.selectionEnd = start + 1
+                }, 0)
+              }
+            }}
           />
         </div>
 
@@ -185,7 +221,15 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             />
           </div>
           <Button
-            onClick={() => mutate({ data: { input, format: selectedFormat } })}
+            onClick={() =>
+              mutate({
+                data: {
+                  input,
+                  format: selectedFormat,
+                  plan: session?.user.plan || 'free',
+                },
+              })
+            }
             disabled={!input.trim() || isPending}
             size="lg"
             className="w-full sm:w-auto"

@@ -1,6 +1,7 @@
 import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
+import { authClient } from '@/lib/auth-client'
 import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { validateAIServerFnInput } from '@/lib/utils'
@@ -14,9 +15,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { Textarea } from './ui/textarea'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -88,7 +89,11 @@ const structureTextFn = createServerFn({ method: 'POST' })
           }
         }
         try {
-          const structuredOutput = await structureData(input, format)
+          const structuredOutput = await structureData(
+            input,
+            format,
+            session.user.plan,
+          )
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -132,6 +137,7 @@ const AIStructure = ({
   selectedFormat,
   setSelectedFormat,
 }: AIStructureProps) => {
+  const { data: session } = authClient.useSession()
   const [unstructuredData, setUnstructuredData] = useState('')
 
   const { data, isSuccess, isPending, mutate } = useMutation({
@@ -155,12 +161,32 @@ const AIStructure = ({
           <Label htmlFor="unstructured-input" className="text-sm font-medium">
             Enter your unstructured data
           </Label>
-          <Textarea
+          <TextareaWithCounter
             id="unstructured-input"
             placeholder="Enter your unstructured data here..."
             value={unstructuredData}
             onChange={(e) => setUnstructuredData(e.target.value)}
             className="min-h-75 font-mono bg-card"
+            maxLength={
+              PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+            }
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault()
+                const textarea = e.target as HTMLTextAreaElement
+                const start = textarea.selectionStart
+                const end = textarea.selectionEnd
+                const newValue =
+                  unstructuredData.substring(0, start) +
+                  '\t' +
+                  unstructuredData.substring(end)
+                setUnstructuredData(newValue)
+
+                setTimeout(() => {
+                  textarea.selectionStart = textarea.selectionEnd = start + 1
+                }, 0)
+              }
+            }}
           />
         </div>
 
@@ -184,7 +210,11 @@ const AIStructure = ({
           <Button
             onClick={() =>
               mutate({
-                data: { input: unstructuredData, format: selectedFormat },
+                data: {
+                  input: unstructuredData,
+                  format: selectedFormat,
+                  plan: session?.user.plan || 'free',
+                },
               })
             }
             disabled={isPending || unstructuredData.trim() === ''}
