@@ -31,7 +31,7 @@ export interface UserPlan {
   } | null
 }
 
-export type PlanLimits = {
+export interface PlanLimits {
   price: number
   description: string
 
