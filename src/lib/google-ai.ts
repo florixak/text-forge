@@ -1,6 +1,6 @@
-import { InputFormat, OutputFormat } from '@/constants'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { baseAssistText, baseGenerateData, baseStructureData } from './ai'
+import { InputFormat, OutputFormat } from '@/types'
 
 const apiKey = process.env.GOOGLE_API_KEY
 

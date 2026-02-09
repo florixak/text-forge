@@ -1,6 +1,6 @@
-import { InputFormat } from '@/constants'
+import { OutputFormat } from '@/types'
 
-const getFileExtension = (type: InputFormat): string => {
+const getFileExtension = (type: OutputFormat): string => {
   switch (type) {
     case 'JSON':
       return 'json'
@@ -14,14 +14,12 @@ const getFileExtension = (type: InputFormat): string => {
       return 'md'
     case 'HTML':
       return 'html'
-    case 'Auto-detect':
-      return 'txt'
     default:
       return 'txt'
   }
 }
 
-const getMimeType = (type: InputFormat): string => {
+const getMimeType = (type: OutputFormat): string => {
   switch (type) {
     case 'JSON':
       return 'application/json'
@@ -35,8 +33,6 @@ const getMimeType = (type: InputFormat): string => {
       return 'text/markdown'
     case 'HTML':
       return 'text/html'
-    case 'Auto-detect':
-      return 'text/plain'
     default:
       return 'text/plain'
   }
@@ -44,7 +40,7 @@ const getMimeType = (type: InputFormat): string => {
 
 export const downloadFile = (
   content: string,
-  type: InputFormat,
+  type: OutputFormat,
   filename?: string,
 ): boolean => {
   if (content.length === 0) return false
