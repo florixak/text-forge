@@ -2,7 +2,7 @@ import DashboardFooter from '@/components/dashboard/dashboard-footer'
 import DashboardHeader from '@/components/dashboard/dashboard-header'
 import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
 import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
-import { Plan, planLimits } from '@/constants'
+import { planLimits } from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
@@ -43,7 +43,7 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
         .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
         .limit(1)
 
-      const planKey = user.plan as Plan
+      const planKey = user.plan
       const planConfig = planLimits[planKey]
       if (!planConfig) {
         throw new Error('Invalid plan configuration')
@@ -103,7 +103,7 @@ export const Route = createFileRoute('/dashboard')({
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async ({ context }) => {
-    return context.queryClient.ensureQueryData(createUsageQueryOptions())
+    await context.queryClient.ensureQueryData(createUsageQueryOptions())
   },
 })
 

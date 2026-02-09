@@ -69,7 +69,7 @@ export const Route = createFileRoute('/history')({
   },
   loaderDeps: ({ search }) => ({ day: search.day, action: search.action }),
   loader: async ({ context, deps }) => {
-    return context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))
+    await context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))
   },
 })
 
