@@ -14,8 +14,6 @@ const getFileExtension = (type: OutputFormat): string => {
       return 'md'
     case 'HTML':
       return 'html'
-    case 'Auto-detect':
-      return 'txt'
     default:
       return 'txt'
   }
@@ -35,8 +33,6 @@ const getMimeType = (type: OutputFormat): string => {
       return 'text/markdown'
     case 'HTML':
       return 'text/html'
-    case 'Auto-detect':
-      return 'text/plain'
     default:
       return 'text/plain'
   }
