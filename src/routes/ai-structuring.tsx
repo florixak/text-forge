@@ -1,7 +1,9 @@
 import AIGenerate from '@/components/ai-generate'
 import AIStructure from '@/components/ai-structure'
-import { outputFormats } from '@/constants'
+import { OUTPUT_FORMATS } from '@/constants'
+
 import { authMiddleware } from '@/lib/middleware'
+import { OutputFormat } from '@/types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
@@ -11,7 +13,7 @@ const aiStructuringSchema = z
       .enum(['structure', 'generate'])
       .default('structure')
       .catch('structure'),
-    to: z.enum(outputFormats).default('JSON').catch('JSON'),
+    to: z.enum(OUTPUT_FORMATS).default('JSON').catch('JSON'),
   })
   .catch({ selected: 'structure', to: 'JSON' })
 
@@ -27,7 +29,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate()
   const { selected, to } = Route.useSearch()
 
-  const handleFormatChange = (format: (typeof outputFormats)[number]) => {
+  const handleFormatChange = (format: OutputFormat) => {
     navigate({
       search: (prev) => ({
         ...prev,
