@@ -5,20 +5,27 @@ import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
 import { Plan, planLimits } from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
+import { createUsageQueryOptions } from '@/hooks/query-options'
 import { authMiddleware } from '@/lib/middleware'
-import { formatLimit } from '@/lib/utils'
-import { queryOptions } from '@tanstack/react-query'
+import { formatLimit, FormatLimitResult } from '@/lib/utils'
+import { DashboardUser } from '@/types'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq } from 'drizzle-orm'
 
-export const usageQueryOptions = () =>
-  queryOptions({
-    queryKey: ['usage', 'today'],
-    queryFn: getTodayUsage,
-  })
+export interface DashboardData {
+  user: DashboardUser
+  usage: {
+    words: number
+    last_used: number | null
+    assist: FormatLimitResult
+    structure: FormatLimitResult
+    generate: FormatLimitResult
+  }
+}
 
-const getTodayUsage = createServerFn({ method: 'GET' })
+export const getTodayUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { user } = context.session || {}
@@ -71,7 +78,7 @@ const getTodayUsage = createServerFn({ method: 'GET' })
         'generate_ai',
       )
 
-      const usage = {
+      const usage: DashboardData['usage'] = {
         words,
         last_used,
         assist: assistLimit,
@@ -96,18 +103,21 @@ export const Route = createFileRoute('/dashboard')({
   errorComponent: () => <div>Failed to load dashboard</div>,
   pendingComponent: () => <div>Loading dashboard...</div>,
   loader: async ({ context }) => {
-    return context.queryClient.ensureQueryData(usageQueryOptions())
+    return context.queryClient.ensureQueryData(createUsageQueryOptions())
   },
 })
 
 function RouteComponent() {
+  const {
+    data: { user, usage },
+  } = useSuspenseQuery(createUsageQueryOptions())
   return (
     <section className="max-w-3xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
-      <DashboardHeader />
+      <DashboardHeader data={{ user, usage }} />
 
       <DashboardQuickActions />
 
-      <DashboardUsageInfo />
+      <DashboardUsageInfo data={{ user, usage }} />
 
       <DashboardFooter />
     </section>

@@ -1,3 +1,6 @@
+import { capitalizeFirstLetter } from '@/lib/utils'
+import { DashboardData } from '@/routes/dashboard'
+import { Link } from '@tanstack/react-router'
 import {
   ShieldAlert,
   ShieldCheck,
@@ -5,14 +8,14 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react'
-import { Card } from '../ui/card'
 import { Button } from '../ui/button'
-import { Link } from '@tanstack/react-router'
-import { capitalizeFirstLetter } from '@/lib/utils'
-import { Route } from '@/routes/dashboard'
+import { Card } from '../ui/card'
 
-const DashboardHeader = () => {
-  const { user, usage } = Route.useLoaderData()
+interface DashboardHeaderProps {
+  data: DashboardData
+}
+
+const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
   return (
     <>
       <div className="text-left">

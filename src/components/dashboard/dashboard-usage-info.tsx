@@ -1,10 +1,15 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Separator } from '../ui/separator'
-import { Route } from '@/routes/dashboard'
+import { DashboardData } from '@/routes/dashboard'
 
-const DashboardUsageInfo = () => {
-  const { user, usage } = Route.useLoaderData()
+interface DashboardUsageInfoProps {
+  data: DashboardData
+}
+
+const DashboardUsageInfo = ({
+  data: { user, usage },
+}: DashboardUsageInfoProps) => {
   return (
     <Card className="w-full pb-0">
       <CardHeader className="flex items-center justify-between">
