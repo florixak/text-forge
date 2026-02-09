@@ -1,10 +1,4 @@
-interface NavLink {
-  name: string
-  href: string
-}
-
-export type InputFormat = (typeof inputFormats)[number]
-export type OutputFormat = (typeof outputFormats)[number]
+import { Plan, PlanLimits } from '@/types'
 
 const QUERY_KEYS = {
   usageToday: ['usage', 'today'] as const,
@@ -12,7 +6,10 @@ const QUERY_KEYS = {
   history: (day?: string, action?: string) => ['history', day, action] as const,
 }
 
-const navLinks: NavLink[] = [
+const navLinks: {
+  name: string
+  href: string
+}[] = [
   { name: 'Home', href: '/' },
   { name: 'AI Structuring', href: '/ai-structuring' },
   { name: 'Plans', href: '/plans' },
@@ -39,21 +36,6 @@ const outputFormats = [
   'Text',
   'XML',
 ] as const
-
-export type PlanLimits = {
-  price: number
-  description: string
-
-  assist_ai_day: number
-  structure_ai_day: number
-  generate_ai_day: number
-
-  support: 'community' | 'priority'
-  max_input_length: number
-  features: string[]
-}
-
-export type Plan = 'free' | 'pro'
 
 const planLimits: Record<Plan, PlanLimits> = {
   free: {
