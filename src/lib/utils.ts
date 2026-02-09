@@ -1,5 +1,6 @@
+import { MAX_INPUT_LENGTH, OUTPUT_FORMATS } from '@/constants'
 import { AIUsage } from '@/db/schema'
-import { PlanLimits } from '@/types'
+import { OutputFormat, PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -65,4 +66,23 @@ export const formatLimit = (
 
 export const isValidTheme = (theme: string) => {
   return ['light', 'dark', 'system'].includes(theme)
+}
+
+export const validateAIServerFnInput = (data: {
+  input: string
+  format: OutputFormat
+}) => {
+  if (!OUTPUT_FORMATS.includes(data.format)) {
+    throw new Error('Invalid output format.')
+  }
+  const input = data.input.trim()
+  if (input.length === 0) {
+    throw new Error('Input is required.')
+  }
+  if (input.length > MAX_INPUT_LENGTH) {
+    throw new Error(
+      `AI structuring can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
+    )
+  }
+  return { ...data, input }
 }

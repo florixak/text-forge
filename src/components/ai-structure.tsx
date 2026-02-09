@@ -1,9 +1,10 @@
-import { MAX_INPUT_LENGTH, outputFormats, planLimits } from '@/constants'
-import { OutputFormat } from '@/types'
+import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
 import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
+import { validateAIServerFnInput } from '@/lib/utils'
+import { OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -18,21 +19,7 @@ import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
 
 const structureTextFn = createServerFn({ method: 'POST' })
-  .inputValidator((data: { input: string; format: OutputFormat }) => {
-    if (!outputFormats.includes(data.format)) {
-      throw new Error('Invalid output format.')
-    }
-    const input = data.input.trim()
-    if (input.length === 0) {
-      throw new Error('Input is required.')
-    }
-    if (input.length > MAX_INPUT_LENGTH) {
-      throw new Error(
-        `AI structuring can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
-      )
-    }
-    return { ...data, input }
-  })
+  .inputValidator(validateAIServerFnInput)
   .middleware([authMiddleware])
   .handler(
     async ({
@@ -48,7 +35,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
-        const userPlanLimit = planLimits[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[session.user.plan]
 
         if (!userPlanLimit) {
           return {
@@ -187,7 +174,7 @@ const AIStructure = ({
             </Label>
             <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
-              inputTypes={outputFormats}
+              inputTypes={OUTPUT_FORMATS}
               id="output-format-select"
               selectedFormat={selectedFormat}
               setSelectedFormat={setSelectedFormat}

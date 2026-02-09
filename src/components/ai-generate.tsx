@@ -1,8 +1,10 @@
-import { MAX_INPUT_LENGTH, outputFormats, planLimits } from '@/constants'
+import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
 import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
+import { validateAIServerFnInput } from '@/lib/utils'
+import { OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
@@ -14,31 +16,16 @@ import Output from './output'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Textarea } from './ui/textarea'
-import { OutputFormat } from '@/types'
 
 const generateDataFn = createServerFn({ method: 'POST' })
-  .inputValidator((data: { description: string; format: OutputFormat }) => {
-    if (!outputFormats.includes(data.format)) {
-      throw new Error('Invalid output format.')
-    }
-    const input = data.description.trim()
-    if (input.length === 0) {
-      throw new Error('Input is required.')
-    }
-    if (input.length > MAX_INPUT_LENGTH) {
-      throw new Error(
-        `AI generation can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
-      )
-    }
-    return { ...data, description: input }
-  })
+  .inputValidator(validateAIServerFnInput)
   .middleware([authMiddleware])
   .handler(
     async ({
       data,
       context,
     }): Promise<{ success: boolean; output: string; error: string | null }> => {
-      const { description, format } = data
+      const { input, format } = data
       const { session } = context
 
       if (!session) {
@@ -51,7 +38,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
 
       try {
         const today = new Date().toISOString().split('T')[0]
-        const userPlanLimit = planLimits[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[session.user.plan]
 
         if (!userPlanLimit) {
           return {
@@ -105,7 +92,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
         }
 
         try {
-          const generatedOutput = await generateData(description, format)
+          const generatedOutput = await generateData(input, format)
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -148,7 +135,7 @@ interface AIGenerateProps {
 }
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
-  const [description, setDescription] = useState('')
+  const [input, setInput] = useState('')
 
   const { data, isSuccess, isPending, mutate } = useMutation({
     mutationFn: generateDataFn,
@@ -174,8 +161,8 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           <Textarea
             id="data-description"
             placeholder="Example: Generate a list of 10 fictional users with name, email, age, and city..."
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             className="min-h-75 bg-card"
           />
         </div>
@@ -190,7 +177,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             </Label>
             <FormatSelect<OutputFormat>
               placeholder="Select Output Format"
-              inputTypes={outputFormats}
+              inputTypes={OUTPUT_FORMATS}
               id="output-type-select"
               selectedFormat={selectedFormat}
               setSelectedFormat={setSelectedFormat}
@@ -198,10 +185,8 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             />
           </div>
           <Button
-            onClick={() =>
-              mutate({ data: { description, format: selectedFormat } })
-            }
-            disabled={!description.trim() || isPending}
+            onClick={() => mutate({ data: { input, format: selectedFormat } })}
+            disabled={!input.trim() || isPending}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -212,7 +197,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       </div>
       {isSuccess && data && data.output.trim() !== '' ? (
         <Output
-          input={description}
+          input={input}
           output={data.output}
           success={true}
           error={undefined}
