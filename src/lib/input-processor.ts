@@ -37,7 +37,7 @@ const formatProcessors = {
       content,
       originalLength: input.length,
       processedLength: content.length,
-      compressionRatio: content.length / input.length,
+      compressionRatio: input.length > 0 ? content.length / input.length : 0,
       metadata: {
         isCompressed: content.length < input.length,
         strategy: 'JSON normalization + structural sampling',
@@ -88,7 +88,8 @@ const formatProcessors = {
       content: finalContent,
       originalLength: input.length,
       processedLength: finalContent.length,
-      compressionRatio: finalContent.length / input.length,
+      compressionRatio:
+        input.length > 0 ? finalContent.length / input.length : 0,
       metadata: {
         isCompressed: true,
         strategy: `CSV row sampling (kept ${sampledLines.length}/${lines.length} rows)`,
@@ -113,7 +114,7 @@ const formatProcessors = {
       content,
       originalLength: input.length,
       processedLength: content.length,
-      compressionRatio: content.length / input.length,
+      compressionRatio: input.length > 0 ? content.length / input.length : 0,
       metadata: {
         isCompressed: content.length < input.length,
         strategy: 'whitespace normalization + smart paragraph sampling',
@@ -131,7 +132,7 @@ const formatProcessors = {
       content,
       originalLength: input.length,
       processedLength: content.length,
-      compressionRatio: content.length / input.length,
+      compressionRatio: input.length > 0 ? content.length / input.length : 0,
       metadata: {
         isCompressed: content.length < input.length,
         strategy: 'whitespace normalization',
@@ -156,12 +157,33 @@ function sampleJSON(json: string, maxLength: number): string {
     const str = JSON.stringify(parsed)
     if (str.length <= maxLength) return str
 
-    const truncated = str.substring(0, maxLength - 5)
-    if (Array.isArray(parsed)) {
-      return truncated + '...]'
-    } else {
-      return truncated + '...}'
+    const isArray = Array.isArray(parsed)
+    const closingChar = isArray ? ']' : '}'
+    const indicator = ' ...'
+    const reservedLength = closingChar.length + indicator.length
+
+    let left = 1
+    let right = maxLength - reservedLength
+    let bestLen = 0
+
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2)
+      const candidate = str.substring(0, mid) + closingChar
+
+      try {
+        JSON.parse(candidate)
+        bestLen = mid
+        left = mid + 1
+      } catch {
+        right = mid - 1
+      }
     }
+
+    if (bestLen === 0) {
+      return isArray ? '[]' : '{}'
+    }
+
+    return str.substring(0, bestLen) + closingChar + indicator
   } catch {
     return truncateWithContext(json, maxLength)
   }
