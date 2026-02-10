@@ -1,6 +1,6 @@
 import { INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
-import { aiUsage, User } from '@/db/schema'
+import { aiUsage } from '@/db/schema'
 import useDebounce from '@/hooks/use-debounce'
 import { authClient } from '@/lib/auth-client'
 import { assistText } from '@/lib/google-ai'
@@ -21,12 +21,7 @@ const aiAssistFn = createServerFn({
 })
   .middleware([authMiddleware])
   .inputValidator(
-    (data: {
-      input: string
-      fromType: InputFormat
-      toType: OutputFormat
-      plan: User['plan']
-    }) => {
+    (data: { input: string; fromType: InputFormat; toType: OutputFormat }) => {
       if (!OUTPUT_FORMATS.includes(data.toType)) {
         throw new Error('Invalid output format.')
       }
@@ -37,11 +32,6 @@ const aiAssistFn = createServerFn({
       if (input.length === 0) {
         throw new Error('Input is required.')
       }
-      if (input.length > PLAN_LIMITS[data.plan].max_input_length) {
-        throw new Error(
-          `AI assist can handle up to ${PLAN_LIMITS[data.plan].max_input_length} characters. ${data.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
-        )
-      }
 
       return { ...data, input }
     },
@@ -50,9 +40,15 @@ const aiAssistFn = createServerFn({
     async ({
       data,
       context,
-    }): Promise<{ success: boolean; output: string; error: string | null }> => {
-      const { input, fromType, toType, plan } = data
+    }): Promise<{
+      success: boolean
+      output: string
+      error: string | null
+      compression?: { ratio: number; strategy: string }
+    }> => {
+      const { input, fromType, toType } = data
       const { session } = context
+      const plan = session?.user?.plan || 'free'
 
       try {
         const today = new Date().toISOString().split('T')[0]
@@ -62,8 +58,19 @@ const aiAssistFn = createServerFn({
           return {
             output: '',
             success: false,
-            error:
-              'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+            error: 'Plan does not support AI features.',
+          }
+        }
+
+        if (input.length > userPlanLimit.max_input_length) {
+          return {
+            output: '',
+            success: false,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${
+              plan === 'free'
+                ? 'Upgrade your plan for larger inputs.'
+                : 'Please shorten your input.'
+            }`,
           }
         }
 
@@ -104,15 +111,30 @@ const aiAssistFn = createServerFn({
           return {
             output: '',
             success: false,
-            error:
-              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
+            error: 'AI usage limit reached for today.',
           }
         }
 
         try {
-          const assistedOutput = await assistText(input, fromType, toType, plan)
+          const result = await assistText(input, fromType, toType, plan)
 
-          return { output: assistedOutput, success: true, error: null }
+          if (result.processing?.metadata.isCompressed) {
+            console.log(
+              `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
+            )
+          }
+
+          return {
+            output: result.text,
+            success: true,
+            error: null,
+            compression: result.processing
+              ? {
+                  ratio: result.processing.compressionRatio,
+                  strategy: result.processing.metadata.strategy,
+                }
+              : undefined,
+          }
         } catch (aiError) {
           await db
             .update(aiUsage)
@@ -123,7 +145,7 @@ const aiAssistFn = createServerFn({
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error('AI assist failed: ' + (aiError as Error).message)
+          throw aiError
         }
       } catch (error) {
         return {
@@ -309,21 +331,6 @@ const InputEditor = ({
         maxLength={PLAN_LIMITS[data?.user?.plan || 'free'].max_input_length}
         placeholder="Enter your text or code here..."
         className="mt-4 h-120 w-full resize-none bg-card"
-        onKeyDown={(e) => {
-          if (e.key === 'Tab') {
-            e.preventDefault()
-            const textarea = e.target as HTMLTextAreaElement
-            const start = textarea.selectionStart
-            const end = textarea.selectionEnd
-            const newValue =
-              input.substring(0, start) + '\t' + input.substring(end)
-            handleValueChange(newValue)
-
-            setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start + 1
-            }, 0)
-          }
-        }}
       />
 
       <div className="flex items-center justify-between mt-4 w-full">
@@ -348,7 +355,6 @@ const InputEditor = ({
                   input,
                   fromType,
                   toType,
-                  plan: data?.user?.plan || 'free',
                 },
               })
             }
