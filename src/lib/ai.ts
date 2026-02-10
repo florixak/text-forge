@@ -2,11 +2,62 @@ import { PLAN_LIMITS } from '@/constants'
 import {
   assistPrompt,
   generatePrompt,
+  getOutputTokenLimit,
   structurePrompt,
 } from '@/constants/prompts'
 import { User } from '@/db/schema'
 import { InputFormat, OutputFormat } from '@/types'
 import { generateText, LanguageModel } from 'ai'
+import { ProcessedInput, processInput } from './input-processor'
+
+interface AIOptions {
+  model: LanguageModel
+  plan: User['plan']
+  verbose?: boolean
+}
+
+interface AIResult {
+  text: string
+  usage?: {
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+  }
+  processing?: ProcessedInput
+}
+
+async function baseGenerateText(
+  systemPrompt: string,
+  userPrompt: string,
+  task: 'assist' | 'structure' | 'generate',
+  options: AIOptions,
+): Promise<AIResult> {
+  if (!options.model) {
+    throw new Error(`No language model specified for ${task}.`)
+  }
+
+  try {
+    const result = await generateText({
+      model: options.model,
+      system: systemPrompt,
+      prompt: userPrompt,
+      maxOutputTokens: getOutputTokenLimit(task),
+    })
+
+    return {
+      text: result.text,
+      usage: result.usage
+        ? {
+            inputTokens: result.usage.inputTokens || 0,
+            outputTokens: result.usage.outputTokens || 0,
+            totalTokens: result.usage.totalTokens || 0,
+          }
+        : undefined,
+    }
+  } catch (error) {
+    throw new Error(`Failed to ${task} text: ` + (error as Error).message)
+  }
+}
 
 export async function baseAssistText(
   input: string,
@@ -15,40 +66,21 @@ export async function baseAssistText(
   model: LanguageModel,
   plan: User['plan'],
 ) {
-  if (!model) {
-    throw new Error('No language model specified for text assistance.')
-  }
+  const maxLength = PLAN_LIMITS[plan].max_input_length
 
-  const getSample = (text: string, maxLength: number = 1000): string => {
-    if (text.length <= maxLength) return text
+  const processed = processInput(input, fromType, maxLength, toType)
 
-    const start = text.substring(0, 500)
-    const middle = text.substring(
-      Math.floor(text.length / 2) - 100,
-      Math.floor(text.length / 2) + 100,
-    )
-    const end = text.substring(text.length - 300)
+  const userPrompt = `Sample:\n${processed.content}`
 
-    const preservedLength = start.length + middle.length + end.length
-    const truncatedCount = text.length - preservedLength
-
-    return `${start}...[truncated ${truncatedCount} characters]...${middle}...[truncated]...${end}`
-  }
-
-  const sample = getSample(input, PLAN_LIMITS[plan].max_input_length)
-
-  try {
-    const result = await generateText({
-      model,
-      system: assistPrompt(fromType, toType),
-      prompt: `Sample of user's data:\n${sample}`,
-      maxOutputTokens: 200,
-    })
-
-    return result.text
-  } catch (error) {
-    throw new Error('Failed to assist text: ' + (error as Error).message)
-  }
+  return baseGenerateText(
+    assistPrompt(fromType, toType),
+    userPrompt,
+    'assist',
+    { model, plan },
+  ).then((result) => ({
+    ...result,
+    processing: processed,
+  }))
 }
 
 export async function baseStructureData(
@@ -57,40 +89,25 @@ export async function baseStructureData(
   model: LanguageModel,
   plan: User['plan'],
 ) {
-  if (!model) {
-    throw new Error('No language model specified for data structuring.')
-  }
+  const maxLength = PLAN_LIMITS[plan].max_input_length
 
-  const MAX_LENGTH = PLAN_LIMITS[plan].max_input_length
+  const detectedFormat = detectFormat(input)
+  const processed = processInput(input, detectedFormat, maxLength, format)
 
-  if (input.length <= MAX_LENGTH) {
-    try {
-      const result = await generateText({
-        model,
-        system: structurePrompt(format),
-        prompt: input,
-      })
-      return result.text
-    } catch (error) {
-      throw new Error('Failed to structure data: ' + (error as Error).message)
-    }
-  }
+  const compressionNote =
+    processed.compressionRatio < 0.6
+      ? `\n(Note: Input sampled to fit context. Pattern should apply to all ${processed.metadata.sampleInfo || 'data'}.)`
+      : ''
 
-  const lines = input.split('\n')
-  const sampleLines = Math.min(15, lines.length)
-  const sample = lines.slice(0, sampleLines).join('\n').substring(0, MAX_LENGTH)
+  const userPrompt = `${processed.content}${compressionNote}`
 
-  try {
-    const result = await generateText({
-      model,
-      system: structurePrompt(format),
-      prompt: `Sample of unstructured data (showing ${sampleLines} of ${lines.length} total lines):\n\n${sample}\n\nStructure this sample as ${format}. The same pattern will be applied to all remaining lines.`,
-    })
-
-    return result.text
-  } catch (error) {
-    throw new Error('Failed to structure data: ' + (error as Error).message)
-  }
+  return baseGenerateText(structurePrompt(format), userPrompt, 'structure', {
+    model,
+    plan,
+  }).then((result) => ({
+    ...result,
+    processing: processed,
+  }))
 }
 
 export async function baseGenerateData(
@@ -99,19 +116,42 @@ export async function baseGenerateData(
   model: LanguageModel,
   plan: User['plan'],
 ) {
-  if (!model) {
-    throw new Error('No language model specified for data generation.')
-  }
+  const normalized = description
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line)
+    .join('\n')
 
+  return baseGenerateText(generatePrompt(format), normalized, 'generate', {
+    model,
+    plan,
+  })
+}
+
+function detectFormat(input: string): InputFormat {
   try {
-    const result = await generateText({
-      model,
-      system: generatePrompt(format),
-      prompt: description,
-    })
+    JSON.parse(input)
+    return 'JSON'
+  } catch {}
 
-    return result.text
-  } catch (error) {
-    throw new Error('Failed to generate data: ' + (error as Error).message)
+  if (
+    /<\?xml[\s\S]*?\?>/.test(input) ||
+    /<([a-z][\w-]*)[\s\S]*?<\/\1>/i.test(input)
+  ) {
+    return 'XML'
   }
+
+  if (/^\s{0,3}(#{1,6})\s.+/m.test(input) || /```[\s\S]*?```/m.test(input)) {
+    return 'Markdown'
+  }
+
+  const lines = input.split('\n').filter(Boolean)
+  if (lines.length > 1) {
+    const commaCounts = lines.map((l) => (l.match(/,/g) || []).length)
+    if (commaCounts.every((c) => c === commaCounts[0] && c > 0)) {
+      return 'CSV'
+    }
+  }
+
+  return 'Text'
 }
