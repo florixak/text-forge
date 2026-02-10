@@ -32,10 +32,29 @@ export function TextareaWithCounter({
         value={value}
         onChange={onChange}
         maxLength={maxLength}
-        className={className}
+        className={`pb-6 ${className}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Tab') {
+            e.preventDefault()
+            const textarea = e.target as HTMLTextAreaElement
+            const start = textarea.selectionStart
+            const end = textarea.selectionEnd
+            const newValue =
+              value.substring(0, start) + '\t' + value.substring(end)
+            onChange({
+              ...({
+                target: { value: newValue },
+              } as React.ChangeEvent<HTMLTextAreaElement>),
+            })
+
+            setTimeout(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + 1
+            }, 0)
+          }
+        }}
         {...props}
       />
-      <div className="text-right text-xs text-muted-foreground mt-1 absolute bottom-1 right-2 z-50">
+      <div className="text-right text-xs text-muted-foreground absolute bottom-2 right-2 z-10 pointer-events-none">
         {value.length} / {maxLength}
       </div>
     </div>
