@@ -47,6 +47,7 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     generate_ai_day: 5,
     support: 'community',
     max_input_length: 2000,
+    history_limit: 30,
     features: [
       '10 AI assist calls per day',
       '5 AI structuring calls per day',
@@ -64,6 +65,7 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     generate_ai_day: 30,
     support: 'priority',
     max_input_length: 10000,
+    history_limit: 10000,
     features: [
       '100 AI assist calls per day',
       '50 AI structuring calls per day',

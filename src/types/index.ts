@@ -40,6 +40,7 @@ export interface PlanLimits {
   generate_ai_day: number
 
   support: 'community' | 'priority'
+  history_limit: number
   max_input_length: number
   features: string[]
 }
