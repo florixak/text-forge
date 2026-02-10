@@ -26,7 +26,12 @@ const structureTextFn = createServerFn({ method: 'POST' })
     async ({
       data,
       context,
-    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+    }): Promise<{
+      success: boolean
+      output: string
+      error: string | null
+      compression?: { ratio: number; strategy: string }
+    }> => {
       const { input, format } = data
       const { session } = context
 
@@ -44,6 +49,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
             success: false,
             error:
               'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
+        if (input.length > userPlanLimit.max_input_length) {
+          return {
+            output: '',
+            success: false,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${session.user.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
           }
         }
 
@@ -89,11 +102,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
           }
         }
         try {
-          const structuredOutput = await structureData(
-            input,
-            format,
-            session.user.plan,
-          )
+          const result = await structureData(input, format, session.user.plan)
+
+          if (result.processing?.metadata.isCompressed) {
+            console.log(
+              `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
+            )
+          }
+
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -103,7 +119,17 @@ const structureTextFn = createServerFn({ method: 'POST' })
             })
           } catch (historyError) {}
 
-          return { output: structuredOutput, success: true, error: null }
+          return {
+            output: result.text,
+            success: true,
+            error: null,
+            compression: result.processing
+              ? {
+                  ratio: result.processing.compressionRatio,
+                  strategy: result.processing.metadata.strategy,
+                }
+              : undefined,
+          }
         } catch (aiError) {
           await db
             .update(aiUsage)
@@ -114,9 +140,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error(
-            'AI structuring failed: ' + (aiError as Error).message,
-          )
+          throw aiError
         }
       } catch (error) {
         return {
@@ -170,23 +194,6 @@ const AIStructure = ({
             maxLength={
               PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
             }
-            onKeyDown={(e) => {
-              if (e.key === 'Tab') {
-                e.preventDefault()
-                const textarea = e.target as HTMLTextAreaElement
-                const start = textarea.selectionStart
-                const end = textarea.selectionEnd
-                const newValue =
-                  unstructuredData.substring(0, start) +
-                  '\t' +
-                  unstructuredData.substring(end)
-                setUnstructuredData(newValue)
-
-                setTimeout(() => {
-                  textarea.selectionStart = textarea.selectionEnd = start + 1
-                }, 0)
-              }
-            }}
           />
         </div>
 
@@ -213,7 +220,6 @@ const AIStructure = ({
                 data: {
                   input: unstructuredData,
                   format: selectedFormat,
-                  plan: session?.user.plan || 'free',
                 },
               })
             }
@@ -222,7 +228,7 @@ const AIStructure = ({
             className="w-full sm:w-auto"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Structure Data
+            {isPending ? 'Structuring...' : 'Structure Data'}
           </Button>
         </div>
       </div>
