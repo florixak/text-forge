@@ -36,6 +36,15 @@ export async function structureData(
   return baseStructureData(input, format, google('gemini-2.5-flash-lite'), plan)
 }
 
-export async function generateData(description: string, format: OutputFormat) {
-  return baseGenerateData(description, format, google('gemini-2.5-flash-lite'))
+export async function generateData(
+  description: string,
+  format: OutputFormat,
+  plan: User['plan'],
+) {
+  return baseGenerateData(
+    description,
+    format,
+    google('gemini-2.5-flash-lite'),
+    plan,
+  )
 }
