@@ -41,32 +41,34 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   free: {
     price: 0,
     description: 'Basic plan for personal use',
-    assist_ai_day: 20,
-    structure_ai_day: 15,
-    generate_ai_day: 10,
+    assist_ai_day: 10,
+    structure_ai_day: 5,
+    generate_ai_day: 5,
     support: 'community',
-    max_input_length: 1000,
+    max_input_length: 2000,
+    history_limit: 30,
     features: [
-      '20 AI assist calls per day',
-      '15 AI structuring calls per day',
-      '10 AI generations per day',
-      '20 history record limit',
+      '10 AI assist calls per day',
+      '5 AI structuring calls per day',
+      '5 AI generations per day',
+      '30 history record limit',
       'Community support',
-      'Max input length: 1000 characters',
+      'Max input length: 2,000 characters',
     ],
   },
   pro: {
     price: 9.99,
     description: 'For professionals and small teams',
     assist_ai_day: 100,
-    structure_ai_day: 75,
-    generate_ai_day: 50,
+    structure_ai_day: 50,
+    generate_ai_day: 30,
     support: 'priority',
     max_input_length: 10000,
+    history_limit: 10000,
     features: [
       '100 AI assist calls per day',
-      '75 AI structuring calls per day',
-      '50 AI generations per day',
+      '50 AI structuring calls per day',
+      '30 AI generations per day',
       'Unlimited history records',
       'Priority support',
       'Max input length: 10,000 characters',
@@ -74,13 +76,4 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 } as const
 
-const MAX_INPUT_LENGTH = PLAN_LIMITS.free.max_input_length
-
-export {
-  NAV_LINKS,
-  INPUT_FORMATS,
-  OUTPUT_FORMATS,
-  PLAN_LIMITS,
-  MAX_INPUT_LENGTH,
-  QUERY_KEYS,
-}
+export { NAV_LINKS, INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS, QUERY_KEYS }

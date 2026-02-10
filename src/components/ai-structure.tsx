@@ -1,6 +1,7 @@
 import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
+import { authClient } from '@/lib/auth-client'
 import { structureData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { validateAIServerFnInput } from '@/lib/utils'
@@ -14,9 +15,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { Textarea } from './ui/textarea'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -25,7 +26,12 @@ const structureTextFn = createServerFn({ method: 'POST' })
     async ({
       data,
       context,
-    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+    }): Promise<{
+      success: boolean
+      output: string
+      error: string | null
+      compression?: { ratio: number; strategy: string }
+    }> => {
       const { input, format } = data
       const { session } = context
 
@@ -43,6 +49,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
             success: false,
             error:
               'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
+        if (input.length > userPlanLimit.max_input_length) {
+          return {
+            output: '',
+            success: false,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${session.user.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
           }
         }
 
@@ -88,7 +102,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
           }
         }
         try {
-          const structuredOutput = await structureData(input, format)
+          const result = await structureData(input, format, session.user.plan)
+
+          if (result.processing?.metadata.isCompressed) {
+            console.log(
+              `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
+            )
+          }
+
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -98,7 +119,17 @@ const structureTextFn = createServerFn({ method: 'POST' })
             })
           } catch (historyError) {}
 
-          return { output: structuredOutput, success: true, error: null }
+          return {
+            output: result.text,
+            success: true,
+            error: null,
+            compression: result.processing
+              ? {
+                  ratio: result.processing.compressionRatio,
+                  strategy: result.processing.metadata.strategy,
+                }
+              : undefined,
+          }
         } catch (aiError) {
           await db
             .update(aiUsage)
@@ -109,9 +140,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error(
-            'AI structuring failed: ' + (aiError as Error).message,
-          )
+          throw aiError
         }
       } catch (error) {
         return {
@@ -132,6 +161,7 @@ const AIStructure = ({
   selectedFormat,
   setSelectedFormat,
 }: AIStructureProps) => {
+  const { data: session } = authClient.useSession()
   const [unstructuredData, setUnstructuredData] = useState('')
 
   const { data, isSuccess, isPending, mutate } = useMutation({
@@ -155,12 +185,15 @@ const AIStructure = ({
           <Label htmlFor="unstructured-input" className="text-sm font-medium">
             Enter your unstructured data
           </Label>
-          <Textarea
+          <TextareaWithCounter
             id="unstructured-input"
             placeholder="Enter your unstructured data here..."
             value={unstructuredData}
             onChange={(e) => setUnstructuredData(e.target.value)}
             className="min-h-75 font-mono bg-card"
+            maxLength={
+              PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+            }
           />
         </div>
 
@@ -184,7 +217,10 @@ const AIStructure = ({
           <Button
             onClick={() =>
               mutate({
-                data: { input: unstructuredData, format: selectedFormat },
+                data: {
+                  input: unstructuredData,
+                  format: selectedFormat,
+                },
               })
             }
             disabled={isPending || unstructuredData.trim() === ''}
@@ -192,7 +228,7 @@ const AIStructure = ({
             className="w-full sm:w-auto"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Structure Data
+            {isPending ? 'Structuring...' : 'Structure Data'}
           </Button>
         </div>
       </div>

@@ -1,29 +1,25 @@
-import {
-  INPUT_FORMATS,
-  MAX_INPUT_LENGTH,
-  OUTPUT_FORMATS,
-  PLAN_LIMITS,
-} from '@/constants'
-import { InputFormat, OutputFormat } from '@/types'
+import { INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage } from '@/db/schema'
 import useDebounce from '@/hooks/use-debounce'
 import { authClient } from '@/lib/auth-client'
 import { assistText } from '@/lib/google-ai'
-import { authOptionalMiddleware } from '@/lib/middleware'
+import { authMiddleware } from '@/lib/middleware'
+import { InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
+import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { Textarea } from './ui/textarea'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
 })
+  .middleware([authMiddleware])
   .inputValidator(
     (data: { input: string; fromType: InputFormat; toType: OutputFormat }) => {
       if (!OUTPUT_FORMATS.includes(data.toType)) {
@@ -36,42 +32,45 @@ const aiAssistFn = createServerFn({
       if (input.length === 0) {
         throw new Error('Input is required.')
       }
-      if (input.length > MAX_INPUT_LENGTH) {
-        throw new Error(
-          `AI assist can handle up to ${MAX_INPUT_LENGTH} characters. Upgrade your plan for larger inputs.`,
-        )
-      }
 
       return { ...data, input }
     },
   )
-  .middleware([authOptionalMiddleware])
   .handler(
     async ({
       data,
       context,
-    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+    }): Promise<{
+      success: boolean
+      output: string
+      error: string | null
+      compression?: { ratio: number; strategy: string }
+    }> => {
       const { input, fromType, toType } = data
       const { session } = context
-
-      if (!session) {
-        return {
-          output: '',
-          success: false,
-          error: 'User is not authenticated.',
-        }
-      }
+      const plan = session?.user?.plan || 'free'
 
       try {
         const today = new Date().toISOString().split('T')[0]
-        const userPlanLimit = PLAN_LIMITS[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[plan]
 
         if (!userPlanLimit) {
           return {
             output: '',
             success: false,
-            error:
-              'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+            error: 'Plan does not support AI features.',
+          }
+        }
+
+        if (input.length > userPlanLimit.max_input_length) {
+          return {
+            output: '',
+            success: false,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${
+              plan === 'free'
+                ? 'Upgrade your plan for larger inputs.'
+                : 'Please shorten your input.'
+            }`,
           }
         }
 
@@ -112,15 +111,30 @@ const aiAssistFn = createServerFn({
           return {
             output: '',
             success: false,
-            error:
-              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
+            error: 'AI usage limit reached for today.',
           }
         }
 
         try {
-          const assistedOutput = await assistText(input, fromType, toType)
+          const result = await assistText(input, fromType, toType, plan)
 
-          return { output: assistedOutput, success: true, error: null }
+          if (result.processing?.metadata.isCompressed) {
+            console.log(
+              `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
+            )
+          }
+
+          return {
+            output: result.text,
+            success: true,
+            error: null,
+            compression: result.processing
+              ? {
+                  ratio: result.processing.compressionRatio,
+                  strategy: result.processing.metadata.strategy,
+                }
+              : undefined,
+          }
         } catch (aiError) {
           await db
             .update(aiUsage)
@@ -131,7 +145,7 @@ const aiAssistFn = createServerFn({
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error('AI assist failed: ' + (aiError as Error).message)
+          throw aiError
         }
       } catch (error) {
         return {
@@ -310,28 +324,15 @@ const InputEditor = ({
           />
         </div>
       </div>
-      <Textarea
+      <TextareaWithCounter
         id="input-textarea"
-        placeholder="Enter your text or code here..."
-        className="mt-4 h-120 w-full resize-none bg-card"
         value={input}
         onChange={(e) => handleValueChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Tab') {
-            e.preventDefault()
-            const textarea = e.target as HTMLTextAreaElement
-            const start = textarea.selectionStart
-            const end = textarea.selectionEnd
-            const newValue =
-              input.substring(0, start) + '\t' + input.substring(end)
-            handleValueChange(newValue)
-
-            setTimeout(() => {
-              textarea.selectionStart = textarea.selectionEnd = start + 1
-            }, 0)
-          }
-        }}
+        maxLength={PLAN_LIMITS[data?.user?.plan || 'free'].max_input_length}
+        placeholder="Enter your text or code here..."
+        className="mt-4 h-120 w-full resize-none bg-card"
       />
+
       <div className="flex items-center justify-between mt-4 w-full">
         <div className="flex gap-2">
           {/*<Button>Convert</Button>*/}
@@ -348,7 +349,15 @@ const InputEditor = ({
           <Button
             variant="outline"
             disabled={!loggedIn || input.trim() === '' || isPending}
-            onClick={() => mutate({ data: { input, fromType, toType } })}
+            onClick={() =>
+              mutate({
+                data: {
+                  input,
+                  fromType,
+                  toType,
+                },
+              })
+            }
           >
             <Sparkles />
             AI Assist

@@ -1,6 +1,7 @@
 import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiUsage, historyUsage } from '@/db/schema'
+import { authClient } from '@/lib/auth-client'
 import { generateData } from '@/lib/google-ai'
 import { authMiddleware } from '@/lib/middleware'
 import { validateAIServerFnInput } from '@/lib/utils'
@@ -13,9 +14,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { Textarea } from './ui/textarea'
 
 const generateDataFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -24,7 +25,12 @@ const generateDataFn = createServerFn({ method: 'POST' })
     async ({
       data,
       context,
-    }): Promise<{ success: boolean; output: string; error: string | null }> => {
+    }): Promise<{
+      success: boolean
+      output: string
+      error: string | null
+      compression?: { ratio: number; strategy: string }
+    }> => {
       const { input, format } = data
       const { session } = context
 
@@ -46,6 +52,14 @@ const generateDataFn = createServerFn({ method: 'POST' })
             success: false,
             error:
               'Your current plan does not support AI features. Please upgrade your plan to use this feature.',
+          }
+        }
+
+        if (input.length > userPlanLimit.max_input_length) {
+          return {
+            output: '',
+            success: false,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${session.user.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
           }
         }
 
@@ -92,7 +106,14 @@ const generateDataFn = createServerFn({ method: 'POST' })
         }
 
         try {
-          const generatedOutput = await generateData(input, format)
+          const result = await generateData(input, format, session.user.plan)
+
+          if (result.processing?.metadata.isCompressed) {
+            console.log(
+              `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
+            )
+          }
+
           try {
             await db.insert(historyUsage).values({
               userId: session.user.id,
@@ -103,9 +124,15 @@ const generateDataFn = createServerFn({ method: 'POST' })
           } catch (historyError) {}
 
           return {
-            output: generatedOutput,
+            output: result.text,
             success: true,
             error: null,
+            compression: result.processing
+              ? {
+                  ratio: result.processing.compressionRatio,
+                  strategy: result.processing.metadata.strategy,
+                }
+              : undefined,
           }
         } catch (aiError) {
           await db
@@ -117,7 +144,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
               and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
             )
 
-          throw new Error('AI generation failed: ' + (aiError as Error).message)
+          throw aiError
         }
       } catch (error) {
         return {
@@ -135,6 +162,7 @@ interface AIGenerateProps {
 }
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
+  const { data: session } = authClient.useSession()
   const [input, setInput] = useState('')
 
   const { data, isSuccess, isPending, mutate } = useMutation({
@@ -151,6 +179,18 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     },
   })
 
+  const handleValueChange = (value: string) => {
+    if (
+      value.length > PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+    ) {
+      toast.error(
+        `Input exceeds maximum length of ${PLAN_LIMITS[session?.user.plan || 'free'].max_input_length} characters for your plan.`,
+      )
+      return
+    }
+    setInput(value)
+  }
+
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
       <div className="space-y-4">
@@ -158,12 +198,15 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           <Label htmlFor="data-description" className="text-sm font-medium">
             Describe the data you want to generate
           </Label>
-          <Textarea
+          <TextareaWithCounter
             id="data-description"
             placeholder="Example: Generate a list of 10 fictional users with name, email, age, and city..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => handleValueChange(e.target.value)}
             className="min-h-75 bg-card"
+            maxLength={
+              PLAN_LIMITS[session?.user.plan || 'free'].max_input_length
+            }
           />
         </div>
 
@@ -185,13 +228,20 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             />
           </div>
           <Button
-            onClick={() => mutate({ data: { input, format: selectedFormat } })}
+            onClick={() =>
+              mutate({
+                data: {
+                  input,
+                  format: selectedFormat,
+                },
+              })
+            }
             disabled={!input.trim() || isPending}
             size="lg"
             className="w-full sm:w-auto"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Generate Data
+            {isPending ? 'Generating...' : 'Generate Data'}
           </Button>
         </div>
       </div>

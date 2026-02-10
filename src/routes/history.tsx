@@ -10,6 +10,7 @@ import type { HistoryItem } from '@/types'
 import * as z from 'zod'
 import { createHistoryQueryOptions } from '@/hooks/query-options'
 import { useSuspenseQuery } from '@tanstack/react-query'
+import { PLAN_LIMITS } from '@/constants'
 
 const historySearchSchema = z.object({
   day: z.string().optional(),
@@ -56,7 +57,7 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
       .from(historyUsage)
       .where(and(...conditions))
       .orderBy(desc(historyUsage.createdAt))
-      .limit(20)
+      .limit(PLAN_LIMITS[session.user.plan].history_limit)
 
     return { history }
   })
