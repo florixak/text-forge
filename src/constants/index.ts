@@ -4,7 +4,6 @@ const QUERY_KEYS = {
   usageToday: ['usage', 'today'] as const,
   userPlan: ['userPlan'] as const,
   history: (day?: string, action?: string) => ['history', day, action] as const,
-  currentUser: ['currentUser'] as const,
 }
 
 const NAV_LINKS: {
