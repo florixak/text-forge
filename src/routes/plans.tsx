@@ -1,3 +1,5 @@
+import ErrorState from '@/components/state/error-state'
+import LoadingIndicator from '@/components/state/loading-indicator'
 import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
 import { PLAN_LIMITS } from '@/constants'
@@ -48,8 +50,8 @@ export const getUserPlan = createServerFn()
 export const Route = createFileRoute('/plans')({
   component: RouteComponent,
   validateSearch: planSchema,
-  errorComponent: () => <div>Failed to load plans.</div>,
-  pendingComponent: () => <div>Loading plans...</div>,
+  errorComponent: () => <ErrorState />,
+  pendingComponent: () => <LoadingIndicator text="Loading plans..." />,
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createPlanQueryOptions())
   },

@@ -1,5 +1,6 @@
 import AIGenerate from '@/components/ai-generate'
 import AIStructure from '@/components/ai-structure'
+import LoadingIndicator from '@/components/state/loading-indicator'
 import { OUTPUT_FORMATS } from '@/constants'
 
 import { authMiddleware } from '@/lib/middleware'
@@ -23,6 +24,7 @@ export const Route = createFileRoute('/ai-structuring')({
     middleware: [authMiddleware],
   },
   validateSearch: aiStructuringSchema,
+  pendingComponent: () => <LoadingIndicator />,
 })
 
 function RouteComponent() {
