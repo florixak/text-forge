@@ -50,7 +50,6 @@ export const getUserPlan = createServerFn()
 export const Route = createFileRoute('/plans')({
   component: RouteComponent,
   validateSearch: planSchema,
-  errorComponent: () => <ErrorState />,
   pendingComponent: () => <LoadingIndicator text="Loading plans..." />,
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createPlanQueryOptions())
