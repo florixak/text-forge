@@ -1,7 +1,6 @@
-import ErrorState from '@/components/state/error-state'
-import LoadingIndicator from '@/components/state/loading-indicator'
 import PlanCard from '@/components/plan-card'
 import PlanFeatureTable from '@/components/plan-feature-table'
+import LoadingIndicator from '@/components/state/loading-indicator'
 import { PLAN_LIMITS } from '@/constants'
 import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
