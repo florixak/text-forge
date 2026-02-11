@@ -18,6 +18,7 @@ import Output from './output'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
+import InlineError from './state/inline-error'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -164,7 +165,7 @@ const AIStructure = ({
   const { data: session } = authClient.useSession()
   const [unstructuredData, setUnstructuredData] = useState('')
 
-  const { data, isSuccess, isPending, mutate } = useMutation({
+  const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: structureTextFn,
     onSuccess: ({ success, error }) => {
       if (success) {
@@ -177,6 +178,19 @@ const AIStructure = ({
       toast.error('Failed to structure data. Please try again.')
     },
   })
+
+  const handleMutate = () => {
+    if (!unstructuredData.trim()) {
+      toast.error('Input cannot be empty.')
+      return
+    }
+    mutate({
+      data: {
+        input: unstructuredData,
+        format: selectedFormat,
+      },
+    })
+  }
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -215,14 +229,7 @@ const AIStructure = ({
             />
           </div>
           <Button
-            onClick={() =>
-              mutate({
-                data: {
-                  input: unstructuredData,
-                  format: selectedFormat,
-                },
-              })
-            }
+            onClick={handleMutate}
             disabled={isPending || unstructuredData.trim() === ''}
             size="lg"
             className="w-full sm:w-auto"
@@ -240,6 +247,13 @@ const AIStructure = ({
           error={undefined}
         />
       ) : null}
+      {isError && (
+        <InlineError
+          title="AI Structuring Failed"
+          message="An error occurred while structuring your data. Please try again."
+          onRetry={handleMutate}
+        />
+      )}
     </section>
   )
 }
