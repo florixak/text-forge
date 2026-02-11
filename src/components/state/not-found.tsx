@@ -1,10 +1,18 @@
+import { useNavigate } from '@tanstack/react-router'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 
 const NotFound = () => {
+  const navigate = useNavigate()
+
   const handleGoBack = () => {
-    window.history.back()
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      navigate({ to: '/' })
+    }
   }
+
   return (
     <section className="min-h-screen flex-col max-w-4xl mx-auto p-4 mt-8">
       <Card className="text-center p-8 flex-center w-full">
