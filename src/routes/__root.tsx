@@ -53,7 +53,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
   shellComponent: RootDocument,
   notFoundComponent: () => <NotFound />,
-  errorComponent: () => <ErrorState />,
+  errorComponent: ({ reset }) => <ErrorState reset={reset} />,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

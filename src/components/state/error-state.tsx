@@ -3,11 +3,15 @@ import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { useNavigate } from '@tanstack/react-router'
 
-const ErrorState = () => {
+const ErrorState = ({ reset }: { error?: Error; reset?: () => void }) => {
   const navigate = useNavigate()
 
   const handleTryAgain = () => {
-    window.location.reload()
+    if (reset) {
+      reset()
+    } else {
+      window.location.reload()
+    }
   }
 
   const handleGoBack = () => {
