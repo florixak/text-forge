@@ -20,7 +20,10 @@ const InlineError = ({
   const isCompact = variant === 'compact'
 
   return (
-    <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900 w-full p-4">
+    <Card
+      className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900 w-full p-4"
+      role="alert"
+    >
       <div className="flex items-start gap-3">
         <CircleAlert
           className="text-red-600 dark:text-red-500 shrink-0"
