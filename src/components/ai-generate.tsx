@@ -17,6 +17,7 @@ import Output from './output'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
+import InlineError from './state/inline-error'
 
 const generateDataFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -165,7 +166,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
   const [input, setInput] = useState('')
 
-  const { data, isSuccess, isPending, mutate } = useMutation({
+  const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
     onSuccess: ({ success, error }) => {
       if (success) {
@@ -178,6 +179,19 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       toast.error('Failed to generate data. Please try again.')
     },
   })
+
+  const handleMutate = () => {
+    if (!input.trim()) {
+      toast.error('Input cannot be empty.')
+      return
+    }
+    mutate({
+      data: {
+        input,
+        format: selectedFormat,
+      },
+    })
+  }
 
   const handleValueChange = (value: string) => {
     if (
@@ -228,14 +242,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
             />
           </div>
           <Button
-            onClick={() =>
-              mutate({
-                data: {
-                  input,
-                  format: selectedFormat,
-                },
-              })
-            }
+            onClick={handleMutate}
             disabled={!input.trim() || isPending}
             size="lg"
             className="w-full sm:w-auto"
@@ -253,6 +260,13 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           error={undefined}
         />
       ) : null}
+      {isError && (
+        <InlineError
+          title="AI Generation Failed"
+          message="An error occurred while generating your data. Please try again."
+          onRetry={handleMutate}
+        />
+      )}
     </section>
   )
 }

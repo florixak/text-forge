@@ -15,6 +15,7 @@ import FormatSelect from './format-select'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
+import InlineError from './state/inline-error'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -240,7 +241,7 @@ const InputEditor = ({
 }: InputEditorProps) => {
   const { data } = authClient.useSession()
 
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, isError } = useMutation({
     mutationFn: aiAssistFn,
     onSuccess: ({ success, output, error }) => {
       if (success) {
@@ -279,6 +280,20 @@ const InputEditor = ({
   const handleClear = () => {
     setInput('')
     setFromType('Auto-detect')
+  }
+
+  const handleMutate = () => {
+    if (!input.trim()) {
+      toast.error('Input cannot be empty.')
+      return
+    }
+    mutate({
+      data: {
+        input,
+        fromType,
+        toType,
+      },
+    })
   }
 
   const loggedIn = data?.user !== null && data?.user !== undefined
@@ -349,21 +364,22 @@ const InputEditor = ({
           <Button
             variant="outline"
             disabled={!loggedIn || input.trim() === '' || isPending}
-            onClick={() =>
-              mutate({
-                data: {
-                  input,
-                  fromType,
-                  toType,
-                },
-              })
-            }
+            onClick={handleMutate}
           >
             <Sparkles />
             AI Assist
           </Button>
         </div>
       </div>
+      {isError && (
+        <div className="mt-4">
+          <InlineError
+            title="AI Assist Failed"
+            message="An error occurred while assisting with your data. Please try again."
+            onRetry={handleMutate}
+          />
+        </div>
+      )}
     </section>
   )
 }

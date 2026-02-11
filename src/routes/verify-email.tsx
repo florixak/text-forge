@@ -1,3 +1,4 @@
+import LoadingIndicator from '@/components/state/loading-indicator'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
@@ -12,6 +13,7 @@ const verifyEmailSchema = z.object({
 export const Route = createFileRoute('/verify-email')({
   component: VerifyEmailPage,
   validateSearch: verifyEmailSchema,
+  pendingComponent: () => <LoadingIndicator text="Verifying your email..." />,
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: async ({ deps }): Promise<{ success: boolean; message: string }> => {
     const { token } = deps

@@ -1,16 +1,17 @@
 import HistoryFilter from '@/components/history-filter'
 import HistoryList from '@/components/history-list'
+import LoadingIndicator from '@/components/state/loading-indicator'
+import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
+import { createHistoryQueryOptions } from '@/hooks/query-options'
 import { authMiddleware } from '@/lib/middleware'
+import type { HistoryItem } from '@/types'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, desc, eq, gte, lte } from 'drizzle-orm'
-import type { HistoryItem } from '@/types'
 import * as z from 'zod'
-import { createHistoryQueryOptions } from '@/hooks/query-options'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { PLAN_LIMITS } from '@/constants'
 
 const historySearchSchema = z.object({
   day: z.string().optional(),
@@ -68,6 +69,7 @@ export const Route = createFileRoute('/history')({
   server: {
     middleware: [authMiddleware],
   },
+  pendingComponent: () => <LoadingIndicator text="Loading history..." />,
   loaderDeps: ({ search }) => ({ day: search.day, action: search.action }),
   loader: async ({ context, deps }) => {
     await context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))

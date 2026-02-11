@@ -2,6 +2,7 @@ import DashboardFooter from '@/components/dashboard/dashboard-footer'
 import DashboardHeader from '@/components/dashboard/dashboard-header'
 import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
 import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
+import LoadingIndicator from '@/components/state/loading-indicator'
 import { PLAN_LIMITS } from '@/constants'
 
 import { db } from '@/db'
@@ -101,8 +102,7 @@ export const Route = createFileRoute('/dashboard')({
   server: {
     middleware: [authMiddleware],
   },
-  errorComponent: () => <div>Failed to load dashboard</div>,
-  pendingComponent: () => <div>Loading dashboard...</div>,
+  pendingComponent: () => <LoadingIndicator text="Loading dashboard..." />,
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createUsageQueryOptions())
   },

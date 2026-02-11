@@ -17,6 +17,8 @@ import Footer from '@/components/footer'
 
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme-provider'
+import NotFound from '@/components/state/not-found'
+import ErrorState from '@/components/state/error-state'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -50,7 +52,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   }),
 
   shellComponent: RootDocument,
-  notFoundComponent: () => <div>404 Not Found</div>,
+  notFoundComponent: () => <NotFound />,
+  errorComponent: ({ reset }) => <ErrorState reset={reset} />,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {

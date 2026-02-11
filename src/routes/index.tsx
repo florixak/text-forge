@@ -1,12 +1,13 @@
 import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
 
-import { InputFormat, OutputFormat } from '@/types'
+import LoadingIndicator from '@/components/state/loading-indicator'
+import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
 import useDebounce from '@/hooks/use-debounce'
+import { InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import * as z from 'zod'
-import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
 
 const indexSchema = z
   .object({
@@ -18,8 +19,7 @@ const indexSchema = z
 export const Route = createFileRoute('/')({
   component: App,
   validateSearch: indexSchema,
-  errorComponent: () => <div>Failed to load the app.</div>,
-  pendingComponent: () => <div>Loading the app...</div>,
+  pendingComponent: () => <LoadingIndicator />,
 })
 
 function App() {
