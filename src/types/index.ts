@@ -43,4 +43,9 @@ export interface PlanLimits {
   history_limit: number
   max_input_length: number
   features: string[]
+
+  models: {
+    openai: string[]
+    google: string[]
+  }
 }
