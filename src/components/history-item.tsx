@@ -47,8 +47,7 @@ const HistoryItem = ({
   const handleUseAgain = () => {
     navigate({
       to: getActionPath(type),
-      search: (old) => ({
-        ...old,
+      search: () => ({
         selected: type,
         from: inputFormat === 'Prompt' ? undefined : inputFormat,
         to: outputFormat,
