@@ -48,8 +48,8 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     max_input_length: 2000,
     history_limit: 30,
     models: {
-      openai: [process.env.OPENAI_FREE_MODEL || 'gpt-3.5-turbo'],
-      google: [process.env.GEMINI_FREE_MODEL || 'gemini-2.5-flash-lite'],
+      openai: [process.env.VITE_OPENAI_FREE_MODEL || 'gpt-3.5-turbo'],
+      google: [process.env.VITE_GEMINI_FREE_MODEL || 'gemini-2.5-flash-lite'],
     },
     features: [
       '10 AI assist calls per day',
@@ -57,7 +57,7 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
       '5 AI generations per day',
       '30 history record limit',
       'Community support',
-      `Models ${process.env.OPENAI_FREE_MODEL || 'gpt-3.5-turbo'} and ${process.env.GEMINI_FREE_MODEL || 'gemini-2.5-flash-lite'}`,
+      `Models ${process.env.VITE_OPENAI_FREE_MODEL || 'gpt-3.5-turbo'} and ${process.env.VITE_GEMINI_FREE_MODEL || 'gemini-2.5-flash-lite'}`,
       'Max input length: 2,000 characters',
     ],
   },
@@ -71,8 +71,8 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     max_input_length: 10000,
     history_limit: 10000,
     models: {
-      openai: [process.env.OPENAI_PRO_MODEL || 'gpt-4.1-nano'],
-      google: [process.env.GEMINI_PRO_MODEL || 'gemini-2.5-flash-lite'],
+      openai: [process.env.VITE_OPENAI_PRO_MODEL || 'gpt-4.1-nano'],
+      google: [process.env.VITE_GEMINI_PRO_MODEL || 'gemini-2.5-flash-lite'],
     },
     features: [
       '100 AI assist calls per day',
@@ -80,7 +80,7 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
       '30 AI generations per day',
       'Unlimited history records',
       'Priority support',
-      `Models ${process.env.OPENAI_PRO_MODEL || 'gpt-4.1-nano'} and ${process.env.GEMINI_PRO_MODEL || 'gemini-2.5-flash-lite'}`,
+      `Models ${process.env.VITE_OPENAI_PRO_MODEL || 'gpt-4.1-nano'} and ${process.env.VITE_GEMINI_PRO_MODEL || 'gemini-2.5-flash-lite'}`,
       'Max input length: 10,000 characters',
     ],
   },
