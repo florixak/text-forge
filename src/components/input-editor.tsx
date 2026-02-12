@@ -12,10 +12,11 @@ import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
+import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import InlineError from './state/inline-error'
+import AssistOutput from './assist-output'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -152,7 +153,7 @@ const aiAssistFn = createServerFn({
         return {
           output: '',
           success: false,
-          error: 'AI assist failed, please try again later.',
+          error: 'AI Assist failed. Please try again later.',
         }
       }
     },
@@ -241,11 +242,16 @@ const InputEditor = ({
 }: InputEditorProps) => {
   const { data } = authClient.useSession()
 
-  const { mutate, isPending, isError } = useMutation({
+  const {
+    data: assistData,
+    mutate,
+    isPending,
+    isError,
+  } = useMutation({
     mutationFn: aiAssistFn,
-    onSuccess: ({ success, output, error }) => {
+    onSuccess: ({ success, error }) => {
       if (success) {
-        setInput(output)
+        toast.success('AI Assist successful!')
       } else {
         toast.error(error || 'AI Assist failed. Please try again.')
       }
@@ -299,7 +305,7 @@ const InputEditor = ({
   const loggedIn = data?.user !== null && data?.user !== undefined
 
   return (
-    <section className="p-4 w-full">
+    <section className="p-4 w-full max-w-160" aria-label="Input Editor">
       <h2 className="text-foreground font-bold text-lg">Input Editor</h2>
       <p className="text-muted-foreground">
         Paste your text or code to begin conversion.
@@ -378,6 +384,14 @@ const InputEditor = ({
             message="An error occurred while assisting with your data. Please try again."
             onRetry={handleMutate}
           />
+        </div>
+      )}
+      {assistData?.output && (
+        <div className="mt-6">
+          <Label className="mb-2 uppercase font-medium text-foreground text-sm">
+            AI Assist Output
+          </Label>
+          <AssistOutput output={assistData.output} onApply={setInput} />
         </div>
       )}
     </section>
