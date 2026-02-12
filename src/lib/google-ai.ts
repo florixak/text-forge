@@ -2,6 +2,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { baseAssistText, baseGenerateData, baseStructureData } from './ai'
 import { InputFormat, OutputFormat } from '@/types'
 import { User } from '@/db/schema'
+import { MODELS } from '@/constants/prompts'
 
 const apiKey = process.env.GOOGLE_API_KEY
 
@@ -23,7 +24,7 @@ export async function assistText(
     input,
     fromType,
     toType,
-    google('gemini-2.5-flash-lite'),
+    google(MODELS.google[plan]),
     plan,
   )
 }
@@ -33,7 +34,7 @@ export async function structureData(
   format: OutputFormat,
   plan: User['plan'],
 ) {
-  return baseStructureData(input, format, google('gemini-2.5-flash-lite'), plan)
+  return baseStructureData(input, format, google(MODELS.google[plan]), plan)
 }
 
 export async function generateData(
@@ -44,7 +45,7 @@ export async function generateData(
   return baseGenerateData(
     description,
     format,
-    google('gemini-2.5-flash-lite'),
+    google(MODELS.google[plan]),
     plan,
   )
 }
