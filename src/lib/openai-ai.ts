@@ -1,16 +1,16 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { baseAssistText, baseGenerateData, baseStructureData } from './ai'
-import { InputFormat, OutputFormat } from '@/types'
 import { User } from '@/db/schema'
+import { InputFormat, OutputFormat } from '@/types'
+import { createOpenAI } from '@ai-sdk/openai'
+import { baseAssistText, baseGenerateData, baseStructureData } from './ai'
 import { MODELS } from '@/constants/prompts'
 
-const apiKey = process.env.GOOGLE_API_KEY
+const apiKey = process.env.OPENAI_API_KEY
 
 if (!apiKey) {
-  throw new Error('GOOGLE_API_KEY is not defined in environment variables.')
+  throw new Error('OPENAI_API_KEY is not defined in environment variables.')
 }
 
-const google = createGoogleGenerativeAI({
+const openai = createOpenAI({
   apiKey,
 })
 
@@ -24,7 +24,7 @@ export async function assistText(
     input,
     fromType,
     toType,
-    google(MODELS.google[plan]),
+    openai(MODELS.openai[plan]),
     plan,
   )
 }
@@ -34,7 +34,7 @@ export async function structureData(
   format: OutputFormat,
   plan: User['plan'],
 ) {
-  return baseStructureData(input, format, google(MODELS.google[plan]), plan)
+  return baseStructureData(input, format, openai(MODELS.openai[plan]), plan)
 }
 
 export async function generateData(
@@ -45,7 +45,7 @@ export async function generateData(
   return baseGenerateData(
     description,
     format,
-    google(MODELS.google[plan]),
+    openai(MODELS.openai[plan]),
     plan,
   )
 }

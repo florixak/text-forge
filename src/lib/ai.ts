@@ -43,6 +43,14 @@ async function baseGenerateText(
       prompt: userPrompt,
       maxOutputTokens: getOutputTokenLimit(task),
     })
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Generating ${task} with model ${options.model}...`)
+      console.log('System prompt:', systemPrompt)
+      console.log('User prompt:', userPrompt)
+      console.log(`${task} result:`, result.text)
+      console.log(`${task} token usage:`, result.usage)
+      console.log(`${task} token total usage:`, result.totalUsage)
+    }
 
     return {
       text: result.text,
