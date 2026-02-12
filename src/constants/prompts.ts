@@ -1,13 +1,14 @@
 import { InputFormat, OutputFormat } from '@/types'
 
 const SYSTEM_PROMPTS = {
-  assist: `Convert tips: {from} → {to}. Short, actionable only. No data.`,
-  structure: `Output {format} only. Valid, no extra text.`,
-  generate: `Generate {format} per description. Valid only.`,
+  //assist: `Fix issues in {from} converting to {to}, no code blocks, extra text, or \`\`\`{format} marks.`,
+  assist: `Give short tips or fixes for converting {from} to {to}. Focus on common pitfalls and best practices. Keep it concise. No explanations, just tips.`,
+  structure: `Return only valid {format}, no code blocks, extra text, or \`\`\`{format} marks.`,
+  generate: `Return only valid {format}, no code blocks, extra text, or \`\`\`{format} marks.`,
 } as const
 
 const OUTPUT_TOKEN_LIMITS = {
-  assist: 100,
+  assist: 1000,
   structure: 2000,
   generate: 3000,
 } as const
