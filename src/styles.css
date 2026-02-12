@@ -33,12 +33,12 @@ code {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(var(--color-muted));
+  background: var(--color-muted);
   border-radius: var(--radius);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--color-border));
+  background: var(--color-border);
 }
 
 :root {
