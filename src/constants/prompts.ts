@@ -59,7 +59,7 @@ export const MODELS = {
 }
 
 const OUTPUT_TOKEN_LIMITS = {
-  assist: 100,
+  assist: 500,
   structure: 1000,
   generate: 2000,
 } as const
