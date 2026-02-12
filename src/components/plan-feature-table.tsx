@@ -92,7 +92,7 @@ const PlanFeatureTable = ({ plans, selected }: PlanFeatureTableProps) => {
           ))}
         </tr>
         <tr className="border-t border-border">
-          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5 rounded-bl-xl">
+          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
             AI Models
           </td>
           {plans.map(([plan, limits], idx) => (
@@ -106,7 +106,7 @@ const PlanFeatureTable = ({ plans, selected }: PlanFeatureTableProps) => {
           ))}
         </tr>
         <tr className="border-t border-border">
-          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
+          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5 rounded-bl-xl">
             Max Input Length
           </td>
           {plans.map(([plan, limits]) => (
