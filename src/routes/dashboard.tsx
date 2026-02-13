@@ -6,10 +6,15 @@ import LoadingIndicator from '@/components/state/loading-indicator'
 import { PLAN_LIMITS } from '@/constants'
 
 import { db } from '@/db'
-import { aiUsage } from '@/db/schema'
+import { aiMonthlyUsage, aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
 import { authMiddleware } from '@/lib/middleware'
-import { formatLimit, FormatLimitResult } from '@/lib/utils'
+import {
+  FormatLimitResult,
+  formatTokenLimit,
+  getCurrentMonthISO,
+  getTodayISO,
+} from '@/lib/utils'
 import { DashboardUser } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
@@ -19,11 +24,23 @@ import { and, eq } from 'drizzle-orm'
 export interface DashboardData {
   user: DashboardUser
   usage: {
-    words: number
-    last_used: number | null
-    assist: FormatLimitResult
-    structure: FormatLimitResult
-    generate: FormatLimitResult
+    today: FormatLimitResult['today']
+    month: FormatLimitResult['month']
+  }
+}
+
+export interface DashboardUsage {
+  today: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
+  }
+  month: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
   }
 }
 
@@ -37,56 +54,37 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
     }
 
     try {
-      const now = new Date()
-      const today = now.toISOString().split('T')[0]
-      const todayUsage = await db
-        .select()
-        .from(aiUsage)
-        .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
-        .limit(1)
+      const today = getTodayISO()
+      const month = getCurrentMonthISO()
+      const [todayUsage, monthlyUsage] = await Promise.all([
+        await db
+          .select()
+          .from(aiUsage)
+          .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
+          .limit(1),
+        await db
+          .select()
+          .from(aiMonthlyUsage)
+          .where(
+            and(
+              eq(aiMonthlyUsage.userId, user.id),
+              eq(aiMonthlyUsage.month, month),
+            ),
+          )
+          .limit(1),
+      ])
 
       const planKey = user.plan
       const planConfig = PLAN_LIMITS[planKey]
       if (!planConfig) {
         throw new Error('Invalid plan configuration')
       }
-      const lastUsedDate = todayUsage[0]?.last_used
-        ? new Date(todayUsage[0].last_used)
-        : null
-      const last_used = lastUsedDate
-        ? Math.max(
-            0,
-            Math.floor(
-              (now.getTime() - lastUsedDate.getTime()) / (1000 * 60 * 60),
-            ),
-          )
-        : null
 
-      const words = todayUsage[0]?.words ?? 0
-
-      const assistLimit = formatLimit(
+      const usage: FormatLimitResult = formatTokenLimit(
+        todayUsage[0],
+        monthlyUsage[0],
         planConfig,
-        todayUsage[0] || {},
-        'assist_ai',
       )
-      const structureLimit = formatLimit(
-        planConfig,
-        todayUsage[0] || {},
-        'structure_ai',
-      )
-      const generateLimit = formatLimit(
-        planConfig,
-        todayUsage[0] || {},
-        'generate_ai',
-      )
-
-      const usage: DashboardData['usage'] = {
-        words,
-        last_used,
-        assist: assistLimit,
-        structure: structureLimit,
-        generate: generateLimit,
-      }
 
       return {
         user,
@@ -113,7 +111,7 @@ function RouteComponent() {
     data: { user, usage },
   } = useSuspenseQuery(createUsageQueryOptions())
   return (
-    <section className="max-w-3xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
+    <section className="max-w-4xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
       <DashboardHeader data={{ user, usage }} />
 
       <DashboardQuickActions />
