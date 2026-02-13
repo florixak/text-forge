@@ -1,6 +1,6 @@
 import { OUTPUT_FORMATS } from '@/constants'
-import { AIUsage } from '@/db/schema'
-import { AIFeature } from '@/db/utils'
+import { AIMonthlyUsage, AIUsage } from '@/db/schema'
+import { DashboardUsage } from '@/routes/dashboard'
 import { OutputFormat, PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -68,25 +68,42 @@ export const getCurrentMonthISO = (): string => {
 }
 
 export interface FormatLimitResult {
-  used: number
-  limit: number
-  remaining: number
-  percentage: number
+  today: DashboardUsage['today']
+  month: DashboardUsage['month']
 }
 
-export const formatLimit = (
-  planConfig: PlanLimits,
+export const formatTokenLimit = (
   todayUsage: AIUsage,
-  type: AIFeature,
+  monthlyUsage: AIMonthlyUsage,
+  planConfig: PlanLimits,
 ): FormatLimitResult => {
-  const assistLimit = Math.max(0, planConfig[`${type}_day`])
-  const used = Math.max(0, todayUsage[type] ?? 0)
+  const todayUsed = Math.max(0, todayUsage.total_tokens ?? 0)
+  const monthlyUsed = Math.max(0, monthlyUsage.total_tokens ?? 0)
 
-  const remaining = Math.max(0, assistLimit - used)
-  const percentage =
-    assistLimit > 0 ? Math.min(100, (used / assistLimit) * 100) : 0
+  const today = {
+    used: todayUsed,
+    limit: planConfig.token_limit_day,
+    remaining: Math.max(0, planConfig.token_limit_day - todayUsed),
+    percentage:
+      planConfig.token_limit_day > 0
+        ? Math.min(100, (todayUsed / planConfig.token_limit_day) * 100)
+        : 0,
+  }
 
-  return { used, limit: assistLimit, remaining, percentage }
+  const month = {
+    used: monthlyUsed,
+    limit: planConfig.token_limit_month,
+    remaining: Math.max(0, planConfig.token_limit_month - monthlyUsed),
+    percentage:
+      planConfig.token_limit_month > 0
+        ? Math.min(100, (monthlyUsed / planConfig.token_limit_month) * 100)
+        : 0,
+  }
+
+  return {
+    today,
+    month,
+  }
 }
 
 export const isValidTheme = (theme: string) => {
@@ -105,4 +122,14 @@ export const validateAIServerFnInput = (data: {
     throw new Error('Input is required.')
   }
   return { ...data, input }
+}
+
+export const formatBigNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`
+  }
+  if (num >= 10000) {
+    return `${(num / 1000).toFixed(1)}K`
+  }
+  return num.toString()
 }
