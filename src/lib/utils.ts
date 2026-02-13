@@ -1,5 +1,6 @@
 import { OUTPUT_FORMATS } from '@/constants'
 import { AIUsage } from '@/db/schema'
+import { AIFeature } from '@/db/utils'
 import { OutputFormat, PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -49,6 +50,23 @@ export const formatLocalDate = (date: Date) => {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * Get today's date in ISO format (YYYY-MM-DD)
+ */
+export const getTodayISO = (): string => {
+  return formatLocalDate(new Date())
+}
+
+/**
+ * Get current month in ISO format (YYYY-MM-01)
+ */
+export const getCurrentMonthISO = (): string => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}-01`
+}
+
 export interface FormatLimitResult {
   used: number
   limit: number
@@ -59,7 +77,7 @@ export interface FormatLimitResult {
 export const formatLimit = (
   planConfig: PlanLimits,
   todayUsage: AIUsage,
-  type: 'assist_ai' | 'structure_ai' | 'generate_ai',
+  type: AIFeature,
 ): FormatLimitResult => {
   const assistLimit = Math.max(0, planConfig[`${type}_day`])
   const used = Math.max(0, todayUsage[type] ?? 0)
