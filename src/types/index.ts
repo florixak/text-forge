@@ -35,9 +35,9 @@ export interface PlanLimits {
   price: number
   description: string
 
-  assist_ai_day: number
-  structure_ai_day: number
-  generate_ai_day: number
+  token_limit_month: number
+  token_limit_day: number
+  requests_day: number
 
   support: 'community' | 'priority'
   history_limit: number
