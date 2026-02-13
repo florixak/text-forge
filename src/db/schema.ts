@@ -276,5 +276,6 @@ export const historyUsageRelations = relations(historyUsage, ({ one }) => ({
 }))
 
 export type AIUsage = InferSelectModel<typeof aiUsage>
+export type AIMonthlyUsage = InferSelectModel<typeof aiMonthlyUsage>
 export type Subscription = InferSelectModel<typeof subscription>
 export type User = InferSelectModel<typeof user>
