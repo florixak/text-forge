@@ -87,6 +87,38 @@ export const verification = pgTable(
   (table) => [index('verification_identifier_idx').on(table.identifier)],
 )
 
+export const aiMonthlyUsage = pgTable(
+  'ai_monthly_usage',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+
+    month: date('month').notNull(),
+
+    total_tokens: integer('total_tokens').default(0).notNull(),
+    input_tokens: integer('input_tokens').default(0).notNull(),
+    output_tokens: integer('output_tokens').default(0).notNull(),
+    requests: integer('requests').default(0).notNull(),
+
+    last_used: timestamp('last_used')
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+
+    words: integer('words').default(0).notNull(),
+  },
+  (table) => [
+    index('ai_monthly_usage_userId_idx').on(table.userId),
+    unique('ai_monthly_usage_userId_month_unique').on(
+      table.userId,
+      table.month,
+    ),
+  ],
+)
+
 export const aiUsage = pgTable(
   'ai_usage',
   {
@@ -97,6 +129,11 @@ export const aiUsage = pgTable(
       .references(() => user.id, { onDelete: 'cascade' }),
 
     day: date('day').notNull(),
+
+    total_tokens: integer('total_tokens').default(0).notNull(),
+    input_tokens: integer('input_tokens').default(0).notNull(),
+    output_tokens: integer('output_tokens').default(0).notNull(),
+    requests: integer('requests').default(0).notNull(),
 
     assist_ai: integer('assist_ai').default(0).notNull(),
     structure_ai: integer('structure_ai').default(0).notNull(),
@@ -220,6 +257,20 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const aiUsageRelations = relations(aiUsage, ({ one }) => ({
   user: one(user, {
     fields: [aiUsage.userId],
+    references: [user.id],
+  }),
+}))
+
+export const aiMonthlyUsageRelations = relations(aiMonthlyUsage, ({ one }) => ({
+  user: one(user, {
+    fields: [aiMonthlyUsage.userId],
+    references: [user.id],
+  }),
+}))
+
+export const historyUsageRelations = relations(historyUsage, ({ one }) => ({
+  user: one(user, {
+    fields: [historyUsage.userId],
     references: [user.id],
   }),
 }))
