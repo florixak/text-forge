@@ -1,6 +1,7 @@
 import HistoryFilter from '@/components/history/history-filter'
 import HistoryList from '@/components/history/history-list'
 import LoadingIndicator from '@/components/state/loading-indicator'
+import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { createHistoryQueryOptions } from '@/hooks/query-options'
@@ -9,7 +10,7 @@ import type { HistoryItem } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { and, desc, eq, gte, lte, count } from 'drizzle-orm'
+import { and, desc, eq, gte, lte } from 'drizzle-orm'
 import * as z from 'zod'
 
 const historySearchSchema = z.object({
@@ -33,6 +34,8 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
       }
 
       const { day, action, page, count: countStr } = data
+      const userPlan = session.user.plan || 'free'
+      const planLimit = PLAN_LIMITS[userPlan]?.history_limit || 100
 
       const conditions = [eq(historyUsage.userId, session.user.id)]
 
@@ -52,7 +55,7 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
         )
       }
 
-      const history = await db
+      const allHistory = await db
         .select({
           id: historyUsage.id,
           type: historyUsage.action,
@@ -63,15 +66,16 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
         .from(historyUsage)
         .where(and(...conditions))
         .orderBy(desc(historyUsage.createdAt))
-        .offset(((Number(page) || 1) - 1) * (Number(countStr) || 10))
-        .limit(Number(countStr) || 10)
+        .limit(planLimit)
 
-      const totalResult = await db
-        .select({ total: count(historyUsage.id) })
-        .from(historyUsage)
-        .where(and(...conditions))
+      const total = allHistory.length
 
-      return { history, total: totalResult?.[0]?.total ?? 0 }
+      const pageNum = Number(page) || 1
+      const countNum = Number(countStr) || 10
+      const offset = (pageNum - 1) * countNum
+      const history = allHistory.slice(offset, offset + countNum)
+
+      return { history, total }
     },
   )
 
