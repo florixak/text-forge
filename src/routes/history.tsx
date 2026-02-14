@@ -14,7 +14,17 @@ import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
 import * as z from 'zod'
 
 const historySearchSchema = z.object({
-  day: z.string().optional(),
+  day: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(
+      (val) => {
+        const d = new Date(val)
+        return !isNaN(d.getTime()) && val === d.toISOString().slice(0, 10)
+      },
+      { message: 'Invalid date' },
+    )
+    .optional(),
   action: z.enum(['convert', 'structure', 'generate']).optional(),
   page: z.string().regex(/^\d+$/).optional().default('1'),
   count: z.string().regex(/^\d+$/).optional().default('10'),
@@ -44,9 +54,13 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
       }
 
       if (day) {
-        const startOfDay = new Date(day)
+        const parsed = new Date(day)
+        if (isNaN(parsed.getTime())) {
+          throw new Response('Invalid date format', { status: 400 })
+        }
+        const startOfDay = new Date(parsed)
         startOfDay.setUTCHours(0, 0, 0, 0)
-        const endOfDay = new Date(day)
+        const endOfDay = new Date(parsed)
         endOfDay.setUTCHours(23, 59, 59, 999)
 
         conditions.push(
