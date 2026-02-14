@@ -3,7 +3,8 @@ import { Plan, PlanLimits } from '@/types'
 const QUERY_KEYS = {
   usageToday: ['usage', 'today'] as const,
   userPlan: ['userPlan'] as const,
-  history: (day?: string, action?: string) => ['history', day, action] as const,
+  history: (day?: string, action?: string, page?: string, count?: string) =>
+    ['history', day, action, page, count] as const,
 }
 
 const NAV_LINKS: {
