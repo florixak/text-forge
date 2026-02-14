@@ -100,10 +100,7 @@ export const reserveQuota = async (
       return { error: 'Failed to fetch monthly usage data.' }
     }
 
-    if (
-      !monthlyUsage ||
-      monthlyUsage.total_tokens >= userPlanLimit.token_limit_month
-    ) {
+    if (monthlyUsage.total_tokens >= userPlanLimit.token_limit_month) {
       await tx
         .update(aiUsage)
         .set({
@@ -113,9 +110,7 @@ export const reserveQuota = async (
         .where(and(eq(aiUsage.userId, userId), eq(aiUsage.day, today)))
 
       return {
-        error: !monthlyUsage
-          ? 'Failed to fetch monthly usage data.'
-          : 'Monthly token limit reached. Upgrade your plan.',
+        error: 'Monthly token limit reached. Upgrade your plan.',
       }
     }
 
