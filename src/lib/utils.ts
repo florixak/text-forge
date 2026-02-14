@@ -67,6 +67,13 @@ export const getCurrentMonthISO = (): string => {
   return `${year}-${month}-01`
 }
 
+export const formatPercentage = (value: number): string => {
+  if (isNaN(value) || !isFinite(value)) return '0%'
+  if (value < 0.01) return '<0.01%'
+  if (value > 99.99) return '>99.99%'
+  return `${value.toFixed(2)}%`
+}
+
 export interface FormatLimitResult {
   today: DashboardUsage['today']
   month: DashboardUsage['month']
