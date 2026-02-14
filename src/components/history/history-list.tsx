@@ -1,8 +1,7 @@
-import { PLAN_LIMITS } from '@/constants'
 import { Route } from '@/routes/history'
 import type { HistoryItem as HistoryItemType } from '@/types'
-import HistoryItem from './history-item'
 import { Button } from '../ui/button'
+import HistoryItem from './history-item'
 
 interface HistoryListProps {
   history: HistoryItemType[]
@@ -23,12 +22,6 @@ const HistoryList = ({ history, paging }: HistoryListProps) => {
       {history.length === 0 && (
         <div className="text-center text-muted-foreground py-10">
           No history items found for the selected filters.
-        </div>
-      )}
-      {history.length >= PLAN_LIMITS.free.history_limit && (
-        <div className="text-center text-sm text-muted-foreground py-4">
-          You have reached the maximum number of history items for your plan. To
-          access more history, please consider upgrading your plan.
         </div>
       )}
       {paging && paging.total > paging.count && (
