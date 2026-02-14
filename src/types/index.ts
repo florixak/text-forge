@@ -35,9 +35,9 @@ export interface PlanLimits {
   price: number
   description: string
 
-  assist_ai_day: number
-  structure_ai_day: number
-  generate_ai_day: number
+  token_limit_month: number
+  token_limit_day: number
+  requests_day: number
 
   support: 'community' | 'priority'
   history_limit: number
@@ -47,5 +47,38 @@ export interface PlanLimits {
   models: {
     openai: string[]
     google: string[]
+  }
+}
+
+export interface FormatLimitResult {
+  today: DashboardUsage['today']
+  month: DashboardUsage['month']
+}
+
+export interface DashboardData {
+  user: DashboardUser
+  usage: {
+    today: FormatLimitResult['today']
+    month: FormatLimitResult['month']
+  }
+  featureUsages: {
+    assist_ai: number
+    structure_ai: number
+    generate_ai: number
+  }
+}
+
+export interface DashboardUsage {
+  today: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
+  }
+  month: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
   }
 }

@@ -16,7 +16,7 @@ interface AIOptions {
   verbose?: boolean
 }
 
-interface AIResult {
+export interface AIResult {
   text: string
   usage?: {
     inputTokens: number

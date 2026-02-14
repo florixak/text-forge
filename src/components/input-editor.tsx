@@ -1,22 +1,20 @@
 import { INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
-import { db } from '@/db'
-import { aiUsage } from '@/db/schema'
+import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
 import useDebounce from '@/hooks/use-debounce'
 import { authClient } from '@/lib/auth-client'
-import { assistText } from '@/lib/openai-ai'
 import { authMiddleware } from '@/lib/middleware'
+import { assistText } from '@/lib/openai-ai'
 import { InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq, sql } from 'drizzle-orm'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import AssistOutput from './assist-output'
 import FormatSelect from './format-select'
 import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import AssistOutput from './assist-output'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -53,7 +51,6 @@ const aiAssistFn = createServerFn({
       const plan = session?.user?.plan || 'free'
 
       try {
-        const today = new Date().toISOString().split('T')[0]
         const userPlanLimit = PLAN_LIMITS[plan]
 
         if (!userPlanLimit) {
@@ -76,54 +73,46 @@ const aiAssistFn = createServerFn({
           }
         }
 
-        const quotaReserved = await db.transaction(async (tx) => {
-          await tx
-            .insert(aiUsage)
-            .values({
-              userId: session.user.id,
-              day: today,
-              assist_ai: 0,
-              structure_ai: 0,
-              generate_ai: 0,
-              words: 0,
-            })
-            .onConflictDoNothing()
+        const quotaReserved = await reserveQuota(
+          session.user.id,
+          plan,
+          'assist_ai',
+        )
 
-          const updateResult = await tx
-            .update(aiUsage)
-            .set({
-              assist_ai: sql`${aiUsage.assist_ai} + 1`,
-            })
-            .where(
-              and(
-                eq(aiUsage.userId, session.user.id),
-                eq(aiUsage.day, today),
-                sql`${aiUsage.assist_ai} < ${userPlanLimit.assist_ai_day}`,
-              ),
-            )
-
-          if (!updateResult.rowCount) {
-            return false
-          }
-
-          return updateResult.rowCount > 0
-        })
-
-        if (!quotaReserved) {
+        if (quotaReserved.error) {
           return {
             output: '',
             success: false,
-            error: 'AI usage limit reached for today.',
+            error: quotaReserved.error,
+          }
+        }
+
+        if (!quotaReserved.success) {
+          return {
+            output: '',
+            success: false,
+            error:
+              'You have reached your AI usage limit. Please upgrade your plan to continue using this feature.',
           }
         }
 
         try {
           const result = await assistText(input, fromType, toType, plan)
 
-          if (result.processing?.metadata.isCompressed) {
+          if (
+            result.processing?.metadata.isCompressed &&
+            process.env.NODE_ENV === 'development'
+          ) {
             console.log(
               `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
             )
+          }
+          try {
+            await trackTokenUsage(session.user.id, result)
+          } catch (trackingError) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Failed to track token usage:', trackingError)
+            }
           }
 
           return {
@@ -138,14 +127,16 @@ const aiAssistFn = createServerFn({
               : undefined,
           }
         } catch (aiError) {
-          await db
-            .update(aiUsage)
-            .set({
-              assist_ai: sql`${aiUsage.assist_ai} - 1`,
-            })
-            .where(
-              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-            )
+          const rollbackResult = await rollbackQuota(
+            session.user.id,
+            'assist_ai',
+          )
+
+          if (!rollbackResult.success) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Failed to rollback quota:', rollbackResult.error)
+            }
+          }
 
           throw aiError
         }

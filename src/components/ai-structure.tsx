@@ -1,24 +1,24 @@
 import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
-import { aiUsage, historyUsage } from '@/db/schema'
+import { historyUsage } from '@/db/schema'
+import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
 import { authClient } from '@/lib/auth-client'
-import { structureData } from '@/lib/openai-ai'
 import { authMiddleware } from '@/lib/middleware'
+import { structureData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
 import { OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq, sql } from 'drizzle-orm'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import InlineError from './state/inline-error'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -41,7 +41,6 @@ const structureTextFn = createServerFn({ method: 'POST' })
       }
 
       try {
-        const today = new Date().toISOString().split('T')[0]
         const userPlanLimit = PLAN_LIMITS[session.user.plan]
 
         if (!userPlanLimit) {
@@ -61,40 +60,21 @@ const structureTextFn = createServerFn({ method: 'POST' })
           }
         }
 
-        const quotaReserved = await db.transaction(async (tx) => {
-          await tx
-            .insert(aiUsage)
-            .values({
-              userId: session.user.id,
-              day: today,
-              assist_ai: 0,
-              structure_ai: 0,
-              generate_ai: 0,
-              words: 0,
-            })
-            .onConflictDoNothing()
+        const quotaReserved = await reserveQuota(
+          session.user.id,
+          session.user.plan,
+          'structure_ai',
+        )
 
-          const updateResult = await tx
-            .update(aiUsage)
-            .set({
-              structure_ai: sql`${aiUsage.structure_ai} + 1`,
-            })
-            .where(
-              and(
-                eq(aiUsage.userId, session.user.id),
-                eq(aiUsage.day, today),
-                sql`${aiUsage.structure_ai} < ${userPlanLimit.structure_ai_day}`,
-              ),
-            )
-
-          if (!updateResult.rowCount) {
-            return false
+        if (quotaReserved.error) {
+          return {
+            output: '',
+            success: false,
+            error: quotaReserved.error,
           }
+        }
 
-          return updateResult.rowCount > 0
-        })
-
-        if (!quotaReserved) {
+        if (!quotaReserved.success) {
           return {
             output: '',
             success: false,
@@ -105,10 +85,20 @@ const structureTextFn = createServerFn({ method: 'POST' })
         try {
           const result = await structureData(input, format, session.user.plan)
 
-          if (result.processing?.metadata.isCompressed) {
+          if (
+            result.processing?.metadata.isCompressed &&
+            process.env.NODE_ENV === 'development'
+          ) {
             console.log(
               `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
             )
+          }
+          try {
+            await trackTokenUsage(session.user.id, result)
+          } catch (trackingError) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Failed to track token usage:', trackingError)
+            }
           }
 
           try {
@@ -118,7 +108,14 @@ const structureTextFn = createServerFn({ method: 'POST' })
               from: 'Text',
               to: format,
             })
-          } catch (historyError) {}
+          } catch (historyError) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error(
+                'Failed to log ai structure history usage:',
+                historyError,
+              )
+            }
+          }
 
           return {
             output: result.text,
@@ -132,14 +129,16 @@ const structureTextFn = createServerFn({ method: 'POST' })
               : undefined,
           }
         } catch (aiError) {
-          await db
-            .update(aiUsage)
-            .set({
-              structure_ai: sql`${aiUsage.structure_ai} - 1`,
-            })
-            .where(
-              and(eq(aiUsage.userId, session.user.id), eq(aiUsage.day, today)),
-            )
+          const rollbackResult = await rollbackQuota(
+            session.user.id,
+            'structure_ai',
+          )
+
+          if (!rollbackResult.success) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Failed to rollback quota:', rollbackResult.error)
+            }
+          }
 
           throw aiError
         }
