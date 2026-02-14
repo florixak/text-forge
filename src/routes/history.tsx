@@ -10,7 +10,7 @@ import type { HistoryItem } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { and, desc, eq, gte, lte } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lte } from 'drizzle-orm'
 import * as z from 'zod'
 
 const historySearchSchema = z.object({
@@ -55,7 +55,23 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
         )
       }
 
-      const allHistory = await db
+      const totalResult = await db
+        .select({ total: count() })
+        .from(historyUsage)
+        .where(and(...conditions))
+
+      const actualTotal = totalResult[0]?.total ?? 0
+      const total = Math.min(actualTotal, planLimit)
+
+      const pageNum = Number(page) || 1
+      const countNum = Number(countStr) || 10
+      const offset = (pageNum - 1) * countNum
+
+      if (offset >= planLimit) {
+        return { history: [], total }
+      }
+
+      const history = await db
         .select({
           id: historyUsage.id,
           type: historyUsage.action,
@@ -66,14 +82,8 @@ export const getUserHistoryFn = createServerFn({ method: 'GET' })
         .from(historyUsage)
         .where(and(...conditions))
         .orderBy(desc(historyUsage.createdAt))
-        .limit(planLimit)
-
-      const total = allHistory.length
-
-      const pageNum = Number(page) || 1
-      const countNum = Number(countStr) || 10
-      const offset = (pageNum - 1) * countNum
-      const history = allHistory.slice(offset, offset + countNum)
+        .offset(offset)
+        .limit(Math.min(countNum, planLimit - offset))
 
       return { history, total }
     },
