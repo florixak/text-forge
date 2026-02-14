@@ -62,12 +62,12 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
       const today = getTodayISO()
       const month = getCurrentMonthISO()
       const [todayUsage, monthlyUsage, allUsage] = await Promise.all([
-        await db
+        db
           .select()
           .from(aiUsage)
           .where(and(eq(aiUsage.userId, user.id), eq(aiUsage.day, today)))
           .limit(1),
-        await db
+        db
           .select()
           .from(aiMonthlyUsage)
           .where(
@@ -77,7 +77,7 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
             ),
           )
           .limit(1),
-        await db
+        db
           .select({
             assist_ai: sql<number>`COALESCE(SUM(${aiUsage.assist_ai}), 0)`,
             structure_ai: sql<number>`COALESCE(SUM(${aiUsage.structure_ai}), 0)`,
