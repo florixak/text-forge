@@ -1,6 +1,7 @@
 import { DashboardData } from '@/routes/dashboard'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Separator } from '../ui/separator'
+import { formatBigNumber, formatPercentage } from '@/lib/utils'
 
 interface DashboardUsageInfoProps {
   data: DashboardData
@@ -20,28 +21,48 @@ const DashboardUsageInfo = ({
           <div>
             <h5>Daily Token Usage</h5>
             <p className="text-sm text-muted-foreground">
-              {usage.today.used} / {usage.today.limit} tokens used today
+              {formatBigNumber(usage.today.used)} /{' '}
+              {formatBigNumber(usage.today.limit)} tokens used today
             </p>
           </div>
-          <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
-            <div
-              className="h-2 bg-primary"
-              style={{ width: `${usage.today.percentage}%` }}
-            />
+          <div className="flex flex-col items-end gap-1">
+            <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
+              <div
+                className="h-2 bg-primary"
+                aria-valuemax={100}
+                aria-valuenow={usage.today.percentage}
+                aria-valuemin={0}
+                role="progressbar"
+                style={{ width: `${usage.today.percentage}%` }}
+              />
+            </div>
+            <span className="text-muted-foreground text-sm">
+              {formatPercentage(usage.today.percentage)} used
+            </span>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <div>
             <h5>Monthly Token Usage</h5>
             <p className="text-sm text-muted-foreground">
-              {usage.month.used} / {usage.month.limit} tokens used this month
+              {formatBigNumber(usage.month.used)} /{' '}
+              {formatBigNumber(usage.month.limit)} tokens used this month
             </p>
           </div>
-          <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
-            <div
-              className="h-2 bg-primary"
-              style={{ width: `${usage.month.percentage}%` }}
-            />
+          <div className="flex flex-col items-end gap-1">
+            <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
+              <div
+                className="h-2 bg-primary"
+                aria-valuemax={100}
+                aria-valuenow={usage.month.percentage}
+                aria-valuemin={0}
+                role="progressbar"
+                style={{ width: `${usage.month.percentage}%` }}
+              />
+            </div>
+            <span className="text-muted-foreground text-sm">
+              {formatPercentage(usage.month.percentage)} used
+            </span>
           </div>
         </div>
         <div className="flex items-center justify-between">
