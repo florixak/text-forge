@@ -15,11 +15,11 @@ const HistoryFilter = () => {
   const yesterday = formatLocalDate(yesterdayDate)
 
   const handleActionClick = (newAction: ActionType | undefined) => {
-    navigate({ search: (prev) => ({ ...prev, action: newAction }) })
+    navigate({ search: (prev) => ({ ...prev, action: newAction, page: '1' }) })
   }
 
   const handleDayChange = (newDay: string | undefined) => {
-    navigate({ search: (prev) => ({ ...prev, day: newDay }) })
+    navigate({ search: (prev) => ({ ...prev, day: newDay, page: '1' }) })
   }
 
   return (
