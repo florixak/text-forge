@@ -2,13 +2,14 @@ import { DashboardData } from '@/routes/dashboard'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { formatBigNumber, formatPercentage } from '@/lib/utils'
+import { Link } from '@tanstack/react-router'
 
 interface DashboardUsageInfoProps {
   data: DashboardData
 }
 
 const DashboardUsageInfo = ({
-  data: { usage, featureUsages },
+  data: { user, usage, featureUsages },
 }: DashboardUsageInfoProps) => {
   return (
     <Card className="w-full pb-0">
@@ -68,21 +69,21 @@ const DashboardUsageInfo = ({
         <div className="flex items-center justify-between">
           <div>
             <h5>Assist AI Usage</h5>
-            <span className="text-xs text-muted-foreground">this month</span>
+            <span className="text-xs text-muted-foreground">total</span>
           </div>
           <p className="text-sm">{featureUsages.assist_ai} calls</p>
         </div>
         <div className="flex items-center justify-between">
           <div>
             <h5>Structure AI Usage</h5>
-            <span className="text-xs text-muted-foreground">this month</span>
+            <span className="text-xs text-muted-foreground">total</span>
           </div>
           <p className="text-sm">{featureUsages.structure_ai} calls</p>
         </div>
         <div className="flex items-center justify-between">
           <div>
             <h5>Generate AI Usage</h5>
-            <span className="text-xs text-muted-foreground">this month</span>
+            <span className="text-xs text-muted-foreground">total</span>
           </div>
           <p className="text-sm">{featureUsages.generate_ai} calls</p>
         </div>
@@ -90,9 +91,13 @@ const DashboardUsageInfo = ({
       <CardFooter className="bg-border/50 flex flex-col items-center p-4">
         <p className="text-sm">
           Need more tokens?{' '}
-          <a href="/plans" className="text-primary font-semibold">
+          <Link
+            to="/plans"
+            search={{ plan: user.plan }}
+            className="text-primary font-semibold"
+          >
             Upgrade your plan
-          </a>
+          </Link>
         </p>
       </CardFooter>
     </Card>
