@@ -7,7 +7,7 @@ interface DashboardUsageInfoProps {
 }
 
 const DashboardUsageInfo = ({
-  data: { user, usage },
+  data: { usage, featureUsages },
 }: DashboardUsageInfoProps) => {
   return (
     <Card className="w-full pb-0">
@@ -43,6 +43,27 @@ const DashboardUsageInfo = ({
               style={{ width: `${usage.month.percentage}%` }}
             />
           </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h5>Assist AI Usage</h5>
+            <span className="text-xs text-muted-foreground">this month</span>
+          </div>
+          <p className="text-sm">{featureUsages.assist_ai} calls</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h5>Structure AI Usage</h5>
+            <span className="text-xs text-muted-foreground">this month</span>
+          </div>
+          <p className="text-sm">{featureUsages.structure_ai} calls</p>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h5>Generate AI Usage</h5>
+            <span className="text-xs text-muted-foreground">this month</span>
+          </div>
+          <p className="text-sm">{featureUsages.generate_ai} calls</p>
         </div>
       </CardContent>
       <CardFooter className="bg-border/50 flex flex-col items-center p-4">
