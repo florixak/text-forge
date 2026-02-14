@@ -1,6 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import { Card } from '../ui/card'
-import { DashboardUsage } from '@/routes/dashboard'
+import { DashboardUsage } from '@/types'
 import { formatBigNumber } from '@/lib/utils'
 import { Progress } from '../ui/progress'
 

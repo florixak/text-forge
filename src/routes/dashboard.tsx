@@ -9,45 +9,11 @@ import { db } from '@/db'
 import { aiMonthlyUsage, aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
 import { authMiddleware } from '@/lib/middleware'
-import {
-  FormatLimitResult,
-  formatTokenLimit,
-  getCurrentMonthISO,
-  getTodayISO,
-} from '@/lib/utils'
-import { DashboardUser } from '@/types'
+import { formatTokenLimit, getCurrentMonthISO, getTodayISO } from '@/lib/utils'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
-
-export interface DashboardData {
-  user: DashboardUser
-  usage: {
-    today: FormatLimitResult['today']
-    month: FormatLimitResult['month']
-  }
-  featureUsages: {
-    assist_ai: number
-    structure_ai: number
-    generate_ai: number
-  }
-}
-
-export interface DashboardUsage {
-  today: {
-    used: number
-    limit: number
-    remaining: number
-    percentage: number
-  }
-  month: {
-    used: number
-    limit: number
-    remaining: number
-    percentage: number
-  }
-}
 
 export const getTodayUsage = createServerFn({ method: 'GET' })
   .middleware([authMiddleware])
@@ -93,18 +59,12 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
         throw new Error('Invalid plan configuration')
       }
 
-      const usage: FormatLimitResult = formatTokenLimit(
+      const usage = formatTokenLimit(
         todayUsage[0] ?? {
           total_tokens: 0,
-          assist_ai: 0,
-          structure_ai: 0,
-          generate_ai: 0,
         },
         monthlyUsage[0] ?? {
           total_tokens: 0,
-          assist_ai: 0,
-          structure_ai: 0,
-          generate_ai: 0,
         },
         planConfig,
       )

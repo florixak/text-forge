@@ -1,9 +1,9 @@
-import { DashboardData } from '@/routes/dashboard'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { formatBigNumber, formatPercentage } from '@/lib/utils'
 import { Link } from '@tanstack/react-router'
 import { Progress } from '../ui/progress'
+import type { DashboardData } from '@/types'
 
 interface DashboardUsageInfoProps {
   data: DashboardData

@@ -1,10 +1,10 @@
 import { capitalizeFirstLetter } from '@/lib/utils'
-import { DashboardData } from '@/routes/dashboard'
 import { Link } from '@tanstack/react-router'
 import { Star } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import TokenUsageCard from './token-usage-card'
+import type { DashboardData } from '@/types'
 
 interface DashboardHeaderProps {
   data: DashboardData

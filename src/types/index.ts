@@ -49,3 +49,36 @@ export interface PlanLimits {
     google: string[]
   }
 }
+
+export interface FormatLimitResult {
+  today: DashboardUsage['today']
+  month: DashboardUsage['month']
+}
+
+export interface DashboardData {
+  user: DashboardUser
+  usage: {
+    today: FormatLimitResult['today']
+    month: FormatLimitResult['month']
+  }
+  featureUsages: {
+    assist_ai: number
+    structure_ai: number
+    generate_ai: number
+  }
+}
+
+export interface DashboardUsage {
+  today: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
+  }
+  month: {
+    used: number
+    limit: number
+    remaining: number
+    percentage: number
+  }
+}

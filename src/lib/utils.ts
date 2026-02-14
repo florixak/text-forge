@@ -1,7 +1,6 @@
 import { OUTPUT_FORMATS } from '@/constants'
 import { AIMonthlyUsage, AIUsage } from '@/db/schema'
-import { DashboardUsage } from '@/routes/dashboard'
-import { OutputFormat, PlanLimits } from '@/types'
+import { FormatLimitResult, OutputFormat, PlanLimits } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -74,14 +73,9 @@ export const formatPercentage = (value: number): string => {
   return `${value.toFixed(2)}%`
 }
 
-export interface FormatLimitResult {
-  today: DashboardUsage['today']
-  month: DashboardUsage['month']
-}
-
 export const formatTokenLimit = (
-  todayUsage: AIUsage,
-  monthlyUsage: AIMonthlyUsage,
+  todayUsage: Pick<AIUsage, 'total_tokens'>,
+  monthlyUsage: Pick<AIMonthlyUsage, 'total_tokens'>,
   planConfig: PlanLimits,
 ): FormatLimitResult => {
   const todayUsed = Math.max(0, todayUsage.total_tokens ?? 0)
