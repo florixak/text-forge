@@ -19,7 +19,7 @@ import { DashboardUser } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 export interface DashboardData {
   user: DashboardUser
@@ -77,7 +77,14 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
             ),
           )
           .limit(1),
-        await db.select().from(aiUsage).where(eq(aiUsage.userId, user.id)),
+        await db
+          .select({
+            assist_ai: sql<number>`COALESCE(SUM(${aiUsage.assist_ai}), 0)`,
+            structure_ai: sql<number>`COALESCE(SUM(${aiUsage.structure_ai}), 0)`,
+            generate_ai: sql<number>`COALESCE(SUM(${aiUsage.generate_ai}), 0)`,
+          })
+          .from(aiUsage)
+          .where(eq(aiUsage.userId, user.id)),
       ])
 
       const planKey = user.plan
@@ -103,15 +110,9 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
       )
 
       const featureUsages = {
-        assist_ai: allUsage.reduce((sum, record) => sum + record.assist_ai, 0),
-        structure_ai: allUsage.reduce(
-          (sum, record) => sum + record.structure_ai,
-          0,
-        ),
-        generate_ai: allUsage.reduce(
-          (sum, record) => sum + record.generate_ai,
-          0,
-        ),
+        assist_ai: allUsage[0]?.assist_ai ?? 0,
+        structure_ai: allUsage[0]?.structure_ai ?? 0,
+        generate_ai: allUsage[0]?.generate_ai ?? 0,
       }
 
       return {
@@ -142,7 +143,7 @@ function RouteComponent() {
     data: { user, usage, featureUsages },
   } = useSuspenseQuery(createUsageQueryOptions())
   return (
-    <section className="max-w-4xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
+    <section className="max-w-4xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8 px-4">
       <DashboardHeader data={{ user, usage, featureUsages }} />
 
       <DashboardQuickActions />
