@@ -17,7 +17,7 @@ const ThemeSwitcher = () => {
         aria-label="Toggle Theme"
         disabled
       >
-        <div className="size-5" /> {/* Placeholder to maintain layout */}
+        <div className="size-6" /> {/* Placeholder to maintain layout */}
       </Button>
     )
   }
