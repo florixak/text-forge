@@ -1,8 +1,8 @@
 import { Route } from '@/routes/history'
-import { Button } from './ui/button'
-import { Card } from './ui/card'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 import { ActionType } from '@/types'
-import { Input } from './ui/input'
+import { Input } from '../ui/input'
 import { formatLocalDate } from '@/lib/utils'
 
 const HistoryFilter = () => {
