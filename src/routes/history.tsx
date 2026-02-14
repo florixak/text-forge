@@ -27,7 +27,18 @@ const historySearchSchema = z.object({
     .optional(),
   action: z.enum(['convert', 'structure', 'generate']).optional(),
   page: z.string().regex(/^\d+$/).optional().default('1'),
-  count: z.string().regex(/^\d+$/).optional().default('10'),
+  count: z
+    .string()
+    .regex(/^\d+$/)
+    .optional()
+    .default('10')
+    .refine(
+      (val) => {
+        const num = Number(val)
+        return num > 0 && num <= 100
+      },
+      { message: 'Count must be between 1 and 100' },
+    ),
 })
 
 export const getUserHistoryFn = createServerFn({ method: 'GET' })
