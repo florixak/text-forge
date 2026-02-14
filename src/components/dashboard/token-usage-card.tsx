@@ -9,7 +9,7 @@ interface TokenUsageCardProps {
 
 const TokenUsageCard = ({ usage }: TokenUsageCardProps) => {
   return (
-    <Card className="p-4 flex-1 flex">
+    <Card className="p-4 flex-1 flex flex-col">
       <div className="flex items-center mb-2">
         <div className="bg-primary/10 p-2 rounded-md">
           <Sparkles className="text-primary" />
@@ -70,7 +70,7 @@ const TokenStat = ({
   resetType: 'daily' | 'monthly'
 }) => {
   return (
-    <div className="flex-1 flex flex-col gap-1">
+    <div className="flex flex-col gap-1 flex-1 min-w-fit md:min-w-30">
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold uppercase text-muted-foreground">
           {label}
