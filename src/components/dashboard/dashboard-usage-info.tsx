@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Separator } from '../ui/separator'
 import { formatBigNumber, formatPercentage } from '@/lib/utils'
 import { Link } from '@tanstack/react-router'
+import { Progress } from '../ui/progress'
 
 interface DashboardUsageInfoProps {
   data: DashboardData
@@ -27,16 +28,12 @@ const DashboardUsageInfo = ({
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
-              <div
-                className="h-2 bg-primary"
-                aria-valuemax={100}
-                aria-valuenow={usage.today.percentage}
-                aria-valuemin={0}
-                role="progressbar"
-                style={{ width: `${usage.today.percentage}%` }}
-              />
-            </div>
+            <Progress
+              value={usage.today.percentage}
+              max={100}
+              className="w-40"
+            />
+
             <span className="text-muted-foreground text-sm">
               {formatPercentage(usage.today.percentage)} used
             </span>
@@ -51,16 +48,11 @@ const DashboardUsageInfo = ({
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className="w-40 bg-gray-200 rounded-full overflow-hidden h-2">
-              <div
-                className="h-2 bg-primary"
-                aria-valuemax={100}
-                aria-valuenow={usage.month.percentage}
-                aria-valuemin={0}
-                role="progressbar"
-                style={{ width: `${usage.month.percentage}%` }}
-              />
-            </div>
+            <Progress
+              value={usage.month.percentage}
+              max={100}
+              className="w-40"
+            />
             <span className="text-muted-foreground text-sm">
               {formatPercentage(usage.month.percentage)} used
             </span>

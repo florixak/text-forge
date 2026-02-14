@@ -2,6 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { Card } from '../ui/card'
 import { DashboardUsage } from '@/routes/dashboard'
 import { formatBigNumber } from '@/lib/utils'
+import { Progress } from '../ui/progress'
 
 interface TokenUsageCardProps {
   usage: DashboardUsage
@@ -77,12 +78,7 @@ const TokenStat = ({
         </span>
         {formatBigNumber(used)} / {formatBigNumber(limit)}
       </div>
-      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mt-1">
-        <div
-          className="h-2 bg-primary"
-          style={{ width: `${Math.min(percentage, 100)}%` }}
-        ></div>
-      </div>
+      <Progress value={percentage} max={100} className="w-full" />
       <span className="text-sm text-muted-foreground text-right">
         resets in {getTimeUntilReset(resetType)}
       </span>
