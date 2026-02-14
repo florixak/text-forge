@@ -1,8 +1,8 @@
 import { Route } from '@/routes/history'
-import { Button } from './ui/button'
-import { Card } from './ui/card'
+import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 import { ActionType } from '@/types'
-import { Input } from './ui/input'
+import { Input } from '../ui/input'
 import { formatLocalDate } from '@/lib/utils'
 
 const HistoryFilter = () => {
@@ -15,11 +15,11 @@ const HistoryFilter = () => {
   const yesterday = formatLocalDate(yesterdayDate)
 
   const handleActionClick = (newAction: ActionType | undefined) => {
-    navigate({ search: (prev) => ({ ...prev, action: newAction }) })
+    navigate({ search: (prev) => ({ ...prev, action: newAction, page: '1' }) })
   }
 
   const handleDayChange = (newDay: string | undefined) => {
-    navigate({ search: (prev) => ({ ...prev, day: newDay }) })
+    navigate({ search: (prev) => ({ ...prev, day: newDay, page: '1' }) })
   }
 
   return (

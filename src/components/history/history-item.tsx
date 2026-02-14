@@ -1,8 +1,8 @@
 import type { ActionType, HistoryItem as HistoryItemType } from '@/types'
-import { Card } from './ui/card'
+import { Card } from '../ui/card'
 import { capitalizeFirstLetter } from '@/lib/utils'
 import { Bolt, Bot, RefreshCcw, WandSparkles } from 'lucide-react'
-import { Button } from './ui/button'
+import { Button } from '../ui/button'
 import { useNavigate } from '@tanstack/react-router'
 
 const getActionIcon = (action: ActionType) => {

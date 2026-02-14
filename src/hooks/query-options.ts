@@ -14,14 +14,18 @@ export const createUsageQueryOptions = () =>
 export const createHistoryQueryOptions = ({
   day,
   action,
+  page,
+  count,
 }: {
   day?: string
   action?: ActionType
+  page?: string
+  count?: string
 }) =>
   queryOptions({
-    queryKey: QUERY_KEYS.history(day, action),
+    queryKey: QUERY_KEYS.history(day, action, page, count),
     queryFn: async () => {
-      return await getUserHistoryFn({ data: { day, action } })
+      return await getUserHistoryFn({ data: { day, action, page, count } })
     },
   })
 
