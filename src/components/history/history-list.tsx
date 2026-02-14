@@ -47,7 +47,9 @@ const HistoryList = ({ history, paging }: HistoryListProps) => {
                       : 'bg-gray-200 text-gray-700'
                   }`}
                   onClick={() => {
-                    navigate({ search: { page: String(i + 1) } })
+                    navigate({
+                      search: (prev) => ({ ...prev, page: String(i + 1) }),
+                    })
                   }}
                 >
                   {i + 1}
