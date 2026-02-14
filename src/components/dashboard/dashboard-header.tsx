@@ -18,7 +18,7 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
         <p>Manage your account and AI usage</p>
       </div>
       <div className="flex flex-wrap gap-4 w-full">
-        <Card className="p-4 min-w-xs">
+        <Card className="p-4 md:max-w-xs w-full">
           <div className="flex items-center justify-between">
             <div className="bg-primary/10 p-2 rounded-md">
               <Star className="text-primary" />
