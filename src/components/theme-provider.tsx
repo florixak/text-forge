@@ -12,11 +12,13 @@ type ThemeProviderProps = {
 type ThemeProviderState = {
   theme: Theme
   setTheme: (theme: Theme) => void
+  mounted: boolean
 }
 
 const initialState: ThemeProviderState = {
   theme: 'system',
   setTheme: () => null,
+  mounted: false,
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
@@ -27,15 +29,20 @@ export function ThemeProvider({
   storageKey = 'textforge-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return defaultTheme
-    const storedTheme = localStorage.getItem(storageKey)
-    return isValidTheme(storedTheme ?? '')
-      ? (storedTheme as Theme)
-      : defaultTheme
-  })
+  const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
 
   useEffect(() => {
+    setMounted(true)
+    const storedTheme = localStorage.getItem(storageKey)
+    if (isValidTheme(storedTheme ?? '')) {
+      setTheme(storedTheme as Theme)
+    }
+  }, [storageKey])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const root = window.document.documentElement
     const applyTheme = (resolvedTheme: 'dark' | 'light') => {
       root.classList.remove('light', 'dark')
@@ -55,11 +62,12 @@ export function ThemeProvider({
       applyTheme(theme)
       localStorage.setItem(storageKey, theme)
     }
-  }, [theme, storageKey])
+  }, [theme, storageKey, mounted])
 
   const value = {
     theme,
     setTheme,
+    mounted,
   }
 
   return (
