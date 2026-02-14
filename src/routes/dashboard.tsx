@@ -27,6 +27,11 @@ export interface DashboardData {
     today: FormatLimitResult['today']
     month: FormatLimitResult['month']
   }
+  featureUsages: {
+    assist_ai: number
+    structure_ai: number
+    generate_ai: number
+  }
 }
 
 export interface DashboardUsage {
@@ -56,7 +61,7 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
     try {
       const today = getTodayISO()
       const month = getCurrentMonthISO()
-      const [todayUsage, monthlyUsage] = await Promise.all([
+      const [todayUsage, monthlyUsage, allUsage] = await Promise.all([
         await db
           .select()
           .from(aiUsage)
@@ -72,6 +77,7 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
             ),
           )
           .limit(1),
+        await db.select().from(aiUsage).where(eq(aiUsage.userId, user.id)),
       ])
 
       const planKey = user.plan
@@ -81,17 +87,42 @@ export const getTodayUsage = createServerFn({ method: 'GET' })
       }
 
       const usage: FormatLimitResult = formatTokenLimit(
-        todayUsage[0],
-        monthlyUsage[0],
+        todayUsage[0] ?? {
+          total_tokens: 0,
+          assist_ai: 0,
+          structure_ai: 0,
+          generate_ai: 0,
+        },
+        monthlyUsage[0] ?? {
+          total_tokens: 0,
+          assist_ai: 0,
+          structure_ai: 0,
+          generate_ai: 0,
+        },
         planConfig,
       )
+
+      const featureUsages = {
+        assist_ai: allUsage.reduce((sum, record) => sum + record.assist_ai, 0),
+        structure_ai: allUsage.reduce(
+          (sum, record) => sum + record.structure_ai,
+          0,
+        ),
+        generate_ai: allUsage.reduce(
+          (sum, record) => sum + record.generate_ai,
+          0,
+        ),
+      }
 
       return {
         user,
         usage,
+        featureUsages,
       }
     } catch (error) {
-      throw new Error('Failed to fetch usage data')
+      throw error instanceof Error
+        ? error
+        : new Error('Failed to load usage data')
     }
   })
 
@@ -108,15 +139,15 @@ export const Route = createFileRoute('/dashboard')({
 
 function RouteComponent() {
   const {
-    data: { user, usage },
+    data: { user, usage, featureUsages },
   } = useSuspenseQuery(createUsageQueryOptions())
   return (
     <section className="max-w-4xl mx-auto min-h-screen bg-background flex flex-col items-start justify-center gap-8 my-8">
-      <DashboardHeader data={{ user, usage }} />
+      <DashboardHeader data={{ user, usage, featureUsages }} />
 
       <DashboardQuickActions />
 
-      <DashboardUsageInfo data={{ user, usage }} />
+      <DashboardUsageInfo data={{ user, usage, featureUsages }} />
 
       <DashboardFooter />
     </section>
