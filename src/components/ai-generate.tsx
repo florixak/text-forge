@@ -9,6 +9,7 @@ import { validateAIServerFnInput } from '@/lib/utils'
 import { OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
+import { redirect } from '@tanstack/react-router'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -36,15 +37,21 @@ const generateDataFn = createServerFn({ method: 'POST' })
       const { session } = context
 
       if (!session) {
+        throw redirect({ to: '/signin' })
+      }
+
+      if (!session.user.emailVerified) {
         return {
           output: '',
           success: false,
-          error: 'User is not authenticated.',
+          error: 'Please verify your email to use AI features.',
         }
       }
 
+      const plan = session.user.plan || 'free'
+
       try {
-        const userPlanLimit = PLAN_LIMITS[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[plan]
 
         if (!userPlanLimit) {
           return {
@@ -59,13 +66,13 @@ const generateDataFn = createServerFn({ method: 'POST' })
           return {
             output: '',
             success: false,
-            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${session.user.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
           }
         }
 
         const quotaReserved = await reserveQuota(
           session.user.id,
-          session.user.plan,
+          plan,
           'generate_ai',
         )
 
@@ -86,7 +93,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
           }
         }
         try {
-          const result = await generateData(input, format, session.user.plan)
+          const result = await generateData(input, format, plan)
 
           if (
             result.processing?.metadata.isCompressed &&

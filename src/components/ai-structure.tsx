@@ -40,8 +40,18 @@ const structureTextFn = createServerFn({ method: 'POST' })
         throw redirect({ to: '/signin' })
       }
 
+      if (!session.user.emailVerified) {
+        return {
+          output: '',
+          success: false,
+          error: 'Please verify your email to use AI features.',
+        }
+      }
+
+      const plan = session.user.plan || 'free'
+
       try {
-        const userPlanLimit = PLAN_LIMITS[session.user.plan]
+        const userPlanLimit = PLAN_LIMITS[plan]
 
         if (!userPlanLimit) {
           return {
@@ -56,13 +66,13 @@ const structureTextFn = createServerFn({ method: 'POST' })
           return {
             output: '',
             success: false,
-            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${session.user.plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
+            error: `AI can handle up to ${userPlanLimit.max_input_length} characters. ${plan === 'free' ? 'Upgrade your plan for larger inputs.' : 'Please shorten your input.'}`,
           }
         }
 
         const quotaReserved = await reserveQuota(
           session.user.id,
-          session.user.plan,
+          plan,
           'structure_ai',
         )
 
@@ -83,7 +93,7 @@ const structureTextFn = createServerFn({ method: 'POST' })
           }
         }
         try {
-          const result = await structureData(input, format, session.user.plan)
+          const result = await structureData(input, format, plan)
 
           if (
             result.processing?.metadata.isCompressed &&
