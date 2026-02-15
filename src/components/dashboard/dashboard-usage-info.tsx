@@ -82,14 +82,29 @@ const DashboardUsageInfo = ({
       </CardContent>
       <CardFooter className="bg-border/50 flex flex-col items-center p-4">
         <p className="text-sm">
-          Need more tokens?{' '}
-          <Link
-            to="/plans"
-            search={{ plan: user.plan }}
-            className="text-primary font-semibold"
-          >
-            Upgrade your plan
-          </Link>
+          {user.plan === 'free' ? (
+            <>
+              Need more tokens?{' '}
+              <Link
+                to="/plans"
+                search={{ plan: user.plan }}
+                className="text-primary font-semibold"
+              >
+                Upgrade your plan
+              </Link>
+            </>
+          ) : (
+            <>
+              Manage your subscription{' '}
+              <Link
+                to="/plans"
+                search={{ plan: user.plan }}
+                className="text-primary font-semibold"
+              >
+                here
+              </Link>
+            </>
+          )}
         </p>
       </CardFooter>
     </Card>
