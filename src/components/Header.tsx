@@ -24,7 +24,13 @@ export default function Header() {
           <ul className="flex gap-8 flex-row items-center justify-between w-full">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <Link to={link.href} className="hover:underline">
+                <Link
+                  to={link.href}
+                  className="text-foreground hover:text-primary transition-colors"
+                  activeProps={{
+                    className: 'active-link',
+                  }}
+                >
                   {link.name}
                 </Link>
               </li>
