@@ -189,3 +189,7 @@ code {
     );
   background-blend-mode: lighten;
 }
+
+.active-link {
+  @apply border-b-2 border-primary;
+}
