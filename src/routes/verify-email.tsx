@@ -2,6 +2,7 @@ import LoadingIndicator from '@/components/state/loading-indicator'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
+import { authOptionalMiddleware } from '@/lib/middleware'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import * as z from 'zod'
@@ -13,10 +14,22 @@ const verifyEmailSchema = z.object({
 export const Route = createFileRoute('/verify-email')({
   component: VerifyEmailPage,
   validateSearch: verifyEmailSchema,
+  server: {
+    middleware: [authOptionalMiddleware],
+  },
   pendingComponent: () => <LoadingIndicator text="Verifying your email..." />,
   loaderDeps: ({ search }) => ({ token: search.token }),
-  loader: async ({ deps }): Promise<{ success: boolean; message: string }> => {
+  loader: async ({
+    deps,
+    serverContext,
+  }): Promise<{
+    success: boolean
+    message: string
+    isAuthenticated: boolean
+  }> => {
     const { token } = deps
+    const session = serverContext?.session
+    const isAuthenticated = !!session
     try {
       const response = await authClient.verifyEmail({
         query: {
@@ -27,23 +40,26 @@ export const Route = createFileRoute('/verify-email')({
         return {
           success: false,
           message: 'Email verification failed. Please try again.',
+          isAuthenticated,
         }
       }
       return {
         success: true,
         message: 'Email verified successfully!',
+        isAuthenticated,
       }
     } catch (error) {
       return {
         success: false,
         message: (error as Error).message || 'An unexpected error occurred.',
+        isAuthenticated,
       }
     }
   },
 })
 
 function VerifyEmailPage() {
-  const { message, success } = Route.useLoaderData()
+  const { message, success, isAuthenticated } = Route.useLoaderData()
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -66,7 +82,9 @@ function VerifyEmailPage() {
             </>
           )}
           <Button asChild>
-            <Link to="/signin">Go to Sign In</Link>
+            <Link to={isAuthenticated ? '/dashboard' : '/signin'}>
+              {isAuthenticated ? 'Go to Dashboard' : 'Go to Sign In'}
+            </Link>
           </Button>
         </CardContent>
       </Card>
