@@ -67,7 +67,7 @@ export const getCurrentMonthISO = (): string => {
 }
 
 export const formatPercentage = (value: number): string => {
-  if (isNaN(value) || !isFinite(value)) return '0%'
+  if (isNaN(value) || !isFinite(value) || value === 0) return '0%'
   if (value < 0.01) return '<0.01%'
   if (value > 99.99) return '>99.99%'
   return `${value.toFixed(2)}%`
