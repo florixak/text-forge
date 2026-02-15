@@ -7,6 +7,7 @@ import { assistText } from '@/lib/openai-ai'
 import { InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
+import { redirect } from '@tanstack/react-router'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import AssistOutput from './assist-output'
@@ -48,7 +49,20 @@ const aiAssistFn = createServerFn({
     }> => {
       const { input, fromType, toType } = data
       const { session } = context
-      const plan = session?.user?.plan || 'free'
+
+      if (!session) {
+        throw redirect({ to: '/signin' })
+      }
+
+      if (!session.user.emailVerified) {
+        return {
+          output: '',
+          success: false,
+          error: 'Please verify your email to use AI features.',
+        }
+      }
+
+      const plan = session.user.plan || 'free'
 
       try {
         const userPlanLimit = PLAN_LIMITS[plan]
