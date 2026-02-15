@@ -47,8 +47,6 @@ function RouteComponent() {
       <AIGenerate selectedFormat={to} setSelectedFormat={handleFormatChange} />
     )
 
-  const activeClass = 'border-primary border-b-2'
-
   return (
     <section className="min-h-screen bg-background max-w-5xl mx-auto w-full flex flex-col gap-8 p-4 mt-20">
       <div
@@ -59,7 +57,7 @@ function RouteComponent() {
         <Link
           to="/ai-structuring"
           search={(prev) => ({ ...prev, selected: 'structure' })}
-          className={`${selected === 'structure' ? activeClass : ''}`}
+          className={`${selected === 'structure' ? 'active-link' : ''}`}
           role="tab"
           aria-selected={selected === 'structure'}
           tabIndex={selected === 'structure' ? 0 : -1}
@@ -72,7 +70,7 @@ function RouteComponent() {
         <Link
           to="/ai-structuring"
           search={(prev) => ({ ...prev, selected: 'generate' })}
-          className={`${selected === 'generate' ? activeClass : ''}`}
+          className={`${selected === 'generate' ? 'active-link' : ''}`}
           role="tab"
           aria-selected={selected === 'generate'}
           tabIndex={selected === 'generate' ? 0 : -1}
