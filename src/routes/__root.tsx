@@ -49,6 +49,22 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         href: appCss,
       },
     ],
+    scripts: [
+      {
+        children: `
+          (function() {
+            try {
+              const storedTheme = localStorage.getItem('textforge-theme');
+              const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              const theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (prefersDark ? 'dark' : 'light');
+              document.documentElement.classList.add(theme);
+            } catch (e) {
+              document.documentElement.classList.add('light');
+            }
+          })();
+        `,
+      },
+    ],
   }),
 
   shellComponent: RootDocument,
