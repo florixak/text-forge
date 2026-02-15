@@ -53,6 +53,48 @@ export const Route = createFileRoute('/plans')({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createPlanQueryOptions())
   },
+  head: () => {
+    const baseUrl = new URL(
+      process.env.VITE_BASE_URL || 'http://localhost:3000',
+    )
+    const canonicalUrl = new URL('/plans', baseUrl).toString()
+    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
+
+    const appTitle = 'Choose Your Plan - TextForge'
+    const appDescription =
+      'Explore TextForge subscription plans and find the perfect fit for your AI text generation needs. Upgrade for enhanced features and increased limits.'
+
+    return {
+      meta: [
+        {
+          title: appTitle,
+        },
+        {
+          name: 'description',
+          content: appDescription,
+        },
+        { property: 'og:title', content: appTitle },
+        {
+          property: 'og:description',
+          content: appDescription,
+        },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonicalUrl },
+        { property: 'og:image', content: ogImageUrl },
+
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: appTitle },
+        {
+          name: 'twitter:description',
+          content: appDescription,
+        },
+        { name: 'twitter:image', content: ogImageUrl },
+
+        { name: 'robots', content: 'index, follow' },
+      ],
+      links: [{ rel: 'canonical', href: canonicalUrl }],
+    }
+  },
 })
 
 function RouteComponent() {

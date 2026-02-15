@@ -25,6 +25,48 @@ export const Route = createFileRoute('/ai-structuring')({
   },
   validateSearch: aiStructuringSchema,
   pendingComponent: () => <LoadingIndicator />,
+  head: () => {
+    const baseUrl = new URL(
+      process.env.VITE_BASE_URL || 'http://localhost:3000',
+    )
+    const canonicalUrl = new URL('/ai-structuring', baseUrl).toString()
+    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
+
+    const appTitle = 'AI Structuring - TextForge'
+    const appDescription =
+      'Use AI to structure unstructured text into JSON, CSV, or XML. Ideal for extraction, transformation, and organization.'
+
+    return {
+      meta: [
+        {
+          title: appTitle,
+        },
+        {
+          name: 'description',
+          content: appDescription,
+        },
+        { property: 'og:title', content: appTitle },
+        {
+          property: 'og:description',
+          content: appDescription,
+        },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonicalUrl },
+        { property: 'og:image', content: ogImageUrl },
+
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: appTitle },
+        {
+          name: 'twitter:description',
+          content: appDescription,
+        },
+        { name: 'twitter:image', content: ogImageUrl },
+
+        { name: 'robots', content: 'noindex, nofollow' },
+      ],
+      links: [{ rel: 'canonical', href: canonicalUrl }],
+    }
+  },
 })
 
 function RouteComponent() {
