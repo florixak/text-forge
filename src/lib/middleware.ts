@@ -8,7 +8,7 @@ export const authMiddleware = createMiddleware().server(
     if (!session) {
       throw redirect({ to: '/signin' })
     }
-    if (!session.user.emailVerified) {
+    if (!session.user.emailVerified && !request.url.endsWith('/dashboard')) {
       throw redirect({ to: '/dashboard' })
     }
     return await next({
