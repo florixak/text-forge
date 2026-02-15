@@ -6,8 +6,8 @@ const DashboardQuickActions = () => {
   return (
     <div className="w-full flex flex-col">
       <h3 className="text-2xl font-bold mb-2">Quick Actions</h3>
-      <div className="flex flex-wrap gap-4 w-full">
-        <Link to="/" className="flex-1">
+      <div className="flex flex-wrap sm:gap-4 w-full">
+        <Link to="/" className="min-w-75 flex-1">
           <Card className="p-4 mb-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-accent/50">
             <div className="flex items-center">
               <div className="bg-primary/10 p-2 rounded-md">
@@ -22,7 +22,7 @@ const DashboardQuickActions = () => {
             </div>
           </Card>
         </Link>
-        <Link to="/ai-structuring" className="flex-1">
+        <Link to="/ai-structuring" className="min-w-75 flex-1">
           <Card className="p-4 mb-4 flex flex-row items-center gap-4 cursor-pointer hover:bg-accent/50">
             <div className="flex items-center">
               <div className="bg-primary/10 p-2 rounded-md">

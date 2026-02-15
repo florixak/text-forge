@@ -71,7 +71,7 @@ const TokenStat = ({
   resetType: 'daily' | 'monthly'
 }) => {
   return (
-    <div className="flex flex-col gap-1 flex-1 min-w-fit md:min-w-30">
+    <div className="flex flex-col gap-1 min-w-50 flex-1">
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold uppercase text-muted-foreground">
           {label}
