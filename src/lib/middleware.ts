@@ -8,6 +8,9 @@ export const authMiddleware = createMiddleware().server(
     if (!session) {
       throw redirect({ to: '/signin' })
     }
+    if (!session.user.emailVerified) {
+      throw redirect({ to: '/dashboard' })
+    }
     return await next({
       context: {
         session,
