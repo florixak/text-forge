@@ -100,9 +100,12 @@ export function getMetadata(path: string) {
     }
   }
 
-  const baseUrl = new URL(
-    import.meta.env.VITE_BASE_URL || 'http://localhost:3000',
-  )
+  let baseUrl: URL
+  try {
+    baseUrl = new URL(import.meta.env.VITE_BASE_URL || 'http://localhost:3000')
+  } catch {
+    baseUrl = new URL('http://localhost:3000')
+  }
   const canonicalUrl = new URL(path, baseUrl).toString()
   const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
 
