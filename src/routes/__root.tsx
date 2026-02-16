@@ -26,25 +26,10 @@ interface MyRouterContext {
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => {
-    const baseUrl = new URL(
-      process.env.VITE_BASE_URL || 'http://localhost:3000',
-    )
-    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
-    const appTitle = 'TextForge - AI Text Tool'
-    const appDescription =
-      'Text Forge is an AI-powered text generation and editing tool designed to help you create, refine, and enhance your written content with ease.'
-
     return {
       meta: [
         { charSet: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        {
-          name: 'description',
-          content: appDescription,
-        },
-        {
-          title: appTitle,
-        },
         {
           name: 'keywords',
           content:
@@ -53,29 +38,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         { name: 'author', content: 'TextForge Team' },
         { name: 'theme-color', content: '#1a202c' },
         { name: 'color-scheme', content: 'light dark' },
-
-        { property: 'og:title', content: appTitle },
-        {
-          property: 'og:description',
-          content: appDescription,
-        },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'TextForge' },
-        { property: 'og:image', content: ogImageUrl },
-        { property: 'og:url', content: baseUrl.toString() },
-
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: appTitle },
-        {
-          name: 'twitter:description',
-          content: appDescription,
-        },
-        { name: 'twitter:image', content: ogImageUrl },
       ],
-      links: [
-        { rel: 'stylesheet', href: appCss },
-        { rel: 'canonical', href: baseUrl.toString() },
-      ],
+      links: [{ rel: 'stylesheet', href: appCss }],
       scripts: [
         {
           children: `
