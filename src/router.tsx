@@ -17,6 +17,7 @@ export const getRouter = () => {
 
     defaultPreload: 'intent',
     scrollRestoration: true,
+    getScrollRestorationKey: (location) => location.pathname,
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
