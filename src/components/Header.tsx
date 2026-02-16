@@ -5,7 +5,7 @@ import { authClient } from '@/lib/auth-client'
 import ThemeSwitcher from './theme-switcher'
 import { NAV_LINKS } from '@/constants'
 
-export default function Header() {
+export const Header = () => {
   const { data: session } = authClient.useSession()
   return (
     <header className="bg-background text-foreground w-full shadow-md">
@@ -59,3 +59,5 @@ export default function Header() {
     </header>
   )
 }
+
+export default Header
