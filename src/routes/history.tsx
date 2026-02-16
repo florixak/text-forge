@@ -5,6 +5,7 @@ import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { createHistoryQueryOptions } from '@/hooks/query-options'
+import { getMetadata } from '@/lib/metadata'
 import { authMiddleware } from '@/lib/middleware'
 import type { HistoryItem } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -130,6 +131,7 @@ export const Route = createFileRoute('/history')({
   loader: async ({ context, deps }) => {
     await context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))
   },
+  head: () => getMetadata('/history'),
 })
 
 function RouteComponent() {

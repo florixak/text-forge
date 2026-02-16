@@ -8,6 +8,7 @@ import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiMonthlyUsage, aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
+import { getMetadata } from '@/lib/metadata'
 import { authMiddleware } from '@/lib/middleware'
 import { formatTokenLimit, getCurrentMonthISO, getTodayISO } from '@/lib/utils'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -96,6 +97,7 @@ export const Route = createFileRoute('/dashboard')({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createUsageQueryOptions())
   },
+  head: () => getMetadata('/dashboard'),
 })
 
 function RouteComponent() {

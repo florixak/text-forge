@@ -25,33 +25,24 @@ interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
-  head: () => ({
-    meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'Text Forge - AI Text Tool',
-      },
-      {
-        name: 'description',
-        content:
-          'Text Forge is an AI-powered text generation and editing tool designed to help you create, refine, and enhance your written content with ease.',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-    ],
-    scripts: [
-      {
-        children: `
+  head: () => {
+    return {
+      meta: [
+        { charSet: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'keywords',
+          content:
+            'AI text generation, text editing, content creation, writing assistant, natural language processing, machine learning, text refinement, AI-powered writing tool',
+        },
+        { name: 'author', content: 'TextForge Team' },
+        { name: 'theme-color', content: '#1a202c' },
+        { name: 'color-scheme', content: 'light dark' },
+      ],
+      links: [{ rel: 'stylesheet', href: appCss }],
+      scripts: [
+        {
+          children: `
           (function() {
             try {
               const storedTheme = localStorage.getItem('textforge-theme');
@@ -63,9 +54,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
             }
           })();
         `,
-      },
-    ],
-  }),
+        },
+      ],
+    }
+  },
 
   shellComponent: RootDocument,
   notFoundComponent: () => <NotFound />,

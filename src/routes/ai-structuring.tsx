@@ -4,6 +4,7 @@ import LoadingIndicator from '@/components/state/loading-indicator'
 import { OUTPUT_FORMATS } from '@/constants'
 
 import { authMiddleware } from '@/lib/middleware'
+import { getMetadata } from '@/lib/metadata'
 import { OutputFormat } from '@/types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
@@ -25,6 +26,7 @@ export const Route = createFileRoute('/ai-structuring')({
   },
   validateSearch: aiStructuringSchema,
   pendingComponent: () => <LoadingIndicator />,
+  head: () => getMetadata('/ai-structuring'),
 })
 
 function RouteComponent() {

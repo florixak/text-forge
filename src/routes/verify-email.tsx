@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { getMetadata } from '@/lib/metadata'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import * as z from 'zod'
@@ -56,6 +57,7 @@ export const Route = createFileRoute('/verify-email')({
       }
     }
   },
+  head: () => getMetadata('/verify-email'),
 })
 
 function VerifyEmailPage() {

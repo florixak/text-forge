@@ -1,6 +1,7 @@
 import LoadingIndicator from '@/components/state/loading-indicator'
 import { LoginForm } from '@/components/login-form'
 import { guestMiddleware } from '@/lib/middleware'
+import { getMetadata } from '@/lib/metadata'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/signin')({
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/signin')({
     middleware: [guestMiddleware],
   },
   pendingComponent: () => <LoadingIndicator />,
+  head: () => getMetadata('/signin'),
 })
 
 function RouteComponent() {

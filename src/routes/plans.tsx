@@ -4,6 +4,7 @@ import LoadingIndicator from '@/components/state/loading-indicator'
 import { PLAN_LIMITS } from '@/constants'
 import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { getMetadata } from '@/lib/metadata'
 import { getUserSubscription } from '@/lib/stripe'
 import { Plan, PlanLimits, UserPlan } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -53,6 +54,7 @@ export const Route = createFileRoute('/plans')({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createPlanQueryOptions())
   },
+  head: () => getMetadata('/plans'),
 })
 
 function RouteComponent() {
