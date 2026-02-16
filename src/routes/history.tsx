@@ -5,6 +5,7 @@ import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { createHistoryQueryOptions } from '@/hooks/query-options'
+import { getMetadata } from '@/lib/metadata'
 import { authMiddleware } from '@/lib/middleware'
 import type { HistoryItem } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -130,48 +131,7 @@ export const Route = createFileRoute('/history')({
   loader: async ({ context, deps }) => {
     await context.queryClient.ensureQueryData(createHistoryQueryOptions(deps))
   },
-  head: () => {
-    const baseUrl = new URL(
-      process.env.VITE_BASE_URL || 'http://localhost:3000',
-    )
-    const canonicalUrl = new URL('/history', baseUrl).toString()
-    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
-
-    const appTitle = 'History - TextForge'
-    const appDescription =
-      'Review your recent activities, including conversions, structures, and generations.'
-
-    return {
-      meta: [
-        {
-          title: appTitle,
-        },
-        {
-          name: 'description',
-          content: appDescription,
-        },
-        { property: 'og:title', content: appTitle },
-        {
-          property: 'og:description',
-          content: appDescription,
-        },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:url', content: canonicalUrl },
-        { property: 'og:image', content: ogImageUrl },
-
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: appTitle },
-        {
-          name: 'twitter:description',
-          content: appDescription,
-        },
-        { name: 'twitter:image', content: ogImageUrl },
-
-        { name: 'robots', content: 'noindex, nofollow' },
-      ],
-      links: [{ rel: 'canonical', href: canonicalUrl }],
-    }
-  },
+  head: () => getMetadata('/history'),
 })
 
 function RouteComponent() {

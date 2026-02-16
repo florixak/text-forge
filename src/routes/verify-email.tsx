@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { authClient } from '@/lib/auth-client'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { getMetadata } from '@/lib/metadata'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import * as z from 'zod'
@@ -56,48 +57,7 @@ export const Route = createFileRoute('/verify-email')({
       }
     }
   },
-  head: () => {
-    const baseUrl = new URL(
-      process.env.VITE_BASE_URL || 'http://localhost:3000',
-    )
-    const canonicalUrl = new URL('/verify-email', baseUrl).toString()
-    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
-
-    const appTitle = 'Verify Email - TextForge'
-    const appDescription =
-      'Verify your email address to complete your TextForge account setup and unlock powerful AI text generation features.'
-
-    return {
-      meta: [
-        {
-          title: appTitle,
-        },
-        {
-          name: 'description',
-          content: appDescription,
-        },
-        { property: 'og:title', content: appTitle },
-        {
-          property: 'og:description',
-          content: appDescription,
-        },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:url', content: canonicalUrl },
-        { property: 'og:image', content: ogImageUrl },
-
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: appTitle },
-        {
-          name: 'twitter:description',
-          content: appDescription,
-        },
-        { name: 'twitter:image', content: ogImageUrl },
-
-        { name: 'robots', content: 'index, follow' },
-      ],
-      links: [{ rel: 'canonical', href: canonicalUrl }],
-    }
-  },
+  head: () => getMetadata('/verify-email'),
 })
 
 function VerifyEmailPage() {

@@ -8,6 +8,7 @@ import { PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { aiMonthlyUsage, aiUsage } from '@/db/schema'
 import { createUsageQueryOptions } from '@/hooks/query-options'
+import { getMetadata } from '@/lib/metadata'
 import { authMiddleware } from '@/lib/middleware'
 import { formatTokenLimit, getCurrentMonthISO, getTodayISO } from '@/lib/utils'
 import { useSuspenseQuery } from '@tanstack/react-query'
@@ -96,48 +97,7 @@ export const Route = createFileRoute('/dashboard')({
   loader: async ({ context }) => {
     await context.queryClient.ensureQueryData(createUsageQueryOptions())
   },
-  head: () => {
-    const baseUrl = new URL(
-      process.env.VITE_BASE_URL || 'http://localhost:3000',
-    )
-    const canonicalUrl = new URL('/dashboard', baseUrl).toString()
-    const ogImageUrl = new URL('/og-image.png', baseUrl).toString()
-
-    const appTitle = 'Dashboard - TextForge'
-    const appDescription =
-      'Your TextForge dashboard provides insights into your AI usage, quick access to tools, and an overview of your account. Manage your AI interactions and stay informed about your usage limits.'
-
-    return {
-      meta: [
-        {
-          title: appTitle,
-        },
-        {
-          name: 'description',
-          content: appDescription,
-        },
-        { property: 'og:title', content: appTitle },
-        {
-          property: 'og:description',
-          content: appDescription,
-        },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:url', content: canonicalUrl },
-        { property: 'og:image', content: ogImageUrl },
-
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: appTitle },
-        {
-          name: 'twitter:description',
-          content: appDescription,
-        },
-        { name: 'twitter:image', content: ogImageUrl },
-
-        { name: 'robots', content: 'noindex, nofollow' },
-      ],
-      links: [{ rel: 'canonical', href: canonicalUrl }],
-    }
-  },
+  head: () => getMetadata('/dashboard'),
 })
 
 function RouteComponent() {

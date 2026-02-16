@@ -4,6 +4,7 @@ import OutputPreview from '@/components/output-preview'
 import LoadingIndicator from '@/components/state/loading-indicator'
 import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
 import useDebounce from '@/hooks/use-debounce'
+import { getMetadata } from '@/lib/metadata'
 import { InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -20,6 +21,7 @@ export const Route = createFileRoute('/')({
   component: App,
   validateSearch: indexSchema,
   pendingComponent: () => <LoadingIndicator />,
+  head: () => getMetadata('/'),
 })
 
 function App() {
