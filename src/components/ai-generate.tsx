@@ -172,6 +172,8 @@ interface AIGenerateProps {
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
   const [input, setInput] = useState('')
+  const [capturedFormat, setCapturedFormat] =
+    useState<OutputFormat>(selectedFormat)
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
     onSuccess: ({ success, error }) => {
@@ -187,7 +189,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   })
   const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
     data?.output || '',
-    selectedFormat,
+    capturedFormat,
   )
 
   const handleMutate = () => {
@@ -195,10 +197,12 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       toast.error('Input cannot be empty.')
       return
     }
+    const formatAtMutation = selectedFormat
+    setCapturedFormat(formatAtMutation)
     mutate({
       data: {
         input,
-        format: selectedFormat,
+        format: formatAtMutation,
       },
     })
   }

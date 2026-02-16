@@ -175,6 +175,8 @@ const AIStructure = ({
 }: AIStructureProps) => {
   const { data: session } = authClient.useSession()
   const [unstructuredData, setUnstructuredData] = useState('')
+  const [capturedFormat, setCapturedFormat] =
+    useState<OutputFormat>(selectedFormat)
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: structureTextFn,
     onSuccess: ({ success, error }) => {
@@ -190,7 +192,7 @@ const AIStructure = ({
   })
   const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
     data?.output || '',
-    selectedFormat,
+    capturedFormat,
   )
 
   const handleMutate = () => {
@@ -198,10 +200,12 @@ const AIStructure = ({
       toast.error('Input cannot be empty.')
       return
     }
+    const formatAtMutation = selectedFormat
+    setCapturedFormat(formatAtMutation)
     mutate({
       data: {
         input: unstructuredData,
-        format: selectedFormat,
+        format: formatAtMutation,
       },
     })
   }
