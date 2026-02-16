@@ -19,6 +19,8 @@ import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
+import { useOutput } from '@/hooks/use-output'
+import OutputActions from './output-actions'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -173,7 +175,6 @@ const AIStructure = ({
 }: AIStructureProps) => {
   const { data: session } = authClient.useSession()
   const [unstructuredData, setUnstructuredData] = useState('')
-
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: structureTextFn,
     onSuccess: ({ success, error }) => {
@@ -187,6 +188,10 @@ const AIStructure = ({
       toast.error('Failed to structure data. Please try again.')
     },
   })
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    data?.output || '',
+    selectedFormat,
+  )
 
   const handleMutate = () => {
     if (!unstructuredData.trim()) {
@@ -249,12 +254,20 @@ const AIStructure = ({
         </div>
       </div>
       {isSuccess && data && data.output.trim() !== '' ? (
-        <Output
-          input={unstructuredData}
-          output={data.output}
-          success={true}
-          error={undefined}
-        />
+        <>
+          <Output
+            input={unstructuredData}
+            output={data.output}
+            success={isSuccess}
+            error={undefined}
+          />
+          <OutputActions
+            handleCopy={handleCopyOutput}
+            handleDownload={handleDownloadOutput}
+            success={isSuccess}
+            copied={copied}
+          />
+        </>
       ) : null}
       {isError && (
         <InlineError
