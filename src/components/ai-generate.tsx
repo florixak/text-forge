@@ -2,19 +2,21 @@ import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
+import { useOutput } from '@/hooks/use-output'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { generateData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
 import { OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
-import { createServerFn } from '@tanstack/react-start'
 import { redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import OutputActions from './output-actions'
 import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
@@ -170,7 +172,6 @@ interface AIGenerateProps {
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
   const [input, setInput] = useState('')
-
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
     onSuccess: ({ success, error }) => {
@@ -184,6 +185,10 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       toast.error('Failed to generate data. Please try again.')
     },
   })
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    data?.output || '',
+    selectedFormat,
+  )
 
   const handleMutate = () => {
     if (!input.trim()) {
@@ -258,12 +263,20 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
         </div>
       </div>
       {isSuccess && data && data.output.trim() !== '' ? (
-        <Output
-          input={input}
-          output={data.output}
-          success={true}
-          error={undefined}
-        />
+        <>
+          <Output
+            input={input}
+            output={data.output}
+            success={isSuccess}
+            error={undefined}
+          />
+          <OutputActions
+            handleCopy={handleCopyOutput}
+            handleDownload={handleDownloadOutput}
+            success={isSuccess}
+            copied={copied}
+          />
+        </>
       ) : null}
       {isError && (
         <InlineError
