@@ -1,16 +1,16 @@
-import { InputFormat, OutputFormat } from '@/types'
+import { db } from '@/db'
+import { historyUsage } from '@/db/schema'
 import useCopy from '@/hooks/use-copy'
 import { convertData } from '@/lib/converters'
 import { downloadFile } from '@/lib/download'
-import { getFileSize } from '@/lib/utils'
-import { Dot } from 'lucide-react'
-import { Button } from './ui/button'
-import Output from './output'
-import { useMutation } from '@tanstack/react-query'
 import { authOptionalMiddleware } from '@/lib/middleware'
+import { getFileSize } from '@/lib/utils'
+import { InputFormat, OutputFormat } from '@/types'
+import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
-import { historyUsage } from '@/db/schema'
-import { db } from '@/db'
+import { Dot } from 'lucide-react'
+import Output from './output'
+import OutputActions from './output-actions'
 
 interface PreviewOutputProps {
   fromType: InputFormat
@@ -49,11 +49,12 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
 
   const { success, error, output } = convertData(inputText, fromType, toType)
 
-  const handleCopyWithHistory = async () => {
+  const handleCopyWithHistory = async (): Promise<boolean> => {
     const isCopied = await handleCopy(output || '')
     if (success && output && isCopied) {
       mutate({ data: { from: fromType, to: toType } })
     }
+    return isCopied
   }
 
   const handleDownloadWithHistory = () => {
@@ -93,22 +94,12 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
         </div>
       </div>
 
-      <div className="flex items-center justify-end mt-4 gap-2">
-        <Button
-          variant="outline"
-          onClick={handleCopyWithHistory}
-          disabled={!success}
-        >
-          {copied ? 'Copied!' : 'Copy Output'}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleDownloadWithHistory}
-          disabled={!success}
-        >
-          Download Output
-        </Button>
-      </div>
+      <OutputActions
+        handleCopy={handleCopyWithHistory}
+        handleDownload={handleDownloadWithHistory}
+        success={success}
+        copied={copied}
+      />
     </section>
   )
 }
