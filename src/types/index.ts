@@ -18,7 +18,7 @@ export interface HistoryItem {
 
 export interface DashboardUser extends Pick<
   User,
-  'name' | 'plan' | 'enabled' | 'emailVerified'
+  'name' | 'plan' | 'enabled' | 'emailVerified' | 'email' | 'createdAt'
 > {}
 
 export interface UserPlan {
