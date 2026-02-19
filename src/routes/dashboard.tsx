@@ -2,6 +2,7 @@ import DashboardFooter from '@/components/dashboard/dashboard-footer'
 import DashboardHeader from '@/components/dashboard/dashboard-header'
 import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
 import DashboardUsageInfo from '@/components/dashboard/dashboard-usage-info'
+import ProfileCard from '@/components/dashboard/profile-card'
 import LoadingIndicator from '@/components/state/loading-indicator'
 import { PLAN_LIMITS } from '@/constants'
 
@@ -109,6 +110,8 @@ function RouteComponent() {
       <DashboardHeader data={{ user, usage, featureUsages }} />
 
       <DashboardQuickActions />
+
+      <ProfileCard data={{ user, usage, featureUsages }} />
 
       <DashboardUsageInfo data={{ user, usage, featureUsages }} />
 
