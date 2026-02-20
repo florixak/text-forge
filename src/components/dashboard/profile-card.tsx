@@ -17,6 +17,9 @@ import {
 } from '../ui/drawer'
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field'
 import { Input } from '../ui/input'
+import { db } from '@/db'
+import { user } from '@/db/schema'
+import { eq } from 'drizzle-orm'
 
 interface ProfileCardProps {
   data: DashboardData
@@ -48,22 +51,37 @@ const updateProfileFn = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
   .inputValidator(profileSchema)
   .handler(async ({ context, data }) => {
-    const { user } = context.session || {}
+    const { user: loggedUser } = context.session || {}
 
-    if (user) {
+    if (!loggedUser) {
       throw new Error('Unauthorized')
     }
 
     if (import.meta.env.NODE_ENV === 'development') {
       console.log('Updating profile with data:', data)
     }
+
+    const result = await db
+      .update(user)
+      .set({
+        ...(data.name !== loggedUser.name ? { name: data.name } : {}),
+        ...(data.email !== loggedUser.email ? { email: data.email } : {}),
+        ...(data.password ? { password: data.password } : {}),
+      })
+      .where(eq(user.id, loggedUser.id))
+
+    if (result.rowCount === 0) {
+      throw new Error('Failed to update profile. Please try again.')
+    }
+
+    return { success: true }
   })
 
 const ProfileCard = ({ data }: ProfileCardProps) => {
   const form = useForm({
     defaultValues: {
-      name: data.user.name,
-      email: data.user.email,
+      name: data.user.name || '',
+      email: data.user.email || '',
       password: '',
       confirmPassword: '',
     },
@@ -220,9 +238,24 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
                   <div className="flex items-center flex-col gap-2 mt-4">
                     <Field>
                       <form.Subscribe
-                        selector={(state) => state.isSubmitting}
-                        children={(isSubmitting) => (
-                          <Button type="submit" disabled={isSubmitting}>
+                        selector={(state) => {
+                          return {
+                            isSubmitting: state.isSubmitting,
+                            isValid: state.isValid,
+                            isDirty: state.isDirty,
+                            isTouched: state.isTouched,
+                          }
+                        }}
+                        children={(state) => (
+                          <Button
+                            type="submit"
+                            disabled={
+                              state.isSubmitting ||
+                              !state.isValid ||
+                              !state.isDirty ||
+                              !state.isTouched
+                            }
+                          >
                             Save Changes
                           </Button>
                         )}
