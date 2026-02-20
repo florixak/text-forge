@@ -70,16 +70,16 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
       onSubmit: profileSchema,
     },
     onSubmit: async ({ value }) => {
-      toast.promise(updateProfileFn({ data: value }), {
-        success: 'Profile updated successfully',
-        error: 'Failed to update profile. Please try again.',
-      })
-
-      const timeout = setTimeout(() => {
-        window.location.reload()
-      }, 2000)
-
-      return () => clearTimeout(timeout)
+      toast.promise(
+        updateProfileFn({ data: value }).then((res) => {
+          setTimeout(() => window.location.reload(), 2000)
+          return res
+        }),
+        {
+          success: 'Profile updated successfully',
+          error: 'Failed to update profile. Please try again.',
+        },
+      )
     },
   })
 
