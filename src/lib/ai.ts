@@ -43,7 +43,7 @@ async function baseGenerateText(
       prompt: userPrompt,
       maxOutputTokens: getOutputTokenLimit(task),
     })
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`Generating ${task} with model ${options.model}...`)
       console.log('System prompt:', systemPrompt)
       console.log('User prompt:', userPrompt)

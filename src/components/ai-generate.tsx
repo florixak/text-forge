@@ -97,10 +97,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
         try {
           const result = await generateData(input, format, plan)
 
-          if (
-            result.processing?.metadata.isCompressed &&
-            process.env.NODE_ENV === 'development'
-          ) {
+          if (result.processing?.metadata.isCompressed && import.meta.env.DEV) {
             console.log(
               `[Token Opt] Compressed input: ${(result.processing.compressionRatio * 100).toFixed(1)}%`,
             )
@@ -108,7 +105,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
           try {
             await trackTokenUsage(session.user.id, result)
           } catch (trackingError) {
-            if (process.env.NODE_ENV === 'development') {
+            if (import.meta.env.DEV) {
               console.error('Failed to track token usage:', trackingError)
             }
           }
@@ -121,7 +118,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
               to: format,
             })
           } catch (historyError) {
-            if (process.env.NODE_ENV === 'development') {
+            if (import.meta.env.DEV) {
               console.error(
                 'Failed to log ai generate history usage:',
                 historyError,
@@ -147,7 +144,7 @@ const generateDataFn = createServerFn({ method: 'POST' })
           )
 
           if (!rollbackResult.success) {
-            if (process.env.NODE_ENV === 'development') {
+            if (import.meta.env.DEV) {
               console.error('Failed to rollback quota:', rollbackResult.error)
             }
           }

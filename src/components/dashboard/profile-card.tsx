@@ -40,7 +40,7 @@ const updateProfileFn = createServerFn({ method: 'POST' })
       throw new Error('Unauthorized')
     }
 
-    if (import.meta.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('Updating profile with data:', data)
     }
 
