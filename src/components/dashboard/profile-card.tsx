@@ -19,33 +19,16 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field'
 import { Input } from '../ui/input'
 import { db } from '@/db'
 import { user } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 interface ProfileCardProps {
   data: DashboardData
 }
 
-const profileSchema = z
-  .object({
-    name: z.string().min(1, 'Name is required'),
-    email: z.string().email('Invalid email address'),
-    password: z
-      .string()
-      .min(0)
-      .max(0)
-      .or(z.string().min(8, 'Password must be at least 8 characters')),
-    confirmPassword: z
-      .string()
-      .min(0)
-      .max(0)
-      .or(z.string().min(8, 'Password must be at least 8 characters')),
-  })
-  .refine((data) => {
-    if (data.password || data.confirmPassword) {
-      return data.password === data.confirmPassword
-    }
-    return true
-  })
+const profileSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address'),
+})
 
 const updateProfileFn = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
@@ -66,7 +49,7 @@ const updateProfileFn = createServerFn({ method: 'POST' })
       .set({
         ...(data.name !== loggedUser.name ? { name: data.name } : {}),
         ...(data.email !== loggedUser.email ? { email: data.email } : {}),
-        ...(data.password ? { password: data.password } : {}),
+        updatedAt: sql`NOW()`,
       })
       .where(eq(user.id, loggedUser.id))
 
@@ -82,8 +65,6 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
     defaultValues: {
       name: data.user.name || '',
       email: data.user.email || '',
-      password: '',
-      confirmPassword: '',
     },
     validators: {
       onSubmit: profileSchema,
@@ -93,6 +74,12 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
         success: 'Profile updated successfully',
         error: 'Failed to update profile. Please try again.',
       })
+
+      const timeout = setTimeout(() => {
+        window.location.reload()
+      }, 2000)
+
+      return () => clearTimeout(timeout)
     },
   })
 
@@ -106,7 +93,7 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
       <CardContent className="flex flex-row items-center justify-between w-full">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-xl font-bold text-white">
-            {user.name.charAt(0).toUpperCase()}
+            {user.name.charAt(0).toUpperCase() || '?'}
           </div>
           <div>
             <p className="text-sm font-medium">{user.name}</p>
@@ -126,7 +113,7 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
                 </DrawerDescription>
               </DrawerHeader>
               <form
-                id="signup-form"
+                id="profile-form"
                 onSubmit={(e) => {
                   e.preventDefault()
                   form.handleSubmit()
@@ -183,7 +170,7 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
                       )
                     }}
                   />
-                  <form.Field
+                  {/*<form.Field
                     name="password"
                     children={(field) => {
                       const isInvalid =
@@ -234,7 +221,7 @@ const ProfileCard = ({ data }: ProfileCardProps) => {
                         </Field>
                       )
                     }}
-                  />
+                  />*/}
                   <div className="flex items-center flex-col gap-2 mt-4">
                     <Field>
                       <form.Subscribe
