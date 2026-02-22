@@ -21,6 +21,7 @@ export const user = pgTable('user', {
   image: text('image'),
   plan: text('plan').$type<'free' | 'pro'>().default('free').notNull(),
   enabled: boolean('enabled').default(true).notNull(),
+  deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at')
     .defaultNow()
