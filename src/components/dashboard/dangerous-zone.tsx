@@ -16,6 +16,7 @@ import {
   DialogClose,
   DialogContent,
   DialogFooter,
+  DialogTitle,
   DialogTrigger,
 } from '../ui/dialog'
 
@@ -102,17 +103,17 @@ const DangerousZone = () => {
         Please proceed with caution and ensure you understand the implications
         of any actions taken here.
       </p>
-      <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-end">
+      <div className="flex flex-row items-start sm:items-center gap-4 justify-end">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="destructive" className="mt-4" disabled={isPending}>
+            <Button variant="destructive" disabled={isPending}>
               Delete Account
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <h2 className="text-lg font-bold mb-4 text-destructive-foreground">
+            <DialogTitle className="text-lg font-bold mb-4 text-destructive-foreground">
               Are you absolutely sure?
-            </h2>
+            </DialogTitle>
             <p className="text-muted-foreground mb-6">
               Your account will be deactivated and you will lose access to all
               services. Your personal identifiers will be obfuscated, but your
@@ -137,14 +138,12 @@ const DangerousZone = () => {
         </Dialog>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="mt-4">
-              Learn More
-            </Button>
+            <Button variant="outline">Learn More</Button>
           </DialogTrigger>
           <DialogContent>
-            <h2 className="text-lg font-bold mb-4">
+            <DialogTitle className="text-lg font-bold mb-4">
               Why is this action dangerous?
-            </h2>
+            </DialogTitle>
             <p className="text-muted-foreground">
               Deactivating your account will immediately revoke your access and
               cancel any active subscriptions. While we retain historical data
