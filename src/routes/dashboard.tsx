@@ -1,3 +1,4 @@
+import DangerousZone from '@/components/dashboard/dangerous-zone'
 import DashboardFooter from '@/components/dashboard/dashboard-footer'
 import DashboardHeader from '@/components/dashboard/dashboard-header'
 import DashboardQuickActions from '@/components/dashboard/dashboard-quick-actions'
@@ -114,6 +115,8 @@ function RouteComponent() {
       <ProfileCard data={{ user, usage, featureUsages }} />
 
       <DashboardUsageInfo data={{ user, usage, featureUsages }} />
+
+      <DangerousZone />
 
       <DashboardFooter />
     </section>
