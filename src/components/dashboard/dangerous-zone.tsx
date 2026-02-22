@@ -30,12 +30,24 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
       throw new Response('Unauthorized', { status: 401 })
     }
 
-    await db.transaction(async (tx) => {
+    const subs = await db.transaction(async (tx) => {
       const subs = await tx
         .select()
         .from(subscription)
         .where(eq(subscription.userId, loggedUser.id))
 
+      await tx
+        .update(user)
+        .set({
+          enabled: false,
+          email: `deleted_${loggedUser.id}_${Date.now()}@deleted.invalid`,
+          deletedAt: sql`NOW()`,
+        })
+        .where(eq(user.id, loggedUser.id))
+
+      return subs
+    })
+    if (subs.length > 0) {
       const stripe = getStripe()
       if (subs.length > 0) {
         const results = await Promise.allSettled(
@@ -53,16 +65,7 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
           throw new Error('Failed to cancel one or more subscriptions')
         }
       }
-
-      await tx
-        .update(user)
-        .set({
-          enabled: false,
-          email: `deleted_${loggedUser.id}_${Date.now()}@deleted.invalid`,
-          deletedAt: sql`NOW()`,
-        })
-        .where(eq(user.id, loggedUser.id))
-    })
+    }
 
     try {
       const request = getRequest()
@@ -120,10 +123,8 @@ const DangerousZone = () => {
             <p className="text-muted-foreground">
               Your account will be deactivated and you will lose access to all
               services. Your personal identifiers will be obfuscated, but your
-              historical data (usage analytics, activity logs) will be retained
-              for 90 days in accordance with our data retention policy before
-              permanent deletion. You will not be able to recover your account
-              after deactivation.
+              historical data (usage analytics, activity logs) will be retained.
+              You will not be able to recover your account after deactivation.
             </p>
             <DialogFooter className="justify-end mt-4">
               <DialogClose asChild>
