@@ -114,7 +114,7 @@ const DangerousZone = () => {
             <DialogTitle className="text-lg font-bold mb-4 text-destructive-foreground">
               Are you absolutely sure?
             </DialogTitle>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground">
               Your account will be deactivated and you will lose access to all
               services. Your personal identifiers will be obfuscated, but your
               historical data (usage analytics, activity logs) will be retained
@@ -122,7 +122,7 @@ const DangerousZone = () => {
               permanent deletion. You will not be able to recover your account
               after deactivation.
             </p>
-            <DialogFooter className="justify-end">
+            <DialogFooter className="justify-end mt-4">
               <DialogClose asChild>
                 <Button variant="outline">Cancel</Button>
               </DialogClose>
@@ -150,6 +150,11 @@ const DangerousZone = () => {
               for compliance purposes, your account cannot be reactivated once
               deleted.
             </p>
+            <DialogFooter className="justify-end mt-4">
+              <DialogClose asChild>
+                <Button variant="outline">Got it</Button>
+              </DialogClose>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
