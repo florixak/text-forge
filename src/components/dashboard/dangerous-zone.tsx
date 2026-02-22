@@ -35,10 +35,11 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
         .from(subscription)
         .where(eq(subscription.userId, loggedUser.id))
 
+      const stripe = getStripe()
       if (subs.length > 0) {
         const results = await Promise.allSettled(
           subs.map(async (sub) => {
-            await getStripe().subscriptions.cancel(sub.stripeSubscriptionId, {
+            await stripe.subscriptions.cancel(sub.stripeSubscriptionId, {
               cancellation_details: {
                 comment: 'User requested account deletion',
               },
@@ -56,7 +57,7 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
         .update(user)
         .set({
           enabled: false,
-          email: `${loggedUser.email}_deleted_${Date.now()}`,
+          email: `deleted_${loggedUser.id}_${Date.now()}@deleted.invalid`,
           deletedAt: sql`NOW()`,
         })
         .where(eq(user.id, loggedUser.id))
