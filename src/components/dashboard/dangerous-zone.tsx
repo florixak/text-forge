@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../ui/dialog'
+import { getRequest } from '@tanstack/react-start/server'
 
 const deleteAccountFn = createServerFn({ method: 'POST' })
   .middleware([authMiddleware])
@@ -64,7 +65,8 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
     })
 
     try {
-      await auth.api.revokeSession()
+      const request = getRequest()
+      await auth.api.signOut({ headers: request.headers })
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Failed to revoke session during account deletion:', {
