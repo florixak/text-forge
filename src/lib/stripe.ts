@@ -7,9 +7,15 @@ import { authMiddleware } from './middleware'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2026-01-28.clover',
-})
+export function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  if (!secretKey) {
+    throw new Error('STRIPE_SECRET_KEY is not configured')
+  }
+  return new Stripe(secretKey, { apiVersion: '2026-01-28.clover' })
+}
+
+const stripe = getStripe()
 
 export const getOrCreateStripeCustomer = createServerFn()
   .middleware([authMiddleware])
