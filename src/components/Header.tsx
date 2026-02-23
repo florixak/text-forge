@@ -1,16 +1,17 @@
+import { NAV_LINKS } from '@/constants'
+import { authClient } from '@/lib/auth-client'
 import { Link } from '@tanstack/react-router'
 import { Terminal, User } from 'lucide-react'
-import { Button } from './ui/button'
-import { authClient } from '@/lib/auth-client'
+import MobileMenu from './mobile-menu'
 import ThemeSwitcher from './theme-switcher'
-import { NAV_LINKS } from '@/constants'
+import { Button } from './ui/button'
 
 export const Header = () => {
   const { data: session } = authClient.useSession()
   return (
     <header className="bg-background text-foreground w-full shadow-md">
-      <div className="flex flex-row justify-between items-center max-w-7xl w-full mx-auto py-4">
-        <h1 className="ml-4 text-xl font-semibold text-foreground">
+      <div className="flex flex-row justify-between items-center max-w-7xl w-full mx-auto p-4">
+        <h1 className="text-xl font-semibold text-foreground">
           <Link to="/">
             <div className="flex items-center gap-2">
               <div className="bg-primary rounded-lg p-2">
@@ -38,22 +39,25 @@ export const Header = () => {
           </ul>
         </nav>
         <div className="flex flex-row items-center gap-4">
-          {!session ? (
-            <Button variant="ghost" asChild>
-              <Link to="/signin">
-                <User className="text-foreground" />
-                <span>Sign In</span>
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="ghost" asChild>
-              <Link to="/dashboard">
-                <User className="text-foreground" />
-                <span>{session.user?.name ?? session.user?.email}</span>
-              </Link>
-            </Button>
-          )}
-          <ThemeSwitcher />
+          <div className="hidden md:flex flex-row items-center gap-4">
+            {!session ? (
+              <Button variant="ghost" asChild>
+                <Link to="/signin">
+                  <User className="text-foreground" />
+                  <span>Sign In</span>
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" asChild>
+                <Link to="/dashboard">
+                  <User className="text-foreground" />
+                  <span>{session.user?.name ?? session.user?.email}</span>
+                </Link>
+              </Button>
+            )}
+            <ThemeSwitcher />
+          </div>
+          <MobileMenu />
         </div>
       </div>
     </header>
