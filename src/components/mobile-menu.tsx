@@ -57,7 +57,7 @@ const MobileMenu = () => {
             <DropdownMenuItem asChild>
               <Link to="/dashboard">
                 <User className="mr-2 h-4 w-4" />
-                {session.user?.name ?? session.user?.email}
+                {session.user?.name ?? session.user?.email ?? 'Dashboard'}
               </Link>
             </DropdownMenuItem>
           )}
