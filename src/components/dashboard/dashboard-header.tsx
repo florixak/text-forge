@@ -17,18 +17,16 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
   const navigate = useNavigate()
 
   const handleLogout = async () => {
-    try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            navigate({ to: '/signin', replace: true })
-          },
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          navigate({ to: '/signin', replace: true })
         },
-      })
-    } catch {
-      toast.error('Failed to log out. Please try again.')
-      navigate({ to: '/signin', replace: true })
-    }
+        onError: () => {
+          toast.error('Failed to logout. Please try again.')
+        },
+      },
+    })
   }
 
   return (
