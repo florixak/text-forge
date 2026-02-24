@@ -12,7 +12,7 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
-import Header from '@/components/header'
+import { Header } from '@/components/header'
 import Footer from '@/components/footer'
 
 import { Toaster } from '@/components/ui/sonner'
