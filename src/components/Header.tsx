@@ -41,19 +41,27 @@ export const Header = () => {
         <div className="flex flex-row items-center gap-4">
           <div className="hidden md:flex flex-row items-center gap-4">
             {!session ? (
-              <Button variant="ghost" asChild>
-                <Link to="/signin">
-                  <User className="text-foreground" />
-                  <span>Sign In</span>
-                </Link>
-              </Button>
+              <Button
+                variant="ghost"
+                render={
+                  <Link to="/signin">
+                    <User className="text-foreground" />
+                    <span>Sign In</span>
+                  </Link>
+                }
+              />
             ) : (
-              <Button variant="ghost" asChild>
-                <Link to="/dashboard">
-                  <User className="text-foreground" />
-                  <span>{session.user?.name ?? session.user?.email}</span>
-                </Link>
-              </Button>
+              <Button
+                variant="ghost"
+                render={
+                  <Link to="/dashboard">
+                    <User className="text-foreground" />
+                    <span>
+                      {session.user?.name ?? session.user?.email ?? 'Dashboard'}
+                    </span>
+                  </Link>
+                }
+              />
             )}
             <ThemeSwitcher />
           </div>

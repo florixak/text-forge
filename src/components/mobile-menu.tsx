@@ -24,42 +24,52 @@ const MobileMenu = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild className="md:hidden">
-        <Button variant="ghost" size="icon">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        className="md:hidden"
+        render={
+          <Button variant="ghost" size="icon">
+            <Menu className="h-5 w-5" />
+          </Button>
+        }
+      />
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuGroup>
           <DropdownMenuLabel>Navigation</DropdownMenuLabel>
           {NAV_LINKS.map((link) => (
-            <DropdownMenuItem key={link.href} asChild>
-              <Link
-                activeProps={{ className: 'active-mobile-link' }}
-                to={link.href}
-              >
-                {link.name}
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem
+              key={link.href}
+              render={
+                <Link
+                  activeProps={{ className: 'active-mobile-link' }}
+                  to={link.href}
+                >
+                  {link.name}
+                </Link>
+              }
+            />
           ))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuLabel>Account</DropdownMenuLabel>
           {!session ? (
-            <DropdownMenuItem asChild>
-              <Link to="/signin">
-                <User className="mr-2 h-4 w-4" />
-                Sign In
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem
+              render={
+                <Link to="/signin">
+                  <User className="mr-2 h-4 w-4" />
+                  Sign In
+                </Link>
+              }
+            />
           ) : (
-            <DropdownMenuItem asChild>
-              <Link to="/dashboard">
-                <User className="mr-2 h-4 w-4" />
-                {session.user?.name ?? session.user?.email ?? 'Dashboard'}
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem
+              render={
+                <Link to="/dashboard">
+                  <User className="mr-2 h-4 w-4" />
+                  {session.user?.name ?? session.user?.email ?? 'Dashboard'}
+                </Link>
+              }
+            />
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

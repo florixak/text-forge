@@ -47,9 +47,9 @@ const PlanDialog = ({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Keep Subscription</Button>
-          </DialogClose>
+          <DialogClose
+            render={<Button variant="outline">Keep Subscription</Button>}
+          />
           <Button
             type="submit"
             disabled={canceling}

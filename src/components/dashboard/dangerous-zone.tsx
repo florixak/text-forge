@@ -111,11 +111,13 @@ const DangerousZone = () => {
       </p>
       <div className="flex flex-row items-start sm:items-center gap-4 justify-end">
         <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="destructive" disabled={isPending}>
-              Delete Account
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button variant="destructive" disabled={isPending}>
+                Delete Account
+              </Button>
+            }
+          />
           <DialogContent>
             <DialogTitle className="text-lg font-bold mb-4 text-destructive-foreground">
               Are you absolutely sure?
@@ -127,9 +129,7 @@ const DangerousZone = () => {
               You will not be able to recover your account after deactivation.
             </p>
             <DialogFooter className="justify-end mt-4">
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
+              <DialogClose render={<Button variant="outline">Cancel</Button>} />
               <Button
                 variant="destructive"
                 onClick={() => mutate()}
@@ -141,9 +141,10 @@ const DangerousZone = () => {
           </DialogContent>
         </Dialog>
         <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Learn More</Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={<Button variant="outline">Learn More</Button>}
+          />
+
           <DialogContent>
             <DialogTitle className="text-lg font-bold mb-4">
               Why is this action dangerous?
@@ -155,9 +156,7 @@ const DangerousZone = () => {
               deleted.
             </p>
             <DialogFooter className="justify-end mt-4">
-              <DialogClose asChild>
-                <Button variant="outline">Got it</Button>
-              </DialogClose>
+              <DialogClose render={<Button variant="outline">Got it</Button>} />
             </DialogFooter>
           </DialogContent>
         </Dialog>
