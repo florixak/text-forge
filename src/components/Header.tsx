@@ -6,7 +6,7 @@ import MobileMenu from './mobile-menu'
 import ThemeSwitcher from './theme-switcher'
 import { Button } from './ui/button'
 
-export const Header = () => {
+const Header = () => {
   const { data: session } = authClient.useSession()
   return (
     <header className="bg-background text-foreground w-full shadow-md">
@@ -71,3 +71,5 @@ export const Header = () => {
     </header>
   )
 }
+
+export default Header

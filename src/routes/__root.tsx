@@ -12,8 +12,8 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
-import { Header } from '@/components/header'
-import Footer from '@/components/footer'
+import Header from '@/components/header.tsx'
+import Footer from '@/components/footer.tsx'
 
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme-provider'
