@@ -62,11 +62,14 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
             <div className="bg-primary/10 p-2 rounded-md">
               <Star className="text-primary" />
             </div>
-            <Button size="sm" asChild>
-              <Link to="/plans" search={{ plan: user.plan }}>
-                {user.plan === 'free' ? 'Upgrade' : 'Manage'}
-              </Link>
-            </Button>
+            <Button
+              size="sm"
+              render={
+                <Link to="/plans" search={{ plan: user.plan }}>
+                  {user.plan === 'free' ? 'Upgrade' : 'Manage'}
+                </Link>
+              }
+            />
           </div>
           <div className="flex flex-col">
             <h4 className="text-lg font-bold">

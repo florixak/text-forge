@@ -83,11 +83,13 @@ function VerifyEmailPage() {
               <p className="text-center font-medium text-red-600">{message}</p>
             </>
           )}
-          <Button asChild>
-            <Link to={isAuthenticated ? '/dashboard' : '/signin'}>
-              {isAuthenticated ? 'Go to Dashboard' : 'Go to Sign In'}
-            </Link>
-          </Button>
+          <Button
+            render={
+              <Link to={isAuthenticated ? '/dashboard' : '/signin'}>
+                {isAuthenticated ? 'Go to Dashboard' : 'Go to Sign In'}
+              </Link>
+            }
+          />
         </CardContent>
       </Card>
     </div>
