@@ -60,7 +60,26 @@ export const auth = betterAuth({
         required: true,
       },
     },
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailConfirmation: async ({ user, newEmail, token }) => {
+        const changeEmailURL = `${APP_URL}/confirm-email-change?token=${encodeURIComponent(token)}`
+        try {
+          await sendEmail({
+            to: user.email,
+            subject: 'Approve email change',
+            html: `
+            <p>Click the link below to approve the change to ${newEmail}:</p>
+            <a href="${changeEmailURL}">${changeEmailURL}</a>
+          `,
+          })
+        } catch (error) {
+          throw error
+        }
+      },
+    },
   },
+
   /*hooks: {
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path.startsWith('/sign-up')) {
