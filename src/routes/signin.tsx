@@ -15,7 +15,7 @@ export const Route = createFileRoute('/signin')({
 
 function RouteComponent() {
   return (
-    <section className="min-h-screen bg-background flex items-center justify-center max-w-md mx-auto p-4">
+    <section className="min-h-screen flex-center max-w-md mx-auto">
       <LoginForm />
     </section>
   )
