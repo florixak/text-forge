@@ -51,6 +51,12 @@ const routeMetadataConfig: RouteMetadata = {
       'Verify your email address to complete your TextForge account setup and unlock powerful AI text generation features.',
     robots: 'noindex, nofollow',
   },
+  '/verify-email-change': {
+    title: 'Confirm Email Change - TextForge',
+    description:
+      'Confirm your email change request to update your TextForge account email address and continue enjoying powerful AI text generation features.',
+    robots: 'noindex, nofollow',
+  },
   '/dashboard': {
     title: 'Dashboard - TextForge',
     description:

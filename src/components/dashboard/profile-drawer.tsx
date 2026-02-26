@@ -1,4 +1,9 @@
+import { authClient } from '@/lib/auth-client'
+import { DashboardUser } from '@/types'
 import { useForm } from '@tanstack/react-form'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import * as z from 'zod'
 import { Button } from '../ui/button'
 import {
   Drawer,
@@ -11,67 +16,49 @@ import {
 } from '../ui/drawer'
 import { Field, FieldError, FieldGroup, FieldLabel } from '../ui/field'
 import { Input } from '../ui/input'
-import { toast } from 'sonner'
-import { sql, eq, and, ne } from 'drizzle-orm'
-import { authMiddleware } from '@/lib/middleware'
-import { createServerFn } from '@tanstack/react-start'
-import { db } from '@/db'
-import { user } from '@/db/schema'
-import { DashboardUser } from '@/types'
-import * as z from 'zod'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
 })
 
-const updateProfileFn = createServerFn({ method: 'POST' })
-  .middleware([authMiddleware])
-  .inputValidator(profileSchema)
-  .handler(async ({ context, data }) => {
-    const { user: loggedUser } = context.session || {}
-
-    if (!loggedUser) {
-      throw new Error('Unauthorized')
-    }
-
-    if (import.meta.env.DEV) {
-      console.log('Updating profile with data:', data)
-    }
-
-    if (data.email !== loggedUser.email) {
-      const existingUser = await db
-        .select()
-        .from(user)
-        .where(and(eq(user.email, data.email), ne(user.id, loggedUser.id)))
-        .limit(1)
-
-      if (existingUser.length > 0) {
-        throw new Error('Email is already in use.')
-      }
-    }
-
-    const result = await db
-      .update(user)
-      .set({
-        ...(data.name !== loggedUser.name ? { name: data.name } : {}),
-        ...(data.email !== loggedUser.email ? { email: data.email } : {}),
-        updatedAt: sql`NOW()`,
-      })
-      .where(eq(user.id, loggedUser.id))
-
-    if (result.rowCount === 0) {
-      throw new Error('Failed to update profile. Please try again.')
-    }
-
-    return { success: true }
-  })
-
 interface ProfileDrawerProps {
   user: DashboardUser
 }
 
 const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (data: { name: string; email: string }) => {
+      if (data.name !== user.name) {
+        const result = await authClient.updateUser({
+          name: data.name,
+        })
+        if (result.error) {
+          throw new Error(result.error.message || 'Failed to update profile')
+        }
+      }
+      if (data.email !== user.email) {
+        const result = await authClient.changeEmail({
+          newEmail: data.email,
+          callbackURL: '/dashboard',
+        })
+
+        if (result.error) {
+          throw new Error(result.error.message || 'Failed to update profile')
+        }
+      }
+      return { success: true }
+    },
+    onSuccess: () => {
+      toast.success('Profile updated successfully')
+      form.reset()
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update profile',
+      )
+    },
+  })
   const form = useForm({
     defaultValues: {
       name: user.name || '',
@@ -81,18 +68,10 @@ const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
       onSubmit: profileSchema,
     },
     onSubmit: async ({ value }) => {
-      toast.promise(
-        updateProfileFn({ data: value }).then((res) => {
-          if (res.success) {
-            setTimeout(() => window.location.reload(), 2000)
-          }
-          return res
-        }),
-        {
-          success: 'Profile updated successfully',
-          error: 'Failed to update profile. Please try again.',
-        },
-      )
+      toast.promise(mutateAsync(value), {
+        success: 'Profile updated successfully',
+        error: 'Failed to update profile. Please try again.',
+      })
     },
   })
   return (
@@ -166,58 +145,6 @@ const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
                   )
                 }}
               />
-              {/*<form.Field
-                    name="password"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            aria-invalid={isInvalid}
-                            placeholder="Enter your password"
-                            type="password"
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      )
-                    }}
-                  />
-                  <form.Field
-                    name="confirmPassword"
-                    children={(field) => {
-                      const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid
-                      return (
-                        <Field data-invalid={isInvalid}>
-                          <FieldLabel htmlFor={field.name}>
-                            Confirm Password
-                          </FieldLabel>
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            aria-invalid={isInvalid}
-                            placeholder="Confirm your password"
-                            type="password"
-                          />
-                          {isInvalid && (
-                            <FieldError errors={field.state.meta.errors} />
-                          )}
-                        </Field>
-                      )
-                    }}
-                  />*/}
               <div className="flex items-center flex-col gap-2 mt-4">
                 <Field>
                   <form.Subscribe
@@ -236,7 +163,8 @@ const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
                           state.isSubmitting ||
                           !state.isValid ||
                           !state.isDirty ||
-                          !state.isTouched
+                          !state.isTouched ||
+                          isPending
                         }
                       >
                         Save Changes
