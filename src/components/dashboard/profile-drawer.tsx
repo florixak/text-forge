@@ -33,7 +33,6 @@ const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
         const result = await authClient.updateUser({
           name: data.name,
         })
-
         if (result.error) {
           throw new Error(result.error.message || 'Failed to update profile')
         }
@@ -41,6 +40,7 @@ const ProfileDrawer = ({ user }: ProfileDrawerProps) => {
       if (data.email !== user.email) {
         const result = await authClient.changeEmail({
           newEmail: data.email,
+          callbackURL: '/dashboard',
         })
 
         if (result.error) {
