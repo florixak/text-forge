@@ -36,7 +36,7 @@ const passwordChangeSchema = z
   })
 
 const PasswordDrawer = () => {
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationFn: async (data: {
       currentPassword: string
       newPassword: string
@@ -45,7 +45,7 @@ const PasswordDrawer = () => {
       const result = await authClient.changePassword({
         newPassword: data.newPassword,
         currentPassword: data.currentPassword,
-        revokeOtherSessions: false,
+        revokeOtherSessions: true,
       })
 
       if (result.error) {
@@ -75,7 +75,10 @@ const PasswordDrawer = () => {
       onSubmit: passwordChangeSchema,
     },
     onSubmit: async ({ value }) => {
-      mutate(value)
+      toast.promise(mutateAsync(value), {
+        success: 'Password changed successfully',
+        error: 'Failed to change password. Please try again.',
+      })
     },
   })
 
