@@ -62,15 +62,14 @@ export const auth = betterAuth({
     },
     changeEmail: {
       enabled: true,
-      sendChangeEmailConfirmation: async ({ user, newEmail, token }) => {
-        const changeEmailURL = `${APP_URL}/confirm-email-change?token=${encodeURIComponent(token)}`
+      sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
         try {
           await sendEmail({
             to: user.email,
             subject: 'Approve email change',
             html: `
             <p>Click the link below to approve the change to ${newEmail}:</p>
-            <a href="${changeEmailURL}">${changeEmailURL}</a>
+            <a href="${url}">${url}</a>
           `,
           })
         } catch (error) {
