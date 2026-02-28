@@ -74,7 +74,7 @@ const Header = () => {
                   <DropdownMenuItem
                     render={<Link to="/dashboard">Dashboard</Link>}
                   />
-                  <DropdownMenuItem onSelect={() => authClient.signOut()}>
+                  <DropdownMenuItem onClick={() => authClient.signOut()}>
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
