@@ -1,12 +1,18 @@
 import { Laptop, Moon, Sun } from 'lucide-react'
 import { useTheme } from './theme-provider'
 import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 const ThemeSwitcher = () => {
   const { theme, setTheme, mounted } = useTheme()
 
-  const handleChange = () => {
-    setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')
+  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    setTheme(theme)
   }
 
   if (!mounted) {
@@ -23,14 +29,39 @@ const ThemeSwitcher = () => {
   }
 
   return (
-    <Button
-      variant="ghost"
-      onClick={handleChange}
-      title="Toggle Theme"
-      aria-label="Toggle Theme"
-    >
-      {theme === 'light' ? <Sun /> : theme === 'dark' ? <Moon /> : <Laptop />}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            title="Toggle Theme"
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? (
+              <Sun />
+            ) : theme === 'dark' ? (
+              <Moon />
+            ) : (
+              <Laptop />
+            )}
+          </Button>
+        }
+      />
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={() => handleThemeChange('light')}>
+          <Sun />
+          <span>Light</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
+          <Moon />
+          <span>Dark</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleThemeChange('system')}>
+          <Laptop />
+          <span>System</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

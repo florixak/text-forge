@@ -5,6 +5,12 @@ import { Terminal, User } from 'lucide-react'
 import MobileMenu from './mobile-menu'
 import ThemeSwitcher from './theme-switcher'
 import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
 
 const Header = () => {
   const { data: session } = authClient.useSession()
@@ -51,17 +57,28 @@ const Header = () => {
                 }
               />
             ) : (
-              <Button
-                variant="ghost"
-                render={
-                  <Link to="/dashboard">
-                    <User className="text-foreground" />
-                    <span>
-                      {session.user?.name ?? session.user?.email ?? 'Dashboard'}
-                    </span>
-                  </Link>
-                }
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button variant="ghost">
+                      <User className="text-foreground" />
+                      <span>
+                        {session.user?.name ??
+                          session.user?.email ??
+                          'Dashboard'}
+                      </span>
+                    </Button>
+                  }
+                ></DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    render={<Link to="/dashboard">Dashboard</Link>}
+                  />
+                  <DropdownMenuItem onClick={() => authClient.signOut()}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <ThemeSwitcher />
           </div>
