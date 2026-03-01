@@ -67,7 +67,7 @@ const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
   const fileSize = getFileSize(output || '')
 
   return (
-    <section className="p-4 w-full max-w-160" aria-label="Preview Output">
+    <section className="p-4 w-full flex-1" aria-label="Preview Output">
       <h2 className="text-foreground font-bold text-lg">Output Preview</h2>
       <p className="text-muted-foreground">
         Paste your text or code to begin conversion.

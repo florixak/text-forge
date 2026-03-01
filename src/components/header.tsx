@@ -1,7 +1,7 @@
 import { NAV_LINKS } from '@/constants'
 import { authClient } from '@/lib/auth-client'
 import { Link } from '@tanstack/react-router'
-import { LogOut, Settings, Terminal, User } from 'lucide-react'
+import { LogOut, Terminal, User } from 'lucide-react'
 import MobileMenu from './mobile-menu'
 import ThemeSwitcher from './theme-switcher'
 import { Button } from './ui/button'
