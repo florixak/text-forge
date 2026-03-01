@@ -307,7 +307,7 @@ const InputEditor = ({
   const loggedIn = data?.user !== null && data?.user !== undefined
 
   return (
-    <section className="p-4 w-full max-w-160" aria-label="Input Editor">
+    <section className="p-4 w-full flex-1" aria-label="Input Editor">
       <h2 className="text-foreground font-bold text-lg">Input Editor</h2>
       <p className="text-muted-foreground">
         Paste your text or code to begin conversion.
