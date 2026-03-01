@@ -1,14 +1,17 @@
 import { NAV_LINKS } from '@/constants'
 import { authClient } from '@/lib/auth-client'
 import { Link } from '@tanstack/react-router'
-import { Terminal, User } from 'lucide-react'
+import { LogOut, Settings, Terminal, User } from 'lucide-react'
 import MobileMenu from './mobile-menu'
 import ThemeSwitcher from './theme-switcher'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 
@@ -70,13 +73,52 @@ const Header = () => {
                     </Button>
                   }
                 ></DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem
-                    render={<Link to="/dashboard">Dashboard</Link>}
-                  />
-                  <DropdownMenuItem onClick={() => authClient.signOut()}>
-                    Sign Out
-                  </DropdownMenuItem>
+                <DropdownMenuContent className="w-56">
+                  <DropdownMenuGroup>
+                    <DropdownMenuLabel className="text-primary font-semibold">
+                      {session.user?.name ?? session.user?.email}
+                    </DropdownMenuLabel>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Navigation
+                  </div>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      render={
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center gap-2 w-full"
+                        >
+                          <User size={16} />
+                          <span>Dashboard</span>
+                        </Link>
+                      }
+                    />
+                    <DropdownMenuItem
+                      render={
+                        <Link
+                          to="/settings"
+                          className="flex items-center gap-2 w-full"
+                        >
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </Link>
+                      }
+                    />
+                  </DropdownMenuGroup>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => authClient.signOut()}
+                      className="text-red-600 dark:text-red-400 cursor-pointer"
+                    >
+                      <LogOut size={16} />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
