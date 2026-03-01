@@ -76,7 +76,7 @@ const Header = () => {
                 <DropdownMenuContent className="w-56">
                   <DropdownMenuGroup>
                     <DropdownMenuLabel className="text-primary font-semibold">
-                      {session.user?.name ?? session.user?.email}
+                      {session.user?.name ?? session.user?.email ?? 'Dashboard'}
                     </DropdownMenuLabel>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
@@ -96,7 +96,7 @@ const Header = () => {
                         </Link>
                       }
                     />
-                    <DropdownMenuItem
+                    {/*<DropdownMenuItem
                       render={
                         <Link
                           to="/settings"
@@ -106,7 +106,7 @@ const Header = () => {
                           <span>Settings</span>
                         </Link>
                       }
-                    />
+                    />*/}
                   </DropdownMenuGroup>
 
                   <DropdownMenuSeparator />
