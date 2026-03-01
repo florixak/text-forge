@@ -51,7 +51,7 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
         </div>
         <div className="w-full flex justify-end">
           <Button variant="destructive" onClick={handleLogout}>
-            Logout
+            Sign Out
           </Button>
         </div>
       </div>
