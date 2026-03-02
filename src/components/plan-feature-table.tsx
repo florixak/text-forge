@@ -26,40 +26,27 @@ const PlanFeatureTable = ({ plans, selected }: PlanFeatureTableProps) => {
       <tbody>
         <tr className="border-t border-border">
           <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
-            AI Assist Calls
+            Tokens per day
           </td>
           {plans.map(([plan, limits]) => (
             <td
               key={plan}
               className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
             >
-              {limits.assist_ai_day}
+              {limits.token_limit_day}
             </td>
           ))}
         </tr>
         <tr className="border-t border-border">
           <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
-            AI Structure Calls
+            Tokens per month
           </td>
           {plans.map(([plan, limits]) => (
             <td
               key={plan}
               className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
             >
-              {limits.structure_ai_day}
-            </td>
-          ))}
-        </tr>
-        <tr className="border-t border-border">
-          <td className="px-6 py-4 font-medium text-muted-foreground bg-card-foreground/5">
-            AI Generate Calls
-          </td>
-          {plans.map(([plan, limits]) => (
-            <td
-              key={plan}
-              className={`px-6 py-4 text-center ${selected === plan ? 'text-primary' : 'text-muted-foreground'}`}
-            >
-              {limits.generate_ai_day}
+              {limits.token_limit_month}
             </td>
           ))}
         </tr>
