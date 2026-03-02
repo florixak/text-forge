@@ -130,7 +130,7 @@ const PlanCard = ({
             handleSelectPlan(plan)
           }
         }}
-        className={`relative w-sm ${selected === plan ? 'border-2 border-primary' : ''}`}
+        className={`relative w-sm h-112 ${selected === plan ? 'border-2 border-primary' : ''}`}
       >
         <CardHeader>
           <h3 className="text-lg capitalize text-primary">{plan}</h3>
