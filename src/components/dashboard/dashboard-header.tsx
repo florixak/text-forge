@@ -64,6 +64,7 @@ const DashboardHeader = ({ data: { user, usage } }: DashboardHeaderProps) => {
             </div>
             <Button
               size="sm"
+              nativeButton={false}
               render={
                 <Link to="/plans" search={{ plan: user.plan }}>
                   {user.plan === 'free' ? 'Upgrade' : 'Manage'}

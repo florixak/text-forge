@@ -52,6 +52,7 @@ const Header = () => {
             {!session ? (
               <Button
                 variant="ghost"
+                nativeButton={false}
                 render={
                   <Link to="/signin">
                     <User className="text-foreground" />
