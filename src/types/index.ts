@@ -93,12 +93,11 @@ export interface ConvertLocalStorageData {
 export interface StructureLocalStorageData {
   input: string
   output: string
-  inputFormat: InputFormat
+  outputFormat: OutputFormat
 }
 
 export interface GenerateLocalStorageData {
   input: string
   output: string
-  inputFormat: 'Prompt'
   outputFormat: OutputFormat
 }
