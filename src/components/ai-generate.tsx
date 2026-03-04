@@ -1,13 +1,15 @@
-import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import { LOCAL_STORAGE_KEYS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
+import useDebounce from '@/hooks/use-debounce'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 import { useOutput } from '@/hooks/use-output'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { generateData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
-import { OutputFormat } from '@/types'
+import { GenerateLocalStorageData, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -168,9 +170,13 @@ interface AIGenerateProps {
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
-  const [input, setInput] = useState('')
+  const { setItem, getItem } = useLocalStorage<GenerateLocalStorageData>(
+    LOCAL_STORAGE_KEYS.ai_generate,
+  )
+  const [input, setInput] = useState<string>(getItem()?.input || '')
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
+
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
     onSuccess: ({ success, error }) => {
@@ -188,6 +194,18 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     data?.output || '',
     capturedFormat,
   )
+
+  useDebounce({
+    value: input,
+    delay: 1000,
+    onDebounce: (debouncedInput) => {
+      setItem({
+        input: debouncedInput || '',
+        output: data?.output || '',
+        outputFormat: capturedFormat,
+      })
+    },
+  })
 
   const handleMutate = () => {
     if (!input.trim()) {
