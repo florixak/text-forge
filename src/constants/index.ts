@@ -83,4 +83,17 @@ const PLAN_LIMITS: Record<Plan, PlanLimits> = {
   },
 } as const
 
-export { NAV_LINKS, INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS, QUERY_KEYS }
+const LOCAL_STORAGE_KEYS = {
+  convert: 'convert-data',
+  ai_structure: 'ai-structure-data',
+  ai_generate: 'ai-generate-data',
+}
+
+export {
+  NAV_LINKS,
+  INPUT_FORMATS,
+  OUTPUT_FORMATS,
+  PLAN_LIMITS,
+  QUERY_KEYS,
+  LOCAL_STORAGE_KEYS,
+}
