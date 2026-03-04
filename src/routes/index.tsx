@@ -43,9 +43,20 @@ function App() {
         output: getItem()?.output || '',
         inputFormat: fromType,
         outputFormat: toType,
+        aiAssistTip: getItem()?.aiAssistTip || '',
       })
     },
   })
+
+  const handleSaveAssistTip = (tip: string) => {
+    setItem({
+      input: getItem()?.input || '',
+      output: getItem()?.output || '',
+      inputFormat: fromType,
+      outputFormat: toType,
+      aiAssistTip: tip,
+    })
+  }
 
   const handleFromTypeChange = (newFromType: InputFormat) => {
     navigate({
@@ -75,6 +86,7 @@ function App() {
           setFromType={handleFromTypeChange}
           toType={toType}
           setToType={handleToTypeChange}
+          onAssistTipGenerated={handleSaveAssistTip}
         />
         <OutputPreview
           fromType={fromType}
