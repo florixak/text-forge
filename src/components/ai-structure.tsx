@@ -1,12 +1,15 @@
-import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import { LOCAL_STORAGE_KEYS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
+import useDebounce from '@/hooks/use-debounce'
+import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useOutput } from '@/hooks/use-output'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { structureData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
-import { OutputFormat } from '@/types'
+import { OutputFormat, StructureLocalStorageData } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
@@ -15,12 +18,11 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import OutputActions from './output-actions'
 import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { useOutput } from '@/hooks/use-output'
-import OutputActions from './output-actions'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -171,7 +173,12 @@ const AIStructure = ({
   setSelectedFormat,
 }: AIStructureProps) => {
   const { data: session } = authClient.useSession()
-  const [unstructuredData, setUnstructuredData] = useState('')
+  const { setItem, getItem } = useLocalStorage<StructureLocalStorageData>(
+    LOCAL_STORAGE_KEYS.ai_structure,
+  )
+  const [unstructuredData, setUnstructuredData] = useState<string>(
+    getItem()?.input || '',
+  )
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
@@ -191,9 +198,20 @@ const AIStructure = ({
     data?.output || '',
     capturedFormat,
   )
+  useDebounce({
+    value: unstructuredData,
+    delay: 1000,
+    onDebounce: (debouncedInput) => {
+      setItem({
+        input: debouncedInput || '',
+        output: data?.output || '',
+        outputFormat: capturedFormat,
+      })
+    },
+  })
 
   const handleMutate = () => {
-    if (!unstructuredData.trim()) {
+    if (!unstructuredData?.trim()) {
       toast.error('Input cannot be empty.')
       return
     }
@@ -217,7 +235,7 @@ const AIStructure = ({
           <TextareaWithCounter
             id="unstructured-input"
             placeholder="Enter your unstructured data here..."
-            value={unstructuredData}
+            value={unstructuredData || ''}
             onChange={(e) => setUnstructuredData(e.target.value)}
             className="min-h-75 font-mono bg-card"
             maxLength={
@@ -245,7 +263,7 @@ const AIStructure = ({
           </div>
           <Button
             onClick={handleMutate}
-            disabled={isPending || unstructuredData.trim() === ''}
+            disabled={isPending || unstructuredData?.trim() === ''}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -257,7 +275,7 @@ const AIStructure = ({
       {isSuccess && data && data.output.trim() !== '' ? (
         <>
           <Output
-            input={unstructuredData}
+            input={unstructuredData || ''}
             output={data.output}
             success={isSuccess}
             error={undefined}
