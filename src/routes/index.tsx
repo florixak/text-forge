@@ -2,13 +2,13 @@ import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
 
 import LoadingIndicator from '@/components/state/loading-indicator'
-import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
+import { INPUT_FORMATS, LOCAL_STORAGE_KEYS, OUTPUT_FORMATS } from '@/constants'
 import useDebounce from '@/hooks/use-debounce'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { getMetadata } from '@/lib/metadata'
 import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useState } from 'react'
 import * as z from 'zod'
 
 const indexSchema = z
@@ -26,8 +26,9 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
-  const { setItem, getItem } =
-    useLocalStorage<ConvertLocalStorageData>('convert-data')
+  const { setItem, getItem } = useLocalStorage<ConvertLocalStorageData>(
+    LOCAL_STORAGE_KEYS.convert,
+  )
   const navigate = Route.useNavigate()
   const { from: fromType, to: toType } = Route.useSearch()
   const [value, setValue] = useState<string>(
@@ -36,22 +37,15 @@ function App() {
   const { debouncedValue } = useDebounce({
     value: value,
     delay: 500,
-  })
-
-  const onUpdate = useEffectEvent(
-    (inputFormat: InputFormat, outputFormat: OutputFormat, input: string) => {
+    onDebounce: (debouncedInput) => {
       setItem({
-        input: input,
+        input: debouncedInput || '',
         output: getItem()?.output || '',
-        inputFormat: inputFormat,
-        outputFormat: outputFormat,
+        inputFormat: fromType,
+        outputFormat: toType,
       })
     },
-  )
-
-  useEffect(() => {
-    onUpdate(fromType, toType, debouncedValue)
-  }, [fromType, toType, debouncedValue])
+  })
 
   const handleFromTypeChange = (newFromType: InputFormat) => {
     navigate({
