@@ -88,6 +88,7 @@ export interface ConvertLocalStorageData {
   output: string
   inputFormat: InputFormat
   outputFormat: OutputFormat
+  aiAssistTip: string
 }
 
 export interface StructureLocalStorageData {
