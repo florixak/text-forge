@@ -3,12 +3,11 @@ import OutputPreview from '@/components/output-preview'
 
 import LoadingIndicator from '@/components/state/loading-indicator'
 import { INPUT_FORMATS, LOCAL_STORAGE_KEYS, OUTPUT_FORMATS } from '@/constants'
-import useDebounce from '@/hooks/use-debounce'
-import { useLocalStorage } from '@/hooks/use-local-storage'
+import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { getMetadata } from '@/lib/metadata'
 import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import * as z from 'zod'
 
 const indexSchema = z
@@ -26,36 +25,37 @@ export const Route = createFileRoute('/')({
 })
 
 function App() {
-  const { setItem, getItem } = useLocalStorage<ConvertLocalStorageData>(
-    LOCAL_STORAGE_KEYS.convert,
-  )
   const navigate = Route.useNavigate()
   const { from: fromType, to: toType } = Route.useSearch()
-  const [value, setValue] = useState<string>(
-    typeof window !== 'undefined' ? getItem()?.input || '' : '',
-  )
-  const { debouncedValue } = useDebounce({
-    value: value,
-    delay: 500,
-    onDebounce: (debouncedInput) => {
-      setItem({
-        input: debouncedInput || '',
-        output: getItem()?.output || '',
-        inputFormat: fromType,
-        outputFormat: toType,
-        aiAssistTip: getItem()?.aiAssistTip || '',
-      })
+
+  const {
+    data: persistedData,
+    updateData,
+    updateDataEffect,
+    debouncedData,
+  } = usePersistentStorage<ConvertLocalStorageData>({
+    key: LOCAL_STORAGE_KEYS.convert,
+    initialData: {
+      input: '',
+      output: '',
+      inputFormat: fromType,
+      outputFormat: toType,
+      aiAssistTip: '',
     },
   })
 
+  const [value, setValue] = useState<string>(persistedData.input || '')
+
+  useEffect(() => {
+    updateDataEffect({ input: value })
+  }, [value])
+
+  useEffect(() => {
+    updateDataEffect({ inputFormat: fromType, outputFormat: toType })
+  }, [fromType, toType])
+
   const handleSaveAssistTip = (tip: string) => {
-    setItem({
-      input: getItem()?.input || '',
-      output: getItem()?.output || '',
-      inputFormat: fromType,
-      outputFormat: toType,
-      aiAssistTip: tip,
-    })
+    updateData({ aiAssistTip: tip })
   }
 
   const handleFromTypeChange = (newFromType: InputFormat) => {
@@ -91,7 +91,7 @@ function App() {
         <OutputPreview
           fromType={fromType}
           toType={toType}
-          inputText={debouncedValue}
+          inputText={debouncedData.input}
         />
       </div>
     </main>
