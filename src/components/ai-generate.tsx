@@ -2,9 +2,8 @@ import { LOCAL_STORAGE_KEYS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
-import useDebounce from '@/hooks/use-debounce'
-import { useLocalStorage } from '@/hooks/use-local-storage'
 import { useOutput } from '@/hooks/use-output'
+import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { generateData } from '@/lib/openai-ai'
@@ -14,7 +13,7 @@ import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
@@ -170,18 +169,37 @@ interface AIGenerateProps {
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
-  const { setItem, getItem } = useLocalStorage<GenerateLocalStorageData>(
-    LOCAL_STORAGE_KEYS.ai_generate,
-  )
-  const [input, setInput] = useState<string>(getItem()?.input || '')
+  const {
+    data: persistentData,
+    updateData,
+    updateDataEffect,
+  } = usePersistentStorage<GenerateLocalStorageData>({
+    key: LOCAL_STORAGE_KEYS.ai_generate,
+    initialData: { input: '', output: '', outputFormat: selectedFormat },
+  })
+
+  const [input, setInput] = useState<string>(persistentData.input)
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
 
+  useEffect(() => {
+    updateDataEffect({ input })
+  }, [input])
+
+  useEffect(() => {
+    updateDataEffect({ outputFormat: selectedFormat })
+  }, [selectedFormat])
+
   const { data, isSuccess, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
-    onSuccess: ({ success, error }) => {
+    onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('Data generated successfully!')
+        updateData({
+          input,
+          output,
+          outputFormat: capturedFormat,
+        })
       } else {
         toast.error(error || 'Failed to generate data. Please try again.')
       }
@@ -194,18 +212,6 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     data?.output || '',
     capturedFormat,
   )
-
-  useDebounce({
-    value: input,
-    delay: 1000,
-    onDebounce: (debouncedInput) => {
-      setItem({
-        input: debouncedInput || '',
-        output: data?.output || '',
-        outputFormat: capturedFormat,
-      })
-    },
-  })
 
   const handleMutate = () => {
     if (!input.trim()) {
@@ -233,6 +239,11 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     }
     setInput(value)
   }
+
+  const isOutputAvailable =
+    (isSuccess && data && data.output.trim() !== '') || persistentData.output
+  const currentOutput = data?.output || persistentData.output || ''
+  const hasValidOutput = Boolean(currentOutput.trim())
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -281,12 +292,12 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           </Button>
         </div>
       </div>
-      {isSuccess && data && data.output.trim() !== '' ? (
+      {isOutputAvailable ? (
         <>
           <Output
             input={input}
-            output={data.output}
-            success={isSuccess}
+            output={currentOutput}
+            success={hasValidOutput}
             error={undefined}
           />
           <OutputActions
