@@ -2,12 +2,12 @@ import InputEditor from '@/components/input-editor'
 import OutputPreview from '@/components/output-preview'
 
 import LoadingIndicator from '@/components/state/loading-indicator'
-import { INPUT_FORMATS, OUTPUT_FORMATS } from '@/constants'
-import useDebounce from '@/hooks/use-debounce'
+import { INPUT_FORMATS, LOCAL_STORAGE_KEYS, OUTPUT_FORMATS } from '@/constants'
+import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { getMetadata } from '@/lib/metadata'
-import { InputFormat, OutputFormat } from '@/types'
+import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import * as z from 'zod'
 
 const indexSchema = z
@@ -27,11 +27,41 @@ export const Route = createFileRoute('/')({
 function App() {
   const navigate = Route.useNavigate()
   const { from: fromType, to: toType } = Route.useSearch()
-  const [value, setValue] = useState<string>('')
-  const { debouncedValue } = useDebounce({
-    value: value,
-    delay: 500,
+
+  const {
+    data: persistedData,
+    updateData,
+    debouncedData,
+  } = usePersistentStorage<ConvertLocalStorageData>({
+    key: LOCAL_STORAGE_KEYS.convert,
+    initialData: {
+      input: '',
+      output: '',
+      inputFormat: fromType,
+      outputFormat: toType,
+      aiAssistTip: '',
+    },
   })
+
+  const [value, setValue] = useState<string>(persistedData.input || '')
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<ConvertLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
+
+  useEffect(() => {
+    updateDataEffect({ input: value })
+  }, [value])
+
+  useEffect(() => {
+    updateDataEffect({ inputFormat: fromType, outputFormat: toType })
+  }, [fromType, toType])
+
+  const handleSaveAssistTip = (tip: string) => {
+    updateData({ aiAssistTip: tip })
+  }
 
   const handleFromTypeChange = (newFromType: InputFormat) => {
     navigate({
@@ -61,11 +91,12 @@ function App() {
           setFromType={handleFromTypeChange}
           toType={toType}
           setToType={handleToTypeChange}
+          onAssistTipGenerated={handleSaveAssistTip}
         />
         <OutputPreview
           fromType={fromType}
           toType={toType}
-          inputText={debouncedValue}
+          inputText={debouncedData.input}
         />
       </div>
     </main>

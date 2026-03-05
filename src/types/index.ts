@@ -82,3 +82,23 @@ export interface DashboardUsage {
     percentage: number
   }
 }
+
+export interface ConvertLocalStorageData {
+  input: string
+  output: string
+  inputFormat: InputFormat
+  outputFormat: OutputFormat
+  aiAssistTip: string
+}
+
+export interface StructureLocalStorageData {
+  input: string
+  output: string
+  outputFormat: OutputFormat
+}
+
+export interface GenerateLocalStorageData {
+  input: string
+  output: string
+  outputFormat: OutputFormat
+}

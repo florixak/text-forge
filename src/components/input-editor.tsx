@@ -1,10 +1,15 @@
-import { INPUT_FORMATS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import {
+  INPUT_FORMATS,
+  LOCAL_STORAGE_KEYS,
+  OUTPUT_FORMATS,
+  PLAN_LIMITS,
+} from '@/constants'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
 import useDebounce from '@/hooks/use-debounce'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { assistText } from '@/lib/openai-ai'
-import { InputFormat, OutputFormat } from '@/types'
+import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { createServerFn } from '@tanstack/react-start'
 import { redirect } from '@tanstack/react-router'
@@ -16,6 +21,7 @@ import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 
 const aiAssistFn = createServerFn({
   method: 'POST',
@@ -232,6 +238,7 @@ interface InputEditorProps {
   setFromType: (type: InputFormat) => void
   toType: OutputFormat
   setToType: (type: OutputFormat) => void
+  onAssistTipGenerated?: (tip: string) => void
 }
 
 const InputEditor = ({
@@ -241,9 +248,12 @@ const InputEditor = ({
   setFromType,
   toType,
   setToType,
+  onAssistTipGenerated,
 }: InputEditorProps) => {
   const { data } = authClient.useSession()
-
+  const { getItem } = useLocalStorage<ConvertLocalStorageData>(
+    LOCAL_STORAGE_KEYS.convert,
+  )
   const {
     data: assistData,
     mutate,
@@ -251,9 +261,10 @@ const InputEditor = ({
     isError,
   } = useMutation({
     mutationFn: aiAssistFn,
-    onSuccess: ({ success, error }) => {
+    onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('AI Assist successful!')
+        onAssistTipGenerated?.(output)
       } else {
         toast.error(error || 'AI Assist failed. Please try again.')
       }
@@ -263,7 +274,7 @@ const InputEditor = ({
     },
   })
 
-  useDebounce({
+  useDebounce<string>({
     value: input,
     delay: 500,
     onDebounce: (value: string) => {
@@ -305,6 +316,9 @@ const InputEditor = ({
   }
 
   const loggedIn = data?.user !== null && data?.user !== undefined
+  const isAIAssistOutputAvailable = Boolean(
+    assistData?.output || getItem()?.aiAssistTip,
+  )
 
   return (
     <section className="p-4 w-full flex-1" aria-label="Input Editor">
@@ -388,14 +402,17 @@ const InputEditor = ({
           />
         </div>
       )}
-      {assistData?.output && (
+      {isAIAssistOutputAvailable ? (
         <div className="mt-6">
           <Label className="mb-2 uppercase font-medium text-foreground text-sm">
             AI Assist Output
           </Label>
-          <AssistOutput output={assistData.output} onApply={setInput} />
+          <AssistOutput
+            output={assistData?.output || getItem()?.aiAssistTip || ''}
+            onApply={setInput}
+          />
         </div>
-      )}
+      ) : null}
     </section>
   )
 }

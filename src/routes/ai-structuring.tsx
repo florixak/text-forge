@@ -3,8 +3,8 @@ import AIStructure from '@/components/ai-structure'
 import LoadingIndicator from '@/components/state/loading-indicator'
 import { OUTPUT_FORMATS } from '@/constants'
 
-import { authMiddleware } from '@/lib/middleware'
 import { getMetadata } from '@/lib/metadata'
+import { authMiddleware } from '@/lib/middleware'
 import { OutputFormat } from '@/types'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
@@ -42,12 +42,13 @@ function RouteComponent() {
     })
   }
 
-  const Component =
-    selected === 'structure' ? (
-      <AIStructure selectedFormat={to} setSelectedFormat={handleFormatChange} />
-    ) : (
-      <AIGenerate selectedFormat={to} setSelectedFormat={handleFormatChange} />
-    )
+  const isStructureSelected = selected === 'structure'
+
+  const Component = isStructureSelected ? (
+    <AIStructure selectedFormat={to} setSelectedFormat={handleFormatChange} />
+  ) : (
+    <AIGenerate selectedFormat={to} setSelectedFormat={handleFormatChange} />
+  )
 
   return (
     <section className="min-h-screen bg-background max-w-5xl mx-auto w-full flex flex-col gap-8 p-4 mt-20">
@@ -59,11 +60,11 @@ function RouteComponent() {
         <Link
           to="/ai-structuring"
           search={(prev) => ({ ...prev, selected: 'structure' })}
-          className={`${selected === 'structure' ? 'active-link' : ''}`}
+          className={`${isStructureSelected ? 'active-link' : ''}`}
           role="tab"
-          aria-selected={selected === 'structure'}
-          tabIndex={selected === 'structure' ? 0 : -1}
-          aria-current={selected === 'structure' ? 'page' : undefined}
+          aria-selected={isStructureSelected}
+          tabIndex={isStructureSelected ? 0 : -1}
+          aria-current={isStructureSelected ? 'page' : undefined}
           aria-controls="tabpanel-structure"
           id="tab-structure"
         >
@@ -72,11 +73,11 @@ function RouteComponent() {
         <Link
           to="/ai-structuring"
           search={(prev) => ({ ...prev, selected: 'generate' })}
-          className={`${selected === 'generate' ? 'active-link' : ''}`}
+          className={`${!isStructureSelected ? 'active-link' : ''}`}
           role="tab"
-          aria-selected={selected === 'generate'}
-          tabIndex={selected === 'generate' ? 0 : -1}
-          aria-current={selected === 'generate' ? 'page' : undefined}
+          aria-selected={!isStructureSelected}
+          tabIndex={!isStructureSelected ? 0 : -1}
+          aria-current={!isStructureSelected ? 'page' : undefined}
           aria-controls="tabpanel-generate"
           id="tab-generate"
         >
@@ -85,13 +86,9 @@ function RouteComponent() {
       </div>
       <div
         className="max-w-5xl w-full"
-        id={
-          selected === 'structure' ? 'tabpanel-structure' : 'tabpanel-generate'
-        }
+        id={isStructureSelected ? 'tabpanel-structure' : 'tabpanel-generate'}
         role="tabpanel"
-        aria-labelledby={
-          selected === 'structure' ? 'tab-structure' : 'tab-generate'
-        }
+        aria-labelledby={isStructureSelected ? 'tab-structure' : 'tab-generate'}
       >
         {Component}
       </div>

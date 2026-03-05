@@ -1,26 +1,27 @@
-import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import { LOCAL_STORAGE_KEYS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
+import { useOutput } from '@/hooks/use-output'
+import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { structureData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
-import { OutputFormat } from '@/types'
+import { OutputFormat, StructureLocalStorageData } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
+import OutputActions from './output-actions'
 import InlineError from './state/inline-error'
 import { TextareaWithCounter } from './textarea-with-counter'
 import { Button } from './ui/button'
 import { Label } from './ui/label'
-import { useOutput } from '@/hooks/use-output'
-import OutputActions from './output-actions'
 
 const structureTextFn = createServerFn({ method: 'POST' })
   .inputValidator(validateAIServerFnInput)
@@ -171,14 +172,37 @@ const AIStructure = ({
   setSelectedFormat,
 }: AIStructureProps) => {
   const { data: session } = authClient.useSession()
-  const [unstructuredData, setUnstructuredData] = useState('')
+  const { data: persistentData, updateData } =
+    usePersistentStorage<StructureLocalStorageData>({
+      key: LOCAL_STORAGE_KEYS.ai_structure,
+      initialData: { input: '', output: '', outputFormat: selectedFormat },
+    })
+  const [unstructuredData, setUnstructuredData] = useState<string>(
+    persistentData.input,
+  )
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
-  const { data, isSuccess, isPending, mutate, isError } = useMutation({
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<StructureLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
+
+  useEffect(() => {
+    updateDataEffect({ input: unstructuredData })
+  }, [unstructuredData])
+
+  useEffect(() => {
+    updateDataEffect({ outputFormat: selectedFormat })
+  }, [selectedFormat])
+
+  const { data, isPending, mutate, isError } = useMutation({
     mutationFn: structureTextFn,
-    onSuccess: ({ success, error }) => {
+    onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('Data structured successfully!')
+        updateData({ output, outputFormat: capturedFormat })
       } else {
         toast.error(error || 'Failed to structure data. Please try again.')
       }
@@ -187,13 +211,9 @@ const AIStructure = ({
       toast.error('Failed to structure data. Please try again.')
     },
   })
-  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
-    data?.output || '',
-    capturedFormat,
-  )
 
   const handleMutate = () => {
-    if (!unstructuredData.trim()) {
+    if (!unstructuredData?.trim()) {
       toast.error('Input cannot be empty.')
       return
     }
@@ -207,6 +227,20 @@ const AIStructure = ({
     })
   }
 
+  const currentOutput = data?.output?.trim()
+    ? data.output
+    : persistentData.output || ''
+  const currentOutputFormat = data?.output?.trim()
+    ? capturedFormat
+    : persistentData.outputFormat
+  const hasValidOutput = Boolean(currentOutput.trim())
+  const isOutputAvailable = hasValidOutput
+
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    currentOutput,
+    currentOutputFormat,
+  )
+
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
       <div className="space-y-4">
@@ -217,7 +251,7 @@ const AIStructure = ({
           <TextareaWithCounter
             id="unstructured-input"
             placeholder="Enter your unstructured data here..."
-            value={unstructuredData}
+            value={unstructuredData || ''}
             onChange={(e) => setUnstructuredData(e.target.value)}
             className="min-h-75 font-mono bg-card"
             maxLength={
@@ -245,7 +279,7 @@ const AIStructure = ({
           </div>
           <Button
             onClick={handleMutate}
-            disabled={isPending || unstructuredData.trim() === ''}
+            disabled={isPending || unstructuredData?.trim() === ''}
             size="lg"
             className="w-full sm:w-auto"
           >
@@ -254,18 +288,18 @@ const AIStructure = ({
           </Button>
         </div>
       </div>
-      {isSuccess && data && data.output.trim() !== '' ? (
+      {isOutputAvailable ? (
         <>
           <Output
-            input={unstructuredData}
-            output={data.output}
-            success={isSuccess}
+            input={unstructuredData || ''}
+            output={currentOutput}
+            success={hasValidOutput}
             error={undefined}
           />
           <OutputActions
             handleCopy={handleCopyOutput}
             handleDownload={handleDownloadOutput}
-            success={isSuccess}
+            success={hasValidOutput}
             copied={copied}
           />
         </>

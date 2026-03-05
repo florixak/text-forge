@@ -1,18 +1,19 @@
-import { OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
+import { LOCAL_STORAGE_KEYS, OUTPUT_FORMATS, PLAN_LIMITS } from '@/constants'
 import { db } from '@/db'
 import { historyUsage } from '@/db/schema'
 import { reserveQuota, rollbackQuota, trackTokenUsage } from '@/db/utils'
 import { useOutput } from '@/hooks/use-output'
+import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { authClient } from '@/lib/auth-client'
 import { authMiddleware } from '@/lib/middleware'
 import { generateData } from '@/lib/openai-ai'
 import { validateAIServerFnInput } from '@/lib/utils'
-import { OutputFormat } from '@/types'
+import { GenerateLocalStorageData, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
@@ -168,14 +169,40 @@ interface AIGenerateProps {
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
-  const [input, setInput] = useState('')
+  const { data: persistentData, updateData } =
+    usePersistentStorage<GenerateLocalStorageData>({
+      key: LOCAL_STORAGE_KEYS.ai_generate,
+      initialData: { input: '', output: '', outputFormat: selectedFormat },
+    })
+
+  const [input, setInput] = useState<string>(persistentData.input)
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
-  const { data, isSuccess, isPending, mutate, isError } = useMutation({
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<GenerateLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
+
+  useEffect(() => {
+    updateDataEffect({ input })
+  }, [input])
+
+  useEffect(() => {
+    updateDataEffect({ outputFormat: selectedFormat })
+  }, [selectedFormat])
+
+  const { data, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
-    onSuccess: ({ success, error }) => {
+    onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('Data generated successfully!')
+        updateData({
+          input,
+          output,
+          outputFormat: capturedFormat,
+        })
       } else {
         toast.error(error || 'Failed to generate data. Please try again.')
       }
@@ -184,10 +211,6 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       toast.error('Failed to generate data. Please try again.')
     },
   })
-  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
-    data?.output || '',
-    capturedFormat,
-  )
 
   const handleMutate = () => {
     if (!input.trim()) {
@@ -215,6 +238,20 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     }
     setInput(value)
   }
+
+  const currentOutput = data?.output?.trim()
+    ? data.output
+    : persistentData.output || ''
+  const currentOutputFormat = data?.output?.trim()
+    ? capturedFormat
+    : persistentData.outputFormat
+  const hasValidOutput = Boolean(currentOutput.trim())
+  const isOutputAvailable = hasValidOutput
+
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    currentOutput,
+    currentOutputFormat,
+  )
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -263,18 +300,18 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           </Button>
         </div>
       </div>
-      {isSuccess && data && data.output.trim() !== '' ? (
+      {isOutputAvailable ? (
         <>
           <Output
             input={input}
-            output={data.output}
-            success={isSuccess}
+            output={currentOutput}
+            success={hasValidOutput}
             error={undefined}
           />
           <OutputActions
             handleCopy={handleCopyOutput}
             handleDownload={handleDownloadOutput}
-            success={isSuccess}
+            success={hasValidOutput}
             copied={copied}
           />
         </>
