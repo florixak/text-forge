@@ -274,7 +274,7 @@ const InputEditor = ({
     },
   })
 
-  useDebounce({
+  useDebounce<string>({
     value: input,
     delay: 500,
     onDebounce: (value: string) => {
