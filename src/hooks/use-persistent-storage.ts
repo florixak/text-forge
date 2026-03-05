@@ -35,6 +35,10 @@ export function usePersistentStorage<T>({
     setData((prev) => ({ ...prev, ...updates }))
   })
 
+  const updateDataEffect = useEffectEvent((updates: Partial<T>) => {
+    setData((prev) => ({ ...prev, ...updates }))
+  })
+
   const reset = useEffectEvent(() => {
     setData(initialData)
     setItem(initialData)
@@ -44,6 +48,7 @@ export function usePersistentStorage<T>({
     data,
     setData,
     updateData,
+    updateDataEffect,
     reset,
     storedData: getItem(),
     debouncedData: debouncedValue,
