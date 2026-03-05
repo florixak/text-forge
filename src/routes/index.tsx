@@ -7,7 +7,7 @@ import { usePersistentStorage } from '@/hooks/use-persistent-storage'
 import { getMetadata } from '@/lib/metadata'
 import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import * as z from 'zod'
 
 const indexSchema = z
@@ -31,7 +31,6 @@ function App() {
   const {
     data: persistedData,
     updateData,
-    updateDataEffect,
     debouncedData,
   } = usePersistentStorage<ConvertLocalStorageData>({
     key: LOCAL_STORAGE_KEYS.convert,
@@ -45,6 +44,12 @@ function App() {
   })
 
   const [value, setValue] = useState<string>(persistedData.input || '')
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<ConvertLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
 
   useEffect(() => {
     updateDataEffect({ input: value })

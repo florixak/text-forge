@@ -13,7 +13,7 @@ import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
@@ -172,19 +172,22 @@ const AIStructure = ({
   setSelectedFormat,
 }: AIStructureProps) => {
   const { data: session } = authClient.useSession()
-  const {
-    data: persistentData,
-    updateData,
-    updateDataEffect,
-  } = usePersistentStorage<StructureLocalStorageData>({
-    key: LOCAL_STORAGE_KEYS.ai_structure,
-    initialData: { input: '', output: '', outputFormat: selectedFormat },
-  })
+  const { data: persistentData, updateData } =
+    usePersistentStorage<StructureLocalStorageData>({
+      key: LOCAL_STORAGE_KEYS.ai_structure,
+      initialData: { input: '', output: '', outputFormat: selectedFormat },
+    })
   const [unstructuredData, setUnstructuredData] = useState<string>(
     persistentData.input,
   )
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<StructureLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
 
   useEffect(() => {
     updateDataEffect({ input: unstructuredData })
@@ -194,7 +197,7 @@ const AIStructure = ({
     updateDataEffect({ outputFormat: selectedFormat })
   }, [selectedFormat])
 
-  const { data, isSuccess, isPending, mutate, isError } = useMutation({
+  const { data, isPending, mutate, isError } = useMutation({
     mutationFn: structureTextFn,
     onSuccess: ({ success, error, output }) => {
       if (success) {
@@ -208,11 +211,6 @@ const AIStructure = ({
       toast.error('Failed to structure data. Please try again.')
     },
   })
-
-  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
-    data?.output || '',
-    capturedFormat,
-  )
 
   const handleMutate = () => {
     if (!unstructuredData?.trim()) {
@@ -229,10 +227,19 @@ const AIStructure = ({
     })
   }
 
-  const isOutputAvailable =
-    (isSuccess && data && data.output.trim() !== '') || persistentData.output
-  const currentOutput = data?.output || persistentData.output || ''
+  const currentOutput = data?.output?.trim()
+    ? data.output
+    : persistentData.output || ''
+  const currentOutputFormat = data?.output?.trim()
+    ? capturedFormat
+    : persistentData.outputFormat
   const hasValidOutput = Boolean(currentOutput.trim())
+  const isOutputAvailable = hasValidOutput
+
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    currentOutput,
+    currentOutputFormat,
+  )
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -285,14 +292,14 @@ const AIStructure = ({
         <>
           <Output
             input={unstructuredData || ''}
-            output={data?.output || persistentData.output || ''}
+            output={currentOutput}
             success={hasValidOutput}
             error={undefined}
           />
           <OutputActions
             handleCopy={handleCopyOutput}
             handleDownload={handleDownloadOutput}
-            success={isSuccess}
+            success={hasValidOutput}
             copied={copied}
           />
         </>

@@ -13,7 +13,7 @@ import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
 import FormatSelect from './format-select'
 import Output from './output'
@@ -169,18 +169,21 @@ interface AIGenerateProps {
 
 const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const { data: session } = authClient.useSession()
-  const {
-    data: persistentData,
-    updateData,
-    updateDataEffect,
-  } = usePersistentStorage<GenerateLocalStorageData>({
-    key: LOCAL_STORAGE_KEYS.ai_generate,
-    initialData: { input: '', output: '', outputFormat: selectedFormat },
-  })
+  const { data: persistentData, updateData } =
+    usePersistentStorage<GenerateLocalStorageData>({
+      key: LOCAL_STORAGE_KEYS.ai_generate,
+      initialData: { input: '', output: '', outputFormat: selectedFormat },
+    })
 
   const [input, setInput] = useState<string>(persistentData.input)
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
+
+  const updateDataEffect = useEffectEvent(
+    (updates: Partial<GenerateLocalStorageData>) => {
+      updateData(updates)
+    },
+  )
 
   useEffect(() => {
     updateDataEffect({ input })
@@ -190,7 +193,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     updateDataEffect({ outputFormat: selectedFormat })
   }, [selectedFormat])
 
-  const { data, isSuccess, isPending, mutate, isError } = useMutation({
+  const { data, isPending, mutate, isError } = useMutation({
     mutationFn: generateDataFn,
     onSuccess: ({ success, error, output }) => {
       if (success) {
@@ -208,10 +211,6 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
       toast.error('Failed to generate data. Please try again.')
     },
   })
-  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
-    data?.output || '',
-    capturedFormat,
-  )
 
   const handleMutate = () => {
     if (!input.trim()) {
@@ -240,10 +239,19 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
     setInput(value)
   }
 
-  const isOutputAvailable =
-    (isSuccess && data && data.output.trim() !== '') || persistentData.output
-  const currentOutput = data?.output || persistentData.output || ''
+  const currentOutput = data?.output?.trim()
+    ? data.output
+    : persistentData.output || ''
+  const currentOutputFormat = data?.output?.trim()
+    ? capturedFormat
+    : persistentData.outputFormat
   const hasValidOutput = Boolean(currentOutput.trim())
+  const isOutputAvailable = hasValidOutput
+
+  const { copied, handleCopyOutput, handleDownloadOutput } = useOutput(
+    currentOutput,
+    currentOutputFormat,
+  )
 
   return (
     <section className="w-full max-w-4xl mx-auto space-y-6">
@@ -303,7 +311,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
           <OutputActions
             handleCopy={handleCopyOutput}
             handleDownload={handleDownloadOutput}
-            success={isSuccess}
+            success={hasValidOutput}
             copied={copied}
           />
         </>
