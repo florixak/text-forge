@@ -1,4 +1,4 @@
-import { useEffectEvent, useState } from 'react'
+import { useState } from 'react'
 import useDebounce from './use-debounce'
 import { useLocalStorage } from './use-local-storage'
 
@@ -19,7 +19,7 @@ export function usePersistentStorage<T>({
 
   const [data, setData] = useState<T>(() => {
     if (typeof window === 'undefined') return initialData
-    return getItem() || initialData
+    return getItem() ?? initialData
   })
 
   const { debouncedValue } = useDebounce<T>({
@@ -31,26 +31,21 @@ export function usePersistentStorage<T>({
     },
   })
 
-  const updateData = useEffectEvent((updates: Partial<T>) => {
+  const updateData = (updates: Partial<T>) => {
     setData((prev) => ({ ...prev, ...updates }))
-  })
+  }
 
-  const updateDataEffect = useEffectEvent((updates: Partial<T>) => {
-    setData((prev) => ({ ...prev, ...updates }))
-  })
-
-  const reset = useEffectEvent(() => {
+  const reset = () => {
     setData(initialData)
     setItem(initialData)
-  })
+  }
 
   return {
     data,
     setData,
     updateData,
-    updateDataEffect,
     reset,
-    storedData: getItem(),
+    storedData: getItem() ?? initialData,
     debouncedData: debouncedValue,
   }
 }
