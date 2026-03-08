@@ -19,15 +19,15 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19, TanStack Router, TanStack Query, TanStack Form
-- **Backend**: TanStack Start, Nitro, Drizzle ORM
+- **Frontend**: React 19
+- **Framework**: TanStack Start
 - **Database**: PostgreSQL with Drizzle
 - **Authentication**: Better Auth
 - **AI Integration**: Vercel AI SDK (OpenAI, Google AI)
-- **Styling**: Tailwind CSS 4, Base UI components
+- **Styling**: Tailwind CSS 4, shadcn/ui
 - **Email**: Resend
 - **Payments**: Stripe
-- **Forms & Validation**: Zod, React Form
+- **Forms & Validation**: Zod, TanStack Form
 - **Build Tool**: Vite
 - **Testing**: Vitest
 - **Code Quality**: ESLint, Prettier
@@ -106,7 +106,7 @@
 
 ## 📐 Project Structure
 
-```
+```text
 /src
   /components       → Reusable UI components
     /dashboard      → Dashboard-specific components
