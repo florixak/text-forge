@@ -1,11 +1,12 @@
 import { QUERY_KEYS } from '@/constants'
 import {
-  cancelSubscription,
-  createCheckoutSession,
-  reactivateSubscription,
+  cancelSubscriptionFn,
+  createCheckoutSessionFn,
+  reactivateSubscriptionFn,
 } from '@/lib/stripe'
 import { UserPlan } from '@/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 
 interface UsePlanMutationsOptions {
@@ -15,6 +16,10 @@ interface UsePlanMutationsOptions {
 
 const usePlanMutations = (callbacks: UsePlanMutationsOptions = {}) => {
   const queryClient = useQueryClient()
+
+  const createCheckoutSession = useServerFn(createCheckoutSessionFn)
+  const cancelSubscription = useServerFn(cancelSubscriptionFn)
+  const reactivateSubscription = useServerFn(reactivateSubscriptionFn)
 
   const checkout = useMutation({
     mutationFn: () => createCheckoutSession(),

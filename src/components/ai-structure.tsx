@@ -11,7 +11,7 @@ import { validateAIServerFnInput } from '@/lib/utils'
 import { OutputFormat, StructureLocalStorageData } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, useServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
@@ -183,6 +183,8 @@ const AIStructure = ({
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
 
+  const structureText = useServerFn(structureTextFn)
+
   const updateDataEffect = useEffectEvent(
     (updates: Partial<StructureLocalStorageData>) => {
       updateData(updates)
@@ -198,7 +200,7 @@ const AIStructure = ({
   }, [selectedFormat])
 
   const { data, isPending, mutate, isError } = useMutation({
-    mutationFn: structureTextFn,
+    mutationFn: structureText,
     onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('Data structured successfully!')

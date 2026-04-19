@@ -17,7 +17,7 @@ export function getStripe() {
 
 const stripe = getStripe()
 
-export const getOrCreateStripeCustomer = createServerFn()
+export const getOrCreateStripeCustomerFn = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { user: authUser } = context.session
@@ -61,10 +61,10 @@ export const getOrCreateStripeCustomer = createServerFn()
     return customer.id
   })
 
-export const createCheckoutSession = createServerFn()
+export const createCheckoutSessionFn = createServerFn()
   .middleware([authMiddleware])
   .handler(async (ctx) => {
-    const customerId = await getOrCreateStripeCustomer()
+    const customerId = await getOrCreateStripeCustomerFn()
 
     const priceId = process.env.STRIPE_PRO_PRICE_ID
     if (!priceId) {
@@ -100,7 +100,7 @@ export const createCheckoutSession = createServerFn()
     return { url: session.url }
   })
 
-export const cancelSubscription = createServerFn()
+export const cancelSubscriptionFn = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const userId = context.session.user.id
@@ -134,7 +134,7 @@ export const cancelSubscription = createServerFn()
     }
   })
 
-export const reactivateSubscription = createServerFn()
+export const reactivateSubscriptionFn = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const userId = context.session.user.id
@@ -166,7 +166,7 @@ export const reactivateSubscription = createServerFn()
     }
   })
 
-export const getUserSubscription = createServerFn()
+export const getUserSubscriptionFn = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const userId = context.session.user.id

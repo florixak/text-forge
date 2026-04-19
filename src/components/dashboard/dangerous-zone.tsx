@@ -5,7 +5,7 @@ import { authMiddleware } from '@/lib/middleware'
 import { getStripe } from '@/lib/stripe'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, useServerFn } from '@tanstack/react-start'
 import { sql } from 'drizzle-orm'
 import { eq } from 'drizzle-orm/sql/expressions/conditions'
 import { toast } from 'sonner'
@@ -84,8 +84,10 @@ const deleteAccountFn = createServerFn({ method: 'POST' })
 
 const DangerousZone = () => {
   const navigate = useNavigate()
+  const deleteAccount = useServerFn(deleteAccountFn)
+
   const { mutate, isPending } = useMutation({
-    mutationFn: () => deleteAccountFn(),
+    mutationFn: () => deleteAccount(),
     onSuccess: () => {
       toast.success('Your account has been deleted successfully.')
       navigate({ to: '/signin' })

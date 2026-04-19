@@ -11,7 +11,7 @@ import { validateAIServerFnInput } from '@/lib/utils'
 import { GenerateLocalStorageData, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, useServerFn } from '@tanstack/react-start'
 import { Sparkles } from 'lucide-react'
 import { useEffect, useEffectEvent, useState } from 'react'
 import { toast } from 'sonner'
@@ -179,6 +179,8 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   const [capturedFormat, setCapturedFormat] =
     useState<OutputFormat>(selectedFormat)
 
+  const generateData = useServerFn(generateDataFn)
+
   const updateDataEffect = useEffectEvent(
     (updates: Partial<GenerateLocalStorageData>) => {
       updateData(updates)
@@ -194,7 +196,7 @@ const AIGenerate = ({ selectedFormat, setSelectedFormat }: AIGenerateProps) => {
   }, [selectedFormat])
 
   const { data, isPending, mutate, isError } = useMutation({
-    mutationFn: generateDataFn,
+    mutationFn: generateData,
     onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('Data generated successfully!')
