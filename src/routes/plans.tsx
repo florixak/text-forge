@@ -5,7 +5,7 @@ import { PLAN_LIMITS } from '@/constants'
 import { createPlanQueryOptions } from '@/hooks/query-options'
 import { authOptionalMiddleware } from '@/lib/middleware'
 import { getMetadata } from '@/lib/metadata'
-import { getUserSubscription } from '@/lib/stripe'
+import { getUserSubscriptionFn } from '@/lib/stripe'
 import { Plan, PlanLimits, UserPlan } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
@@ -18,7 +18,7 @@ const planSchema = z
   })
   .catch({ plan: 'free' })
 
-export const getUserPlan = createServerFn()
+export const getUserPlanFn = createServerFn()
   .middleware([authOptionalMiddleware])
   .handler(async ({ context }): Promise<UserPlan> => {
     const { user } = context.session || {}
@@ -28,7 +28,7 @@ export const getUserPlan = createServerFn()
 
     let subscriptionInfo: UserPlan['subscription'] = null
     try {
-      const sub = await getUserSubscription()
+      const sub = await getUserSubscriptionFn()
       if (sub) {
         subscriptionInfo = {
           cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
