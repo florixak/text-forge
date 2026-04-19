@@ -11,7 +11,7 @@ import { authMiddleware } from '@/lib/middleware'
 import { assistText } from '@/lib/openai-ai'
 import { ConvertLocalStorageData, InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, useServerFn } from '@tanstack/react-start'
 import { redirect } from '@tanstack/react-router'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
@@ -167,7 +167,7 @@ const aiAssistFn = createServerFn({
     },
   )
 
-const checkInputType = createServerFn({
+const checkInputTypeFn = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: { input: string }) => data)
@@ -254,13 +254,17 @@ const InputEditor = ({
   const { getItem } = useLocalStorage<ConvertLocalStorageData>(
     LOCAL_STORAGE_KEYS.convert,
   )
+
+  const aiAssist = useServerFn(aiAssistFn)
+  const checkInputType = useServerFn(checkInputTypeFn)
+
   const {
     data: assistData,
     mutate,
     isPending,
     isError,
   } = useMutation({
-    mutationFn: aiAssistFn,
+    mutationFn: aiAssist,
     onSuccess: ({ success, error, output }) => {
       if (success) {
         toast.success('AI Assist successful!')
@@ -284,12 +288,14 @@ const InputEditor = ({
 
   const handleTypeCheck = async (value: string) => {
     if (fromType !== 'Auto-detect') return
-    const { valid, format: detectedFormat } = await checkInputType({
-      data: { input: value },
-    })
-    if (valid) {
-      setFromType(detectedFormat)
-    }
+    try {
+      const { valid, format: detectedFormat } = await checkInputType({
+        data: { input: value },
+      })
+      if (valid) {
+        setFromType(detectedFormat)
+      }
+    } catch {}
   }
 
   const handleValueChange = async (newValue: string) => {

@@ -7,7 +7,7 @@ import { authOptionalMiddleware } from '@/lib/middleware'
 import { getFileSize } from '@/lib/utils'
 import { InputFormat, OutputFormat } from '@/types'
 import { useMutation } from '@tanstack/react-query'
-import { createServerFn } from '@tanstack/react-start'
+import { createServerFn, useServerFn } from '@tanstack/react-start'
 import { Dot } from 'lucide-react'
 import Output from './output'
 import OutputActions from './output-actions'
@@ -18,7 +18,7 @@ interface PreviewOutputProps {
   inputText: string
 }
 
-const saveConversionHistory = createServerFn({
+const saveConversionHistoryFn = createServerFn({
   method: 'POST',
 })
   .inputValidator((data: { from: InputFormat; to: OutputFormat }) => data)
@@ -43,6 +43,7 @@ const saveConversionHistory = createServerFn({
 
 const OutputPreview = ({ fromType, toType, inputText }: PreviewOutputProps) => {
   const { copied, handleCopy } = useCopy()
+  const saveConversionHistory = useServerFn(saveConversionHistoryFn)
   const { mutate } = useMutation({
     mutationFn: saveConversionHistory,
   })
