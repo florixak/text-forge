@@ -63,6 +63,18 @@ const routeMetadataConfig: RouteMetadata = {
       'View your TextForge dashboard with usage statistics, token limits, and quick actions.',
     robots: 'noindex, nofollow',
   },
+  '/privacy': {
+    title: 'Privacy Policy - TextForge',
+    description:
+      'Learn how TextForge collects, uses, and protects your personal information. AI input and output are not stored on our servers after processing.',
+    robots: 'index, follow',
+  },
+  '/terms': {
+    title: 'Terms of Service - TextForge',
+    description:
+      'Read the Terms of Service for TextForge, including subscription plans, usage limits, AI content disclaimers, and acceptable use policies.',
+    robots: 'index, follow',
+  },
 }
 
 function buildMetaMeta(
