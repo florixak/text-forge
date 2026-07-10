@@ -165,8 +165,15 @@ export function LoginForm({
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our{' '}
+        <Link to="/terms" className="underline underline-offset-4">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link to="/privacy" className="underline underline-offset-4">
+          Privacy Policy
+        </Link>
+        .
       </FieldDescription>
     </div>
   )

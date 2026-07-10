@@ -8,7 +8,7 @@ import { getMetadata } from '@/lib/metadata'
 import { getUserSubscriptionFn } from '@/lib/stripe'
 import { Plan, PlanLimits, UserPlan } from '@/types'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import * as z from 'zod'
 
@@ -93,6 +93,17 @@ function RouteComponent() {
           />
         ))}
       </div>
+      <p className="max-w-xl text-center text-sm text-muted-foreground font-normal">
+        By subscribing, you agree to our{' '}
+        <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
+          Privacy Policy
+        </Link>
+        .
+      </p>
       <div className="w-full max-w-3xl mt-8">
         <h3 className="mb-4 text-lg font-semibold">Feature Comparison</h3>
         <div className="overflow-x-auto rounded-xl shadow-sm bg-card border border-border">
