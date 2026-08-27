@@ -1,5 +1,3 @@
-import { PLAN_LIMITS } from '@/constants'
-import { PlanLimits } from '@/types'
 import { describe, expect, it } from 'vitest'
 import {
   formatBigNumber,
@@ -8,6 +6,8 @@ import {
   getFileSize,
   validateAIServerFnInput,
 } from './utils'
+import type { PlanLimits } from '@/types'
+import { PLAN_LIMITS } from '@/constants'
 
 const plan = (overrides: Partial<PlanLimits> = {}): PlanLimits => ({
   ...PLAN_LIMITS.free,
