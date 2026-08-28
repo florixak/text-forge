@@ -69,16 +69,16 @@ export function assistPrompt(
   toFormat: OutputFormat,
 ): string {
   return SYSTEM_PROMPTS.assist
-    .replace('{from}', fromFormat)
-    .replace('{to}', toFormat)
+    .replaceAll('{from}', fromFormat)
+    .replaceAll('{to}', toFormat)
 }
 
 export function structurePrompt(format: OutputFormat): string {
-  return SYSTEM_PROMPTS.structure.replace('{format}', format)
+  return SYSTEM_PROMPTS.structure.replaceAll('{format}', format)
 }
 
 export function generatePrompt(format: OutputFormat): string {
-  return SYSTEM_PROMPTS.generate.replace('{format}', format)
+  return SYSTEM_PROMPTS.generate.replaceAll('{format}', format)
 }
 
 export function getOutputTokenLimit(
