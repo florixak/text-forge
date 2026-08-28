@@ -98,7 +98,6 @@ const formatProcessors = {
       },
     }
   },
-
   Text: (input: string, options: ProcessingOptions): ProcessedInput => {
     let content = input
       .split('\n')
