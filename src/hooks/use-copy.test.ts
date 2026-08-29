@@ -59,9 +59,12 @@ describe('useCopy', () => {
   })
 
   it('should return false when writeText throws', async () => {
-    writeText.mockRejectedValue(new Error('denied'))
     const { result } = renderHook(() => useCopy())
-
+    await act(async () => {
+      await result.current.handleCopy('hello')
+    })
+    expect(result.current.copied).toBe(true)
+    writeText.mockRejectedValueOnce(new Error('denied'))
     let ok = true
     await act(async () => {
       ok = await result.current.handleCopy('hello')
