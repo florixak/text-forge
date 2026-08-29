@@ -29,10 +29,10 @@ describe('useDebounce', () => {
     })
 
     expect(result.current.debouncedValue).toBe('ab')
-    expect(onDebounce).toHaveBeenCalledWith('ab')
-
+    expect(onDebounce).toHaveBeenCalledTimes(1)
+    expect(onDebounce).toHaveBeenLastCalledWith('ab')
     rerender({ value: 'abc' })
     expect(result.current.debouncedValue).toBe('ab')
-    expect(onDebounce).toHaveBeenCalledWith('ab')
+    expect(onDebounce).toHaveBeenCalledTimes(1)
   })
 })
