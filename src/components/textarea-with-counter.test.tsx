@@ -41,7 +41,12 @@ describe('TextareaWithCounter', () => {
 
   it('should insert a tab instead of moving focus', async () => {
     const user = userEvent.setup()
-    render(<Harness />)
+    render(
+      <>
+        <Harness />
+        <input aria-label="Next field" />
+      </>,
+    )
 
     const textarea = screen.getByRole('textbox', { name: 'Input' })
     await user.click(textarea)
@@ -49,5 +54,9 @@ describe('TextareaWithCounter', () => {
 
     expect((textarea as HTMLTextAreaElement).value).toBe('hi\t')
     expect(screen.getByText('3 / 10')).toBeTruthy()
+    expect(document.activeElement).toBe(textarea)
+    expect(document.activeElement).not.toBe(
+      screen.getByRole('textbox', { name: 'Next field' }),
+    )
   })
 })
