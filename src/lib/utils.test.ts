@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   formatBigNumber,
+  formatLocalDate,
   formatPercentage,
   formatTokenLimit,
   getFileSize,
@@ -169,6 +170,13 @@ describe('Utils', () => {
 
     it('returns the raw number below 10,000', () => {
       expect(formatBigNumber(9999)).toBe('9999')
+    })
+  })
+
+  describe('formatLocalDate', () => {
+    it('should format the date in the format YYYY-MM-DD', () => {
+      const result = formatLocalDate(new Date(2026, 0, 5))
+      expect(result).toBe('2026-01-05')
     })
   })
 })
