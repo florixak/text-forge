@@ -20,12 +20,7 @@ import { cn } from '@/lib/utils'
 import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import * as z from 'zod'
-
-const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
+import { loginFormSchema } from '@/schemas/auth-schema'
 
 export function LoginForm({
   className,
@@ -37,7 +32,7 @@ export function LoginForm({
       password: '',
     },
     validators: {
-      onSubmit: formSchema,
+      onSubmit: loginFormSchema,
     },
     onSubmit: async ({ value }) => {
       const loadingToastId = toast.loading('Logging you in...')

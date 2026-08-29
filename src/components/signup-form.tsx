@@ -20,21 +20,7 @@ import { cn } from '@/lib/utils'
 import { useForm } from '@tanstack/react-form'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import * as z from 'zod'
-
-const formSchema = z
-  .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  })
+import { signUpFormSchema } from '@/schemas/auth-schema'
 
 export function SignUpForm({
   className,
@@ -48,7 +34,7 @@ export function SignUpForm({
       name: '',
     },
     validators: {
-      onSubmit: formSchema,
+      onSubmit: signUpFormSchema,
     },
     onSubmit: async ({ value }) => {
       const loadingToastId = toast.loading('Creating your account...')
