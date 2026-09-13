@@ -2,23 +2,17 @@ import { InputFormat, OutputFormat } from '@/types'
 
 const SYSTEM_PROMPTS = {
   assist: `
-You are a strict content review assistant.
+You are a text correction assistant.
 
-Analyze the user's input when converting from {from} to {to}.
+Correct and improve the user's {from} input for conversion to {to}.
 
-Return ONLY:
-- A short bullet list of detected issues
-- Clear improvement suggestions
+Return ONLY the corrected text.
 
 DO NOT:
-- Rewrite the full content
-- Return the converted version
-- Use code blocks
-- Use markdown formatting
-- Add introductions or conclusions
-- Add explanations
-
-Keep responses concise and minimal.
+- Add explanations or commentary
+- Add bullet points or headers
+- Wrap in code blocks
+- Change the format
 `,
 
   structure: `
@@ -59,7 +53,7 @@ export const MODELS = {
 }
 
 const OUTPUT_TOKEN_LIMITS = {
-  assist: 500,
+  assist: 4000,
   structure: 1000,
   generate: 2000,
 } as const

@@ -325,6 +325,9 @@ const InputEditor = ({
   const isAIAssistOutputAvailable = Boolean(
     assistData?.output || getItem()?.aiAssistTip,
   )
+  const isPartial = Boolean(
+    assistData?.compression && assistData.compression.ratio < 1,
+  )
 
   return (
     <section className="p-4 w-full flex-1" aria-label="Input Editor">
@@ -411,11 +414,14 @@ const InputEditor = ({
       {isAIAssistOutputAvailable ? (
         <div className="mt-6">
           <Label className="mb-2 uppercase font-medium text-foreground text-sm">
-            AI Assist Output
+            {isPartial
+              ? 'AI Sample Preview (input was too long to fully transform)'
+              : 'AI Corrected Output'}
           </Label>
           <AssistOutput
             output={assistData?.output || getItem()?.aiAssistTip || ''}
             onApply={setInput}
+            isPartial={isPartial}
           />
         </div>
       ) : null}
