@@ -15,7 +15,7 @@ describe('Prompts', () => {
       'should use from %s to %s and not contain {from} or {to} placeholder',
       (from, to) => {
         const prompt = assistPrompt(from, to)
-        expect(prompt).toContain(`from ${from} to ${to}`)
+        expect(prompt).toContain(`user's ${from} input for conversion to ${to}`)
         expect(prompt).not.toContain('{from}')
         expect(prompt).not.toContain('{to}')
       },
@@ -48,7 +48,7 @@ describe('Prompts', () => {
 
   describe('getOutputTokenLimit', () => {
     it.each([
-      ['assist', 500],
+      ['assist', 4000],
       ['structure', 1000],
       ['generate', 2000],
     ] as const)(
